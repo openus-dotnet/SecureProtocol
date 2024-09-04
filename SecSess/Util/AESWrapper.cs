@@ -13,23 +13,21 @@ namespace SecSess.Util
     internal class AESWrapper
     {
         private Aes _aes;
-        private byte[] _iv;
 
         public AESWrapper(byte[] key)
         {
             _aes = Aes.Create();
             _aes.Key = key;
-            _iv = new byte[16];
         }
 
-        public byte[] Encrypt(byte[] data)
+        public byte[] Encrypt(byte[] data, byte[] iv)
         {
-            return _aes.EncryptCbc(data, _iv, paddingMode: PaddingMode.PKCS7);
+            return _aes.EncryptCbc(data, iv, paddingMode: PaddingMode.Zeros);
         }
 
-        public byte[] Decrypt(byte[] data)
+        public byte[] Decrypt(byte[] data, byte[] iv)
         {
-            return _aes.DecryptCbc(data, _iv, paddingMode: PaddingMode.PKCS7);
+            return _aes.DecryptCbc(data, iv, paddingMode: PaddingMode.Zeros);
         }
     }
 }

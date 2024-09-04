@@ -23,6 +23,18 @@ namespace SecSess.Tcp
         /// IP of the server to which you want to connect
         /// </summary>
         private IPEndPoint _serverPoint;
+        /// <summary>
+        /// Initial vector for sent AES packet
+        /// </summary>
+        private byte[] _sentIV;
+        /// <summary>
+        /// Initial vector for received AES packet
+        /// </summary>
+        private byte[] _receivedIV;
+        /// <summary>
+        /// AES support wrapper
+        /// </summary>
+        private AESWrapper _aesWrapper { get; set; }
 
         /// <summary>
         /// The AES key used to communicate with this server
@@ -35,6 +47,10 @@ namespace SecSess.Tcp
             _serverPoint = endPoint;
             _rsa = RSA.Create(rsa);
             _aesKey = new byte[32];
+            _aesWrapper = new AESWrapper(_aesKey);
+
+            _sentIV = new byte[16];
+            _receivedIV = new byte[16];
 
             new Random(DateTime.Now.Microsecond).NextBytes(_aesKey);
         }
@@ -87,24 +103,99 @@ namespace SecSess.Tcp
         /// </summary>
         public void Connect()
         {
-            try
-            {
-                _client.Connect(_serverPoint);
+            _client.Connect(_serverPoint);
 
-                byte[] data = _rsa.Encrypt(_aesKey, RSAEncryptionPadding.Pkcs1);
-                _client.GetStream().Write(data);
+            byte[] data = _rsa.Encrypt(_aesKey, RSAEncryptionPadding.Pkcs1);
+            _client.GetStream().Write(data);
 
-                _client.GetStream().Read(data = new byte[16], 0, 16);
-                string res = new AESWrapper(_aesKey).Decrypt(data).GetString();
+            byte[] buffer = new byte[16];
+            _client.GetStream().Read(buffer, 0, 16);
 
-                if (res != "OK")
-                {
-                    throw new Exception();
-                }
-            }
-            catch
+            string res = new AESWrapper(_aesKey).Decrypt(buffer, new byte[16]).GetString();
+
+            _sentIV = _aesKey[0..16];
+            _receivedIV = _aesKey[16..32];
+
+            _aesWrapper = new AESWrapper(_aesKey);
+
+            if (res.StartsWith("OK") == false)
             {
                 throw new SecSessRefuesedException();
+            }
+        }
+
+        /// <summary>
+        /// Close the TCP client
+        /// </summary>
+        public void Close()
+        {
+            _client.Close();
+        }
+
+        /// <summary>
+        /// Write packet with secure session
+        /// </summary>
+        /// <param name="data">Data that write to server</param>
+        public void Write(byte[] data)
+        {
+            byte[] lenBit = BitConverter.GetBytes(data.Length);
+            byte[] msg = new byte[data.Length + 4];
+
+            for (int i = 0; i < 4; i++)
+            {
+                msg[i] = lenBit[i];
+            }
+            for (int i = 0; i < data.Length; i++)
+            {
+                msg[i + 4] = data[i];
+            }
+
+            byte[] enc = _aesWrapper.Encrypt(msg, _sentIV);
+            _client.GetStream().Write(enc, 0, enc.Length);
+
+            _sentIV = enc[0..16];
+        }
+
+        /// <summary>
+        /// Read packet with secure session
+        /// </summary>
+        /// <returns>Data that read from server</returns>
+        public byte[] Read()
+        {
+            byte[] enc = new byte[16];
+            _client.GetStream().Read(enc);
+
+            byte[] msg1 = _aesWrapper.Decrypt(enc, _receivedIV);
+            _receivedIV = enc[0..16];
+
+            int len = BitConverter.ToInt32(msg1[0..4]);
+            int blockCount = (len + 4) / 16 + ((len + 4) % 16 == 0 ? 0 : 1);
+
+            byte[] buffer = new byte[(blockCount - 1) * 16];
+
+            if (buffer.Length != 0)
+            {
+                _client.GetStream().Read(buffer);
+                byte[] msg2 = _aesWrapper.Decrypt(buffer, _receivedIV);
+
+                byte[] data = new byte[len];
+
+                int offset = 0;
+
+                for (; offset < 12; offset++)
+                {
+                    data[offset] = msg1[offset + 4];
+                }
+                for (; offset < data.Length; offset++)
+                {
+                    data[offset] = msg2[offset - 12];
+                }
+
+                return data;
+            }
+            else
+            {
+                return msg1[4..(len + 4)];
             }
         }
     }

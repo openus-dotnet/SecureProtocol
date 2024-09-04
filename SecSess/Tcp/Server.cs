@@ -21,11 +21,22 @@ namespace SecSess.Tcp
             /// Client that actually works
             /// </summary>
             internal TcpClient InnerClient { get; set; }
-
             /// <summary>
             /// The AES key used to communicate with this client
             /// </summary>
             internal byte[] AESKey { get; set; }
+            /// <summary>
+            /// AES support wrapper
+            /// </summary>
+            internal AESWrapper AESWrapper { get; set; }
+            /// <summary>
+            /// Initial vector for sent AES packet
+            /// </summary>
+            private byte[] _sentIV;
+            /// <summary>
+            /// Initial vector for received AES packet
+            /// </summary>
+            private byte[] _receivedIV;
 
             /// <summary>
             /// Create a server side client
@@ -36,6 +47,77 @@ namespace SecSess.Tcp
             {
                 InnerClient = client;
                 AESKey = aesKey;
+                AESWrapper = new AESWrapper(aesKey);
+
+                _sentIV = aesKey[16..32];
+                _receivedIV = aesKey[0..16];
+            }
+
+            /// <summary>
+            /// Write packet with secure session
+            /// </summary>
+            /// <param name="data">Data that write to client</param>
+            public void Write(byte[] data)
+            {
+                byte[] lenBit = BitConverter.GetBytes(data.Length);
+                byte[] msg = new byte[data.Length + 4];
+
+                for (int i = 0; i < 4; i++)
+                {
+                    msg[i] = lenBit[i];
+                }
+                for (int i = 0; i < data.Length; i++)
+                {
+                    msg[i + 4] = data[i];
+                }
+
+                byte[] enc = AESWrapper.Encrypt(msg, _sentIV);
+                InnerClient.GetStream().Write(enc, 0, enc.Length);
+
+                _sentIV = enc[0..16];
+            }
+
+            /// <summary>
+            /// Read packet with secure session
+            /// </summary>
+            /// <returns>Data that read from client</returns>
+            public byte[] Read()
+            {
+                byte[] enc = new byte[16];
+                InnerClient.GetStream().Read(enc);
+
+                byte[] msg1 = AESWrapper.Decrypt(enc, _receivedIV);
+                _receivedIV = enc[0..16];
+
+                int len = BitConverter.ToInt32(msg1[0..4]);
+                int blockCount = (len + 4) / 16 + ((len + 4) % 16 == 0 ? 0 : 1);
+
+                byte[] buffer = new byte[(blockCount - 1) * 16];
+
+                if (buffer.Length != 0)
+                {
+                    InnerClient.GetStream().Read(buffer);
+                    byte[] msg2 = AESWrapper.Decrypt(buffer, _receivedIV);
+
+                    byte[] data = new byte[len];
+
+                    int offset = 0;
+
+                    for (; offset < 12; offset++)
+                    {
+                        data[offset] = msg1[offset + 4];
+                    }
+                    for (; offset < data.Length; offset++)
+                    {
+                        data[offset] = msg2[offset - 12];
+                    }
+
+                    return data;
+                }
+                else
+                {
+                    return msg1[4..(len + 4)];
+                }
             }
         }
 
@@ -128,26 +210,19 @@ namespace SecSess.Tcp
         /// </summary>
         public Client AcceptClient()
         {
-            try
-            {
-                TcpClient client = _listener.AcceptTcpClient();
+            TcpClient client = _listener.AcceptTcpClient();
 
-                byte[] buffer = new byte[512];
-                client.GetStream().Read(buffer, 0, 512);
+            byte[] buffer = new byte[512];
+            client.GetStream().Read(buffer, 0, 512);
 
-                byte[] data = _rsa.Decrypt(buffer, RSAEncryptionPadding.Pkcs1);
+            byte[] aesKey = _rsa.Decrypt(buffer, RSAEncryptionPadding.Pkcs1);
 
-                Client result = new Client(client, data);
-                _clients.Add(result);
+            Client result = new Client(client, aesKey);
+            _clients.Add(result);
 
-                client.GetStream().Write(new AESWrapper(data).Encrypt("OK".GetBytes()));
+            client.GetStream().Write(result.AESWrapper.Encrypt("OK".GetBytes(), new byte[16]));
 
-                return result;
-            }
-            catch
-            {
-                throw new SecSessRefuesedException();
-            }
+            return result;
         }
     }
 }
