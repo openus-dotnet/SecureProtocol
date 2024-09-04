@@ -3,9 +3,14 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.9.34728.123
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecSess", "SecSess\SecSess.csproj", "{4918D68C-14D0-4F39-888D-776660622F0D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SecSess", "SecSess\SecSess.csproj", "{4918D68C-14D0-4F39-888D-776660622F0D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tester", "Tester\Tester.csproj", "{9006B941-720B-4FCA-8549-29A302B5EB4B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tester", "Tester\Tester.csproj", "{9006B941-720B-4FCA-8549-29A302B5EB4B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{E9C596A5-F954-4F0C-8455-6CA3041A8D43}"
+	ProjectSection(SolutionItems) = preProject
+		version = version
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

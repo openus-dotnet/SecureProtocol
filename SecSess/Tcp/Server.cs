@@ -72,7 +72,7 @@ namespace SecSess.Tcp
                 }
 
                 byte[] enc = AESWrapper.Encrypt(msg, _sentIV);
-                InnerClient.GetStream().Write(enc, 0, enc.Length);
+                InnerClient.GetStream().Write(enc);
 
                 _sentIV = enc[0..16];
             }

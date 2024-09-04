@@ -35,7 +35,6 @@ namespace SecSess.Tcp
         /// AES support wrapper
         /// </summary>
         private AESWrapper _aesWrapper { get; set; }
-
         /// <summary>
         /// The AES key used to communicate with this server
         /// </summary>
@@ -151,7 +150,7 @@ namespace SecSess.Tcp
             }
 
             byte[] enc = _aesWrapper.Encrypt(msg, _sentIV);
-            _client.GetStream().Write(enc, 0, enc.Length);
+            _client.GetStream().Write(enc);
 
             _sentIV = enc[0..16];
         }

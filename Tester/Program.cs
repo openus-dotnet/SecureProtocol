@@ -5,12 +5,16 @@ using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
 
-const int Size = 102400;
-int total = 0;
+const int Size = 1 << 1;
+const int Repeat = 1;
+const string Type = "n";
 
-switch (args[0])
+List<double> Totals = new List<double>();
+
+switch (Type)
 {
     case "s":
+        for (int re = 0; re < 10; re++)
         {
             var pair = KeyPair.GenerateRSA();
 
@@ -25,24 +29,28 @@ switch (args[0])
 
             Task.Delay(1000).Wait();
 
-            for (int i = 0; i < 1000; i++)
-            {
-                DateTime time = DateTime.Now;
+            DateTime time = DateTime.Now;
 
+            for (int i = 0; i < Repeat; i++)
+            {
                 client.Write(new byte[Size]);
                 byte[] r = sclient!.Read();
 
                 // Console.WriteLine(r.Length);
-
-                TimeSpan span = DateTime.Now - time;
-
-                Console.WriteLine(span.Microseconds);
-                total+= span.Microseconds;
             }
+
+            TimeSpan span = DateTime.Now - time;
+
+            Console.WriteLine($"Total: {span.TotalSeconds}s");
+            Totals.Add(span.TotalSeconds);
+
+            server.Stop();
+            client.Close();
         }
         break;
 
     case "n":
+        for (int re = 0; re < 10; re++)
         {
             TcpListener server = new TcpListener(IPEndPoint.Parse("127.0.0.1:1234"));
             server.Start();
@@ -55,24 +63,35 @@ switch (args[0])
 
             Task.Delay(1000).Wait();
 
-            for (int i = 0; i < 1000; i++)
-            {
-                DateTime time = DateTime.Now;
+            DateTime time = DateTime.Now;
 
+            for (int i = 0; i < Repeat; i++)
+            {
                 client.GetStream().Write(new byte[Size]);
                 byte[] r = new byte[Size];
 
                 sclient!.GetStream().Read(r);
 
                 // Console.WriteLine(r.Length);
-
-                TimeSpan span = DateTime.Now - time;
-
-                Console.WriteLine(span.Microseconds);
-                total += span.Microseconds;
             }
+
+            TimeSpan span = DateTime.Now - time;
+
+            Console.WriteLine($"Total: {span.TotalSeconds}s");
+            Totals.Add(span.TotalSeconds);
+
+            server.Stop();
+            client.Close();
         }
         break;
 }
 
-Console.WriteLine(total);
+using (StreamWriter sw = new StreamWriter($"{Type} - {Size} Byte for {Repeat}.txt"))
+{
+    sw.Write(Totals.Sum());
+}
+
+/// Benchmark Parameters
+/// 
+/// 1. Each packet's size [1B, 1KiB, 1MiB, 1GiB]
+/// 2. Number of packets to repeat [1, 10, 100, 1000]
