@@ -2,13 +2,20 @@
 using SecSess.Tcp;
 
 var pair = KeyPair.GenerateRSA();
+
 Server server = Server.Create("127.0.0.1", 3000, pair.PrivateKey);
+server.Start();
 
-pair.PublicKey.Save("test.pubkey");
-pair.PrivateKey.Save("test.privkey");
+//pair.PublicKey.Save("test.pubkey");
+//pair.PrivateKey.Save("test.privkey");
 
-pair.PublicKey = PublicKey.Load("test.pubkey");
-pair.PrivateKey = PrivateKey.Load("test.privkey");
+//pair.PublicKey = PublicKey.Load("test.pubkey");
+//pair.PrivateKey = PrivateKey.Load("test.privkey");
 
-//pair.PrivateKey = PrivateKey.Load("test.pubkey");
-//pair.PublicKey = PublicKey.Load("test.privkey");
+////pair.PrivateKey = PrivateKey.Load("test.pubkey");
+////pair.PublicKey = PublicKey.Load("test.privkey");
+
+Client client = Client.Create("127.0.0.1", 3000, pair.PublicKey);
+
+new Thread(() => client.Connect()).Start();
+new Thread(()=>server.AcceptClient()).Start();  
