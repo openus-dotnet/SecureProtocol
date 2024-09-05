@@ -5,8 +5,8 @@ using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
 
-const int Size = 1 << 1;
-const int Repeat = 1;
+const int Size = 1 << 30;
+const int Repeat = 10;
 const string Type = "n";
 
 List<double> Totals = new List<double>();
@@ -22,19 +22,16 @@ switch (Type)
             server.Start();
 
             Client client = Client.Create("127.0.0.1:1234", pair.PublicKey);
-            Server.Client? sclient = null;
 
             new Thread(() => client.Connect()).Start();
-            new Thread(() => sclient = server.AcceptClient()).Start();
-
-            Task.Delay(1000).Wait();
+            Server.Client sclient = server.AcceptClient();
 
             DateTime time = DateTime.Now;
 
             for (int i = 0; i < Repeat; i++)
             {
                 client.Write(new byte[Size]);
-                byte[] r = sclient!.Read();
+                byte[] r = sclient.Read();
 
                 // Console.WriteLine(r.Length);
             }
@@ -56,12 +53,9 @@ switch (Type)
             server.Start();
 
             TcpClient client = new TcpClient();
-            TcpClient? sclient = null;
-
+            
             new Thread(() => client.Connect(IPEndPoint.Parse("127.0.0.1:1234"))).Start();
-            new Thread(() => sclient = server.AcceptTcpClient()).Start();
-
-            Task.Delay(1000).Wait();
+            TcpClient sclient = server.AcceptTcpClient();
 
             DateTime time = DateTime.Now;
 
@@ -70,7 +64,7 @@ switch (Type)
                 client.GetStream().Write(new byte[Size]);
                 byte[] r = new byte[Size];
 
-                sclient!.GetStream().Read(r);
+                sclient.GetStream().Read(r);
 
                 // Console.WriteLine(r.Length);
             }
