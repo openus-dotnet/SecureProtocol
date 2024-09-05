@@ -58,7 +58,7 @@ jobs:
         run: |
           dotnet test --no-build --verbosity normal
           mkdir cs-linux
-          copy SecSess/bin/Release/net8.0/* cs-linux
+          cp SecSess/bin/Release/net8.0/* cs-linux
       - name: Upload C# Build Artifacts
         uses: actions/upload-artifact@v4
         with:
