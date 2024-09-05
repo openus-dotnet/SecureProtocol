@@ -99,8 +99,8 @@ jobs:
 
       - name: Prepare Release Folder
         run: |
-          mkdir cs-win
-          mkdir cs-linux
+          mkdir windows
+          mkdir linux
           cp cs-win/* windows/
           cp cs-linux/* linux/
 
