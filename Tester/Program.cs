@@ -39,6 +39,9 @@ switch (Type)
                 byte[] r = sclient!.Read();
 
                 // Console.WriteLine(r.Length);
+
+                client.FlushStream();
+                sclient.FlushStream();
             }
 
             TimeSpan span = DateTime.Now - time;
@@ -84,6 +87,9 @@ switch (Type)
                 sclient!.GetStream().Read(r, 0, Size);
 
                 // Console.WriteLine(r.Length);
+
+                client.GetStream().Flush();
+                sclient.GetStream().Flush();
             }
 
             TimeSpan span = DateTime.Now - time;

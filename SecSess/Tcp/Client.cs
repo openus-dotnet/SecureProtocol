@@ -211,5 +211,13 @@ namespace SecSess.Tcp
                 && (type.HasFlag(StreamType.Read) == true ? _client.GetStream().CanRead : true)
                 && (type.HasFlag(StreamType.Write) == true ? _client.GetStream().CanWrite : true);
         }
+
+        /// <summary>
+        /// Flushes data from stream
+        /// </summary>
+        public void FlushStream()
+        {
+            _client.GetStream().Flush();
+        }
     }
 }
