@@ -73,7 +73,7 @@ namespace SecSess.Tcp
                 }
 
                 byte[] enc = AESWrapper.Encrypt(msg, _sentIV);
-                InnerClient.GetStream().Write(enc);
+                InnerClient.GetStream().Write(enc, 0, enc.Length);
 
                 _sentIV = enc[0..16];
             }
@@ -85,7 +85,7 @@ namespace SecSess.Tcp
             public byte[] Read()
             {
                 byte[] enc = new byte[16];
-                InnerClient.GetStream().Read(enc);
+                InnerClient.GetStream().Read(enc, 0, enc.Length);
 
                 byte[] msg1 = AESWrapper.Decrypt(enc, _receivedIV);
                 _receivedIV = enc[0..16];
@@ -97,7 +97,7 @@ namespace SecSess.Tcp
 
                 if (buffer.Length != 0)
                 {
-                    InnerClient.GetStream().Read(buffer);
+                    InnerClient.GetStream().Read(buffer, 0, buffer.Length);
                     byte[] msg2 = AESWrapper.Decrypt(buffer, _receivedIV);
 
                     byte[] data = new byte[len];
@@ -228,7 +228,7 @@ namespace SecSess.Tcp
             while (client.Connected == false || client.GetStream().CanRead == false) ;
 
             byte[] buffer = new byte[512];
-            client.GetStream().Read(buffer);
+            client.GetStream().Read(buffer, 0, buffer.Length);
 
             byte[] aesKey = _rsa.Decrypt(buffer, RSAEncryptionPadding.Pkcs1);
 
@@ -237,7 +237,7 @@ namespace SecSess.Tcp
 
             while (client.GetStream().CanWrite == false) ;
 
-            client.GetStream().Write(result.AESWrapper.Encrypt("OK".GetBytes(), new byte[16]));
+            client.GetStream().Write(result.AESWrapper.Encrypt("OK".GetBytes(), new byte[16]), 0, 16);
 
             return result;
         }

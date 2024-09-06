@@ -16,10 +16,10 @@ List<double> Totals = new List<double>();
 switch (Type)
 {
     case "s":
+        var pair = KeyPair.GenerateRSA();
+
         for (int re = 0; re < Retry; re++)
         {
-            var pair = KeyPair.GenerateRSA();
-
             Server server = Server.Create("127.0.0.1:1234", pair.PrivateKey);
             server.Start();
 
