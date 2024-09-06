@@ -29,6 +29,8 @@ switch (Type)
             new Thread(() => sclient = server.AcceptClient()).Start();
             client.Connect();
 
+            while (sclient == null) ;
+
             DateTime time = DateTime.Now;
 
             for (int i = 0; i < Repeat; i++)
@@ -41,7 +43,10 @@ switch (Type)
 
             TimeSpan span = DateTime.Now - time;
 
-            Console.WriteLine($"Total: {span.TotalSeconds}s");
+            if (re % 100 == 0)
+            {
+                Console.WriteLine($"{re}. Total: {span.TotalSeconds}s");
+            }
             Totals.Add(span.TotalSeconds);
 
             server.Stop();
@@ -80,7 +85,10 @@ switch (Type)
 
             TimeSpan span = DateTime.Now - time;
 
-            Console.WriteLine($"Total: {span.TotalSeconds}s");
+            if (re % 100 == 0)
+            {
+                Console.WriteLine($"{re}. Total: {span.TotalSeconds}s");
+            }
             Totals.Add(span.TotalSeconds);
 
             server.Stop();
