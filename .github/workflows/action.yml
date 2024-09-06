@@ -4,87 +4,88 @@ on:
   push:
     paths: [ 'version' ]
   workflow_dispatch:
+
+jobs:
+  Build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
   
-Build:
-  runs-on: ubuntu-latest
-  steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-
-    - name: Set up .NET Core
-      uses: actions/setup-dotnet@v2
-      with:
-        dotnet-version: '8.x'
-
-    - name: Restore dependencies
-      run: dotnet restore
-
-    - name: Build C# Project
-      run: dotnet build --configuration Release --no-restore SecSess/SecSess.csproj
-
-    - name: Test C# Project
-      run: |
-        dotnet test --no-build --verbosity normal
-        mkdir cs-linux
-        cp SecSess/bin/Release/net8.0/* cs-linux
-    - name: Upload C# Build Artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: csharp-build-linux
-        path: |
-          cs-linux/*
-Release:
-  runs-on: ubuntu-latest
-  permissions:
-    contents: write
-  needs: Build
-
-  steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-
-    - name: Extract version
-      id: version_changed
-      run: |
-          echo "VERSION=$(cat version)" >> $GITHUB_ENV
-          
-    - name: Set Release Tag and Name
-      id: set_release_info
-      run: echo "RELEASE_NAME=SecSess-${{ env.VERSION }}" >> $GITHUB_ENV
-
-    - name: Download C# Linux Build Artifacts
-      uses: actions/download-artifact@v4
-      with:
-        name: csharp-build-linux
-        path: cs-linux
-
-    - name: Prepare Release Folder
-      run: |
-        mkdir release
-        cp cs-linux/* release/
-    - name: Install zip utility
-      run: sudo apt-get install -y zip
-
-    - name: Zip Release Files
-      run: |
-          zip -r release.zip release/*
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ env.VERSION }}
-        release_name: ${{ env.RELEASE_NAME }}
-        draft: false
-        prerelease: false
-
-    - name: Upload Combined Release Asset
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_name: release
+      - name: Set up .NET Core
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: '8.x'
+  
+      - name: Restore dependencies
+        run: dotnet restore
+  
+      - name: Build C# Project
+        run: dotnet build --configuration Release --no-restore SecSess/SecSess.csproj
+  
+      - name: Test C# Project
+        run: |
+          dotnet test --no-build --verbosity normal
+          mkdir cs-linux
+          cp SecSess/bin/Release/net8.0/* cs-linux
+      - name: Upload C# Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: csharp-build-linux
+          path: |
+            cs-linux/*
+  Release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    needs: Build
+  
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+  
+      - name: Extract version
+        id: version_changed
+        run: |
+            echo "VERSION=$(cat version)" >> $GITHUB_ENV
+            
+      - name: Set Release Tag and Name
+        id: set_release_info
+        run: echo "RELEASE_NAME=SecSess-${{ env.VERSION }}" >> $GITHUB_ENV
+  
+      - name: Download C# Linux Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: csharp-build-linux
+          path: cs-linux
+  
+      - name: Prepare Release Folder
+        run: |
+          mkdir publish
+          cp cs-linux/* publish/
+      - name: Install zip utility
+        run: sudo apt-get install -y zip
+  
+      - name: Zip Release Files
+        run: |
+            zip -r release.zip publish/*
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.VERSION }}
+          release_name: ${{ env.RELEASE_NAME }}
+          draft: false
+          prerelease: false
+  
+      - name: Upload Combined Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: release.zip
+          asset_name: release.zip
           asset_content_type: application/zip
