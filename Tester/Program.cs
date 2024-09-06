@@ -5,16 +5,17 @@ using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
 
-const int Size = 1 << 30;
-const int Repeat = 10;
-const string Type = "n";
+int Size = 1 << int.Parse(args[1]);
+int Repeat = int.Parse(args[2]);
+string Type = args[0];
 
+int Retry = 100;
 List<double> Totals = new List<double>();
 
 switch (Type)
 {
     case "s":
-        for (int re = 0; re < 10; re++)
+        for (int re = 0; re < Retry; re++)
         {
             var pair = KeyPair.GenerateRSA();
 
@@ -47,7 +48,7 @@ switch (Type)
         break;
 
     case "n":
-        for (int re = 0; re < 10; re++)
+        for (int re = 0; re < Retry; re++)
         {
             TcpListener server = new TcpListener(IPEndPoint.Parse("127.0.0.1:1234"));
             server.Start();
@@ -80,9 +81,14 @@ switch (Type)
         break;
 }
 
-using (StreamWriter sw = new StreamWriter($"{Type} - {Size} Byte for {Repeat}.txt"))
+using (StreamWriter sw = new StreamWriter($"output.txt", true))
 {
-    sw.Write(Totals.Sum());
+    sw.WriteLine(JsonSerializer.Serialize(new
+    {
+        Size,
+        Repeat,
+        Average = Totals.Sum() / Retry,
+    }));
 }
 
 /// Benchmark Parameters
