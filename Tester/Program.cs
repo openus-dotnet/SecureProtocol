@@ -70,10 +70,10 @@ switch (Type)
 
             for (int i = 0; i < Repeat; i++)
             {
-                client.GetStream().Write(new byte[Size]);
+                client.GetStream().Write(new byte[Size], 0, Size);
                 byte[] r = new byte[Size];
 
-                sclient!.GetStream().Read(r);
+                sclient!.GetStream().Read(r, 0, Size);
 
                 // Console.WriteLine(r.Length);
             }
