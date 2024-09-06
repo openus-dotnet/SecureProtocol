@@ -10,7 +10,7 @@ int Size = 1 << int.Parse(args[1]);
 int Repeat = int.Parse(args[2]);
 string Type = args[0];
 
-int Retry = 10000;
+int Retry = 100;
 List<double> Totals = new List<double>();
 
 switch (Type)
@@ -43,11 +43,14 @@ switch (Type)
 
             TimeSpan span = DateTime.Now - time;
 
-            if (re % 100 == 0)
+            if (re % 10 == 0)
             {
                 Console.WriteLine($"{re}. Total: {span.TotalSeconds}s");
             }
-            Totals.Add(span.TotalSeconds);
+            if (re != 0) 
+            {
+                Totals.Add(span.TotalSeconds);
+            }
 
             server.Stop();
             client.Close();
@@ -85,11 +88,14 @@ switch (Type)
 
             TimeSpan span = DateTime.Now - time;
 
-            if (re % 100 == 0)
+            if (re % 10 == 0)
             {
                 Console.WriteLine($"{re}. Total: {span.TotalSeconds}s");
             }
-            Totals.Add(span.TotalSeconds);
+            if (re != 0) 
+            {
+                Totals.Add(span.TotalSeconds);
+            }
 
             server.Stop();
             client.Close();
