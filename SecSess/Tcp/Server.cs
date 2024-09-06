@@ -1,5 +1,6 @@
 ﻿using SecSess.Key;
 using SecSess.Util;
+using System.Drawing;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
@@ -85,7 +86,10 @@ namespace SecSess.Tcp
             public byte[] Read()
             {
                 byte[] enc = new byte[16];
-                InnerClient.GetStream().Read(enc, 0, enc.Length);
+                int s = 0;
+                while (s < enc.Length)
+                    s += InnerClient.GetStream().Read(enc, s, enc.Length - s);
+
 
                 byte[] msg1 = AESWrapper.Decrypt(enc, _receivedIV);
                 _receivedIV = enc[0..16];
@@ -97,7 +101,10 @@ namespace SecSess.Tcp
 
                 if (buffer.Length != 0)
                 {
-                    InnerClient.GetStream().Read(buffer, 0, buffer.Length);
+                    int ss = 0;
+                    while (ss < buffer.Length)
+                        ss += InnerClient.GetStream().Read(buffer, ss, buffer.Length - ss);
+
                     byte[] msg2 = AESWrapper.Decrypt(buffer, _receivedIV);
 
                     byte[] data = new byte[len];
@@ -236,7 +243,10 @@ namespace SecSess.Tcp
             while (client.Connected == false || client.GetStream().CanRead == false) ;
 
             byte[] buffer = new byte[512];
-            client.GetStream().Read(buffer, 0, buffer.Length);
+
+            int s = 0;
+            while (s < buffer.Length) 
+                s += client.GetStream().Read(buffer, s, buffer.Length - s);
 
             byte[] aesKey = _rsa.Decrypt(buffer, RSAEncryptionPadding.Pkcs1);
 

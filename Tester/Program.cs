@@ -84,7 +84,8 @@ switch (Type)
                 client.GetStream().Write(new byte[Size], 0, Size);
                 byte[] r = new byte[Size];
 
-                sclient!.GetStream().Read(r, 0, Size);
+                int s = 0;
+                while (s < Size) s += sclient!.GetStream().Read(r, s, Size - s);
 
                 // Console.WriteLine(r.Length);
 

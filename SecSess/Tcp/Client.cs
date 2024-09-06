@@ -3,6 +3,7 @@ using SecSess.Util;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
+using static SecSess.Tcp.Server;
 
 namespace SecSess.Tcp
 {
@@ -110,7 +111,10 @@ namespace SecSess.Tcp
             _client.GetStream().Write(data, 0, data.Length);
 
             byte[] buffer = new byte[16];
-            _client.GetStream().Read(buffer, 0, buffer.Length);
+
+            int s = 0;
+            while (s < buffer.Length)
+                s += _client.GetStream().Read(buffer, s, buffer.Length - s);
 
             string res = new AESWrapper(_aesKey).Decrypt(buffer, new byte[16]).GetString();
 
@@ -164,7 +168,10 @@ namespace SecSess.Tcp
         public byte[] Read()
         {
             byte[] enc = new byte[16];
-            _client.GetStream().Read(enc, 0, enc.Length);
+            int s = 0;
+            while (s < enc.Length)
+                s += _client.GetStream().Read(enc, s, enc.Length - s);
+
 
             byte[] msg1 = _aesWrapper.Decrypt(enc, _receivedIV);
             _receivedIV = enc[0..16];
@@ -176,7 +183,10 @@ namespace SecSess.Tcp
 
             if (buffer.Length != 0)
             {
-                _client.GetStream().Read(buffer, 0, buffer.Length);
+                int ss = 0;
+                while (ss < buffer.Length)
+                    ss += _client.GetStream().Read(buffer, ss, buffer.Length - ss);
+
                 byte[] msg2 = _aesWrapper.Decrypt(buffer, _receivedIV);
 
                 byte[] data = new byte[len];

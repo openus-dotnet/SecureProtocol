@@ -2,7 +2,7 @@
   "profiles": {
     "Tester": {
       "commandName": "Project",
-      "commandLineArgs": "n 0 1"
+      "commandLineArgs": "s 20 10"
     }
   }
 }
