@@ -104,11 +104,13 @@ namespace SecSess.Tcp
         {
             _client.Connect(_serverPoint);
 
+            while (CanUseStream() == false) ;
+
             byte[] data = _rsa.Encrypt(_aesKey, RSAEncryptionPadding.Pkcs1);
             _client.GetStream().Write(data);
 
             byte[] buffer = new byte[16];
-            _client.GetStream().Read(buffer, 0, 16);
+            _client.GetStream().Read(buffer);
 
             string res = new AESWrapper(_aesKey).Decrypt(buffer, new byte[16]).GetString();
 
@@ -196,6 +198,18 @@ namespace SecSess.Tcp
             {
                 return msg1[4..(len + 4)];
             }
+        }
+
+        /// <summary>
+        /// Determine if tcp client state is available
+        /// </summary>
+        /// <param name="type">The type of client state to judge</param>
+        /// <returns></returns>
+        public bool CanUseStream(StreamType type = StreamType.All)
+        {
+            return (type.HasFlag(StreamType.Connect) == true ? _client.Connected : true)
+                && (type.HasFlag(StreamType.Read) == true ? _client.GetStream().CanRead : true)
+                && (type.HasFlag(StreamType.Write) == true ? _client.GetStream().CanWrite : true);
         }
     }
 }

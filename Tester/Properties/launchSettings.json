@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Tester": {
+      "commandName": "Project",
+      "commandLineArgs": "n 0 1"
+    }
+  }
+}

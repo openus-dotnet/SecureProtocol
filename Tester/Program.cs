@@ -1,5 +1,6 @@
 ﻿using SecSess.Key;
 using SecSess.Tcp;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -9,7 +10,7 @@ int Size = 1 << int.Parse(args[1]);
 int Repeat = int.Parse(args[2]);
 string Type = args[0];
 
-int Retry = 100;
+int Retry = 10000;
 List<double> Totals = new List<double>();
 
 switch (Type)
@@ -23,16 +24,17 @@ switch (Type)
             server.Start();
 
             Client client = Client.Create("127.0.0.1:1234", pair.PublicKey);
+            Server.Client? sclient = null;
 
-            new Thread(() => client.Connect()).Start();
-            Server.Client sclient = server.AcceptClient();
+            new Thread(() => sclient = server.AcceptClient()).Start();
+            client.Connect();
 
             DateTime time = DateTime.Now;
 
             for (int i = 0; i < Repeat; i++)
             {
                 client.Write(new byte[Size]);
-                byte[] r = sclient.Read();
+                byte[] r = sclient!.Read();
 
                 // Console.WriteLine(r.Length);
             }
@@ -54,9 +56,15 @@ switch (Type)
             server.Start();
 
             TcpClient client = new TcpClient();
+            TcpClient? sclient = null;
             
-            new Thread(() => client.Connect(IPEndPoint.Parse("127.0.0.1:1234"))).Start();
-            TcpClient sclient = server.AcceptTcpClient();
+            new Thread(() => sclient = server.AcceptTcpClient()).Start();
+            client.Connect(IPEndPoint.Parse("127.0.0.1:1234"));
+
+            while (sclient == null) ;
+            while (!client.Connected) ;
+            while (!client.GetStream().CanWrite) ;
+            while (!client.GetStream().CanRead) ;
 
             DateTime time = DateTime.Now;
 
@@ -65,7 +73,7 @@ switch (Type)
                 client.GetStream().Write(new byte[Size]);
                 byte[] r = new byte[Size];
 
-                sclient.GetStream().Read(r);
+                sclient!.GetStream().Read(r);
 
                 // Console.WriteLine(r.Length);
             }
@@ -85,6 +93,7 @@ using (StreamWriter sw = new StreamWriter($"output.txt", true))
 {
     sw.WriteLine(JsonSerializer.Serialize(new
     {
+        Type,
         Size,
         Repeat,
         Average = Totals.Sum() / Retry,

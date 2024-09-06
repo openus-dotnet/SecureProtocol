@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
+using static SecSess.Tcp.Server;
 
 namespace SecSess.Tcp
 {
@@ -119,6 +120,18 @@ namespace SecSess.Tcp
                     return msg1[4..(len + 4)];
                 }
             }
+
+            /// <summary>
+            /// Determine if tcp client state is available
+            /// </summary>
+            /// <param name="type">The type of client state to judge</param>
+            /// <returns></returns>
+            public bool CanUseStream(StreamType type = StreamType.All)
+            {
+                return (type.HasFlag(StreamType.Connect) == true ? InnerClient.Connected : true)
+                    && (type.HasFlag(StreamType.Read) == true ? InnerClient.GetStream().CanRead : true)
+                    && (type.HasFlag(StreamType.Write) == true ? InnerClient.GetStream().CanWrite : true);
+            }
         }
 
         /// <summary>
@@ -212,13 +225,17 @@ namespace SecSess.Tcp
         {
             TcpClient client = _listener.AcceptTcpClient();
 
+            while (client.Connected == false || client.GetStream().CanRead == false) ;
+
             byte[] buffer = new byte[512];
-            client.GetStream().Read(buffer, 0, 512);
+            client.GetStream().Read(buffer);
 
             byte[] aesKey = _rsa.Decrypt(buffer, RSAEncryptionPadding.Pkcs1);
 
             Client result = new Client(client, aesKey);
             _clients.Add(result);
+
+            while (client.GetStream().CanWrite == false) ;
 
             client.GetStream().Write(result.AESWrapper.Encrypt("OK".GetBytes(), new byte[16]));
 
