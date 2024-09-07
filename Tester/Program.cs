@@ -6,122 +6,176 @@ using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
 
-int Size = 1 << int.Parse(args[1]);
-int Repeat = int.Parse(args[2]);
-string Type = args[0];
-
-int Retry = 100;
-List<double> Totals = new List<double>();
-
-switch (Type)
+internal class Program
 {
-    case "s":
-        var pair = KeyPair.GenerateRSA();
+    private const int Retry = 100;
 
-        for (int re = 0; re < Retry; re++)
-        {
-            Server server = Server.Create("127.0.0.1:1234", pair.PrivateKey);
-            server.Start();
-
-            Client client = Client.Create("127.0.0.1:1234", pair.PublicKey);
-            Server.Client? sclient = null;
-
-            new Thread(() => sclient = server.AcceptClient()).Start();
-            client.Connect();
-
-            while (sclient == null) ;
-
-            DateTime time = DateTime.Now;
-
-            for (int i = 0; i < Repeat; i++)
-            {
-                client.Write(new byte[Size]);
-                byte[] r = sclient!.Read();
-
-                // Console.WriteLine(r.Length);
-
-                client.FlushStream();
-                sclient.FlushStream();
-            }
-
-            TimeSpan span = DateTime.Now - time;
-
-            if (re % 10 == 0)
-            {
-                Console.WriteLine($"{re}. Total: {span.TotalSeconds}s");
-            }
-            if (re != 0) 
-            {
-                Totals.Add(span.TotalSeconds);
-            }
-
-            server.Stop();
-            client.Close();
-        }
-        break;
-
-    case "n":
-        for (int re = 0; re < Retry; re++)
-        {
-            TcpListener server = new TcpListener(IPEndPoint.Parse("127.0.0.1:1234"));
-            server.Start();
-
-            TcpClient client = new TcpClient();
-            TcpClient? sclient = null;
-            
-            new Thread(() => sclient = server.AcceptTcpClient()).Start();
-            client.Connect(IPEndPoint.Parse("127.0.0.1:1234"));
-
-            while (sclient == null) ;
-            while (!client.Connected) ;
-            while (!client.GetStream().CanWrite) ;
-            while (!client.GetStream().CanRead) ;
-
-            DateTime time = DateTime.Now;
-
-            for (int i = 0; i < Repeat; i++)
-            {
-                client.GetStream().Write(new byte[Size], 0, Size);
-                byte[] r = new byte[Size];
-
-                int s = 0;
-                while (s < Size) s += sclient!.GetStream().Read(r, s, Size - s);
-
-                // Console.WriteLine(r.Length);
-
-                client.GetStream().Flush();
-                sclient.GetStream().Flush();
-            }
-
-            TimeSpan span = DateTime.Now - time;
-
-            if (re % 10 == 0)
-            {
-                Console.WriteLine($"{re}. Total: {span.TotalSeconds}s");
-            }
-            if (re != 0) 
-            {
-                Totals.Add(span.TotalSeconds);
-            }
-
-            server.Stop();
-            client.Close();
-        }
-        break;
-}
-
-using (StreamWriter sw = new StreamWriter($"output.txt", true))
-{
-    sw.WriteLine(JsonSerializer.Serialize(new
+    private static void Main(string[] args)
     {
-        Type,
-        Size,
-        Repeat,
-        Average = Totals.Sum() / Retry,
-    }));
-}
+        //var pair = KeyPair.GenerateRSA();
+        //pair.PublicKey.Save("pub");
+        //pair.PrivateKey.Save("priv");
 
-/// Benchmark Parameters
-/// 
-/// 1. Each packet's size [1B, 1KiB, 1MiB, 1GiB]
-/// 2. Number of packets to repeat [1, 10, 100, 1000]
+        string RoleAndType = args[0];
+        int Size = 1 << int.Parse(args[1]);
+        int Repeat = int.Parse(args[2]);
+        string Ip = args[3];
+
+        List<double> Totals = new List<double>();
+
+        switch (RoleAndType)
+        {
+            case "ss":
+                for (int re = 0; re < Retry; re++)
+                {
+                    Server server = Server.Create($"{Ip}:1234", PrivateKey.Load("test.priv"));
+                    server.Start();
+
+                    Server.Client sclient = server.AcceptClient();
+
+                    for (int i = 0; i < Repeat; i++)
+                    {
+                        byte[] buffer = sclient.Read();
+                        sclient.Write(buffer);
+
+                        sclient.FlushStream();
+                    }
+
+                    server.Stop();
+                }
+                break;
+
+            case "sc":
+                for (int re = 0; re < Retry; re++)
+                {
+                    Client client = Client.Create($"{Ip}:1234", PublicKey.Load("test.pub"));
+                    client.Connect();
+
+                    byte[] buffer = new byte[Size];
+                    new Random().NextBytes(buffer);
+
+                    byte[] check = (byte[])buffer.Clone();
+
+                    DateTime time = DateTime.Now;
+
+                    for (int i = 0; i < Repeat; i++)
+                    {
+                        client.Write(buffer);
+                        buffer = client.Read();
+
+                        client.FlushStream();
+                    }
+
+                    TimeSpan span = DateTime.Now - time;
+
+                    for (int i = 0; i < buffer.Length; i++)
+                    {
+                        if (buffer[i] != check[i])
+                            throw new Exception("buffer is corrupted");
+                    }
+
+                    if ((re - 9) % 10 == 0)
+                    {
+                        Console.WriteLine($"{re + 1}. Total: {span.TotalSeconds}s");
+                    }
+                    if (re != 0)
+                    {
+                        Totals.Add(span.TotalSeconds);
+                    }
+
+                    client.Close();
+
+                    using (StreamWriter sw = new StreamWriter($"output.txt", true))
+                    {
+                        sw.WriteLine(JsonSerializer.Serialize(new
+                        {
+                            RoleAndType,
+                            Size,
+                            Repeat,
+                            Average = Totals.Sum() / Retry,
+                        }));
+                    }
+                }
+                break;
+
+            case "ns":
+                for (int re = 0; re < Retry; re++)
+                {
+                    TcpListener server = new TcpListener(IPEndPoint.Parse($"{Ip}:1234"));
+                    server.Start();
+
+                    TcpClient sclient = server.AcceptTcpClient();
+
+                    for (int i = 0; i < Repeat; i++)
+                    {
+                        byte[] buffer = new byte[Size];
+
+                        int s = 0;
+                        while (s < Size) s += sclient.GetStream().Read(buffer, s, Size - s);
+                        sclient.GetStream().Write(buffer);
+
+                        sclient.GetStream().Flush();
+                    }
+
+                    server.Stop();
+                }
+                break;
+
+            case "nc":
+                for (int re = 0; re < Retry; re++)
+                {
+                    TcpClient client = new TcpClient();
+                    client.Connect(IPEndPoint.Parse($"{Ip}:1234"));
+
+                    byte[] buffer = new byte[Size];
+                    new Random().NextBytes(buffer);
+
+                    byte[] check = (byte[])buffer.Clone();
+
+                    DateTime time = DateTime.Now;
+
+                    for (int i = 0; i < Repeat; i++)
+                    {
+                        client.GetStream().Write(buffer);
+
+                        int s = 0;
+                        while (s < Size) s += client.GetStream().Read(buffer, s, Size - s);
+
+                        client.GetStream().Flush();
+                    }
+
+                    TimeSpan span = DateTime.Now - time;
+
+                    for (int i = 0; i < buffer.Length; i++)
+                    {
+                        if (buffer[i] != check[i])
+                            throw new Exception("buffer is corrupted");
+                    }
+
+                    if ((re - 9) % 10 == 0)
+                    {
+                        Console.WriteLine($"{re + 1}. Total: {span.TotalSeconds}s");
+                    }
+                    if (re != 0)
+                    {
+                        Totals.Add(span.TotalSeconds);
+                    }
+
+                    client.Close();
+
+                    using (StreamWriter sw = new StreamWriter($"output.txt", true))
+                    {
+                        sw.WriteLine(JsonSerializer.Serialize(new
+                        {
+                            RoleAndType,
+                            Size,
+                            Repeat,
+                            Average = Totals.Sum() / Retry,
+                        }));
+                    }
+                }
+                break;
+
+        }
+    }
+}

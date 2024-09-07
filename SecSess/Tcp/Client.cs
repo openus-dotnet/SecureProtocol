@@ -1,16 +1,17 @@
-﻿using SecSess.Key;
+﻿using SecSess.Interface;
+using SecSess.Key;
+using SecSess.Secure;
 using SecSess.Util;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
-using static SecSess.Tcp.Server;
 
 namespace SecSess.Tcp
 {
     /// <summary>
     /// TCP client with secure sessions
     /// </summary>
-    public class Client
+    public class Client : IStream
     {
         /// <summary>
         /// A TCP client that actually works

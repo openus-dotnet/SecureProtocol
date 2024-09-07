@@ -1,11 +1,12 @@
-﻿using SecSess.Key;
+﻿using SecSess.Interface;
+using SecSess.Key;
+using SecSess.Secure;
 using SecSess.Util;
 using System.Drawing;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
-using static SecSess.Tcp.Server;
 
 namespace SecSess.Tcp
 {
@@ -17,7 +18,7 @@ namespace SecSess.Tcp
         /// <summary>
         /// Clients accepted by the server side
         /// </summary>
-        public class Client
+        public class Client : IStream
         {
             /// <summary>
             /// Client that actually works

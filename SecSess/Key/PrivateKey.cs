@@ -1,11 +1,12 @@
 ﻿using System.Security.Cryptography;
+using SecSess.Interface;
 
 namespace SecSess.Key
 {
     /// <summary>
     /// Private key warpper type
     /// </summary>
-    public class PrivateKey : RSAKeyBase
+    public class PrivateKey : RSAKeyBase, IFile
     {
         /// <summary>
         /// Create a private key
@@ -35,7 +36,7 @@ namespace SecSess.Key
         /// </summary>
         /// <param name="path">Path from load the key</param>
         /// <returns>Wrapped private key</returns>
-        public static PrivateKey Load(string path)
+        public static IFile Load(string path)
         {
             RSA rsa = RSA.Create();
 
