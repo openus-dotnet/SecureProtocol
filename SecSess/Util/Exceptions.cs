@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace SecSess.Util
+﻿namespace SecSess.Util
 {
     /// <summary>
     /// Occurs when an initial secure session cannot be formed

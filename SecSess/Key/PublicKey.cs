@@ -6,7 +6,7 @@ namespace SecSess.Key
     /// <summary>
     /// Public key warpper type
     /// </summary>
-    public class PublicKey : RSAKeyBase, IFile
+    public class PublicKey : RSAKeyBase, IKeyPair<PublicKey>
     {
         /// <summary>
         /// Create a public key
@@ -36,7 +36,7 @@ namespace SecSess.Key
         /// </summary>
         /// <param name="path">Path from load the key</param>
         /// <returns>Wrapped public key</returns>
-        public static IFile Load(string path)
+        public static PublicKey Load(string path)
         {
             RSA rsa = RSA.Create();
 

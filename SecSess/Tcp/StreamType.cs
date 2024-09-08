@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace SecSess.Tcp
+﻿namespace SecSess.Tcp
 {
     /// <summary>
     /// The type of client state to judge

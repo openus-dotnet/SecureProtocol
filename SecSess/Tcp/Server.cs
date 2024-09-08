@@ -2,7 +2,6 @@
 using SecSess.Key;
 using SecSess.Secure;
 using SecSess.Util;
-using System.Drawing;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
