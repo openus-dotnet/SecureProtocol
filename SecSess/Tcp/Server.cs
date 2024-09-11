@@ -31,14 +31,6 @@ namespace SecSess.Tcp
             /// AES support wrapper
             /// </summary>
             internal AESWrapper AESWrapper { get; set; }
-            /// <summary>
-            /// Initial vector for sent AES packet
-            /// </summary>
-            private byte[] _sentIV;
-            /// <summary>
-            /// Initial vector for received AES packet
-            /// </summary>
-            private byte[] _receivedIV;
 
             /// <summary>
             /// Create a server side client
@@ -50,9 +42,6 @@ namespace SecSess.Tcp
                 InnerClient = client;
                 AESKey = aesKey;
                 AESWrapper = new AESWrapper(aesKey);
-
-                _sentIV = aesKey[16..32];
-                _receivedIV = aesKey[0..16];
             }
 
             /// <summary>
@@ -61,22 +50,7 @@ namespace SecSess.Tcp
             /// <param name="data">Data that write to client</param>
             public void Write(byte[] data)
             {
-                byte[] lenBit = BitConverter.GetBytes(data.Length);
-                byte[] msg = new byte[data.Length + 4];
-
-                for (int i = 0; i < 4; i++)
-                {
-                    msg[i] = lenBit[i];
-                }
-                for (int i = 0; i < data.Length; i++)
-                {
-                    msg[i + 4] = data[i];
-                }
-
-                byte[] enc = AESWrapper.Encrypt(msg, _sentIV);
-                InnerClient.GetStream().Write(enc, 0, enc.Length);
-
-                _sentIV = enc[0..16];
+                IStream.InternalWrite(data, AESWrapper, InnerClient);
             }
 
             /// <summary>
@@ -85,47 +59,7 @@ namespace SecSess.Tcp
             /// <returns>Data that read from client</returns>
             public byte[] Read()
             {
-                byte[] enc = new byte[16];
-                int s = 0;
-                while (s < enc.Length)
-                    s += InnerClient.GetStream().Read(enc, s, enc.Length - s);
-
-
-                byte[] msg1 = AESWrapper.Decrypt(enc, _receivedIV);
-                _receivedIV = enc[0..16];
-
-                int len = BitConverter.ToInt32(msg1[0..4]);
-                int blockCount = (len + 4) / 16 + ((len + 4) % 16 == 0 ? 0 : 1);
-
-                byte[] buffer = new byte[(blockCount - 1) * 16];
-
-                if (buffer.Length != 0)
-                {
-                    int ss = 0;
-                    while (ss < buffer.Length)
-                        ss += InnerClient.GetStream().Read(buffer, ss, buffer.Length - ss);
-
-                    byte[] msg2 = AESWrapper.Decrypt(buffer, _receivedIV);
-
-                    byte[] data = new byte[len];
-
-                    int offset = 0;
-
-                    for (; offset < 12; offset++)
-                    {
-                        data[offset] = msg1[offset + 4];
-                    }
-                    for (; offset < data.Length; offset++)
-                    {
-                        data[offset] = msg2[offset - 12];
-                    }
-
-                    return data;
-                }
-                else
-                {
-                    return msg1[4..(len + 4)];
-                }
+                return IStream.InternalRead(AESWrapper, InnerClient);
             }
 
             /// <summary>
