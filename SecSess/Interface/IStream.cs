@@ -59,15 +59,15 @@ namespace SecSess.Interface
         {
             byte[] iv = new byte[16];
 
-            int sss = 0;
-            while (sss < iv.Length)
-                sss += client.GetStream().Read(iv, sss, iv.Length - sss);
+            int s1 = 0;
+            while (s1 < iv.Length)
+                s1 += client.GetStream().Read(iv, s1, iv.Length - s1);
 
             byte[] enc = new byte[16];
-            int s = 0;
-            while (s < enc.Length)
-                s += client.GetStream().Read(enc, s, enc.Length - s);
 
+            int s2 = 0;
+            while (s2 < enc.Length)
+                s2 += client.GetStream().Read(enc, s2, enc.Length - s2);
 
             byte[] msg1 = aes.Decrypt(enc, iv);
             iv = enc[0..16];
@@ -79,9 +79,9 @@ namespace SecSess.Interface
 
             if (buffer.Length != 0)
             {
-                int ss = 0;
-                while (ss < buffer.Length)
-                    ss += client.GetStream().Read(buffer, ss, buffer.Length - ss);
+                int s3 = 0;
+                while (s3 < buffer.Length)
+                    s3 += client.GetStream().Read(buffer, s3, buffer.Length - s3);
 
                 byte[] msg2 = aes.Decrypt(buffer, iv);
                 byte[] data = new byte[len];
