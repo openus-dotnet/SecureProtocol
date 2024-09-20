@@ -67,7 +67,7 @@ namespace SecSess.Tcp
         /// <param name="serverEP"/>Server IP end point</param>
         /// <param name="retry">Maximum retry to connect</param>
         /// </summary>
-        public void Connect(IPEndPoint serverEP, int retry = 10)
+        public void Connect(IPEndPoint serverEP, int retry = 100)
         {
             int noneSymmetric = "OK".GetBytes().Length;
 
@@ -75,7 +75,8 @@ namespace SecSess.Tcp
             {
                 try
                 {
-                    _client.ConnectAsync(serverEP);
+                    _client.Connect(serverEP);
+                    
                     break;
                 }
                 catch (SocketException)

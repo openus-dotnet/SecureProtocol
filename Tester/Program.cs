@@ -18,7 +18,7 @@ internal class Program
 
         Set set = new Set()
         {
-            Asymmetric = Asymmetric.None,
+            Asymmetric = Asymmetric.RSA,
             Symmetric = Symmetric.AES,
             Hash = Hash.SHA256,
         };
