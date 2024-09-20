@@ -30,13 +30,14 @@ internal class Program
         string Ip = args[3];
 
         List<double> Totals = new List<double>();
+        int port = 1234;
 
         switch (RoleAndType)
         {
             case "ss":
                 for (int re = 0; re < Retry; re++)
                 {
-                    Server server = Server.Create(IPEndPoint.Parse($"{Ip}:1234"), PrivateKey.Load("test.priv"), set);
+                    Server server = Server.Create(IPEndPoint.Parse($"{Ip}:{port}"), PrivateKey.Load("test.priv"), set);
                     server.Start();
 
                     Server.Client sclient = server.AcceptClient();
@@ -51,13 +52,14 @@ internal class Program
 
                     server.Stop();
                 }
+
                 break;
 
             case "sc":
                 for (int re = 0; re < Retry; re++)
                 {
                     Client client = Client.Create(PublicKey.Load("test.pub"), set);
-                    client.Connect(IPEndPoint.Parse($"{Ip}:1234"));
+                    client.Connect(IPEndPoint.Parse($"{Ip}:{port}"));
 
                     byte[] buffer = new byte[Size];
                     new Random().NextBytes(buffer);
@@ -92,24 +94,25 @@ internal class Program
                     }
 
                     client.Close();
-
-                    using (StreamWriter sw = new StreamWriter($"output.txt", true))
-                    {
-                        sw.WriteLine(JsonSerializer.Serialize(new
-                        {
-                            RoleAndType,
-                            Size,
-                            Repeat,
-                            Average = Totals.Sum() / Retry,
-                        }));
-                    }
                 }
+
+                using (StreamWriter sw = new StreamWriter($"output.txt", true))
+                {
+                    sw.WriteLine(JsonSerializer.Serialize(new
+                    {
+                        RoleAndType,
+                        Size,
+                        Repeat,
+                        Average = Totals.Sum() / Retry,
+                    }));
+                }
+
                 break;
 
             case "ns":
                 for (int re = 0; re < Retry; re++)
                 {
-                    TcpListener server = new TcpListener(IPEndPoint.Parse($"{Ip}:1234"));
+                    TcpListener server = new TcpListener(IPEndPoint.Parse($"{Ip}:{port}"));
                     server.Start();
 
                     TcpClient sclient = server.AcceptTcpClient();
@@ -127,13 +130,14 @@ internal class Program
 
                     server.Stop();
                 }
+
                 break;
 
             case "nc":
                 for (int re = 0; re < Retry; re++)
                 {
                     TcpClient client = new TcpClient();
-                    client.Connect(IPEndPoint.Parse($"{Ip}:1234"));
+                    client.Connect(IPEndPoint.Parse($"{Ip}:{port}"));
 
                     byte[] buffer = new byte[Size];
                     new Random().NextBytes(buffer);
@@ -170,20 +174,20 @@ internal class Program
                     }
 
                     client.Close();
-
-                    using (StreamWriter sw = new StreamWriter($"output.txt", true))
-                    {
-                        sw.WriteLine(JsonSerializer.Serialize(new
-                        {
-                            RoleAndType,
-                            Size,
-                            Repeat,
-                            Average = Totals.Sum() / Retry,
-                        }));
-                    }
                 }
-                break;
 
+                using (StreamWriter sw = new StreamWriter($"output.txt", true))
+                {
+                    sw.WriteLine(JsonSerializer.Serialize(new
+                    {
+                        RoleAndType,
+                        Size,
+                        Repeat,
+                        Average = Totals.Sum() / Retry,
+                    }));
+                }
+
+                break;
         }
     }
 }
