@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography;
+﻿using SecSess.Secure.Algorithm;
+using System.Security.Cryptography;
 
 namespace SecSess.Key
 {
@@ -7,6 +8,10 @@ namespace SecSess.Key
     /// </summary>
     public abstract class AsymmetricKeyBase
     {
+        /// <summary>
+        /// Asymmetric algorithm to use
+        /// </summary>
+        internal Asymmetric Algorithm { get; set; }
         /// <summary>
         /// RSA parameters for actual RSA encryption
         /// </summary>

@@ -154,7 +154,7 @@ namespace SecSess.Tcp
 
             while (client.Connected == false || client.GetStream().CanRead == false) ;
 
-            if (_asymmetric.AsymmetricAlgorithm != null)
+            if (_asymmetric.AsymmetricAlgorithm != null && _set.Symmetric != Secure.Algorithm.Symmetric.None)
             {
                 byte[] buffer = new byte[256];
 
@@ -162,7 +162,7 @@ namespace SecSess.Tcp
                 while (s < buffer.Length)
                     s += client.GetStream().Read(buffer, s, buffer.Length - s);
 
-                byte[] symmetricKey = _asymmetric.AsymmetricAlgorithm.Decrypt(buffer, RSAEncryptionPadding.Pkcs1);
+                byte[] symmetricKey = _asymmetric.Decrypt(buffer);
 
                 Client result = new Client(client, symmetricKey, _set);
                 _clients.Add(result);
@@ -174,23 +174,16 @@ namespace SecSess.Tcp
 
                 return result;
             }
-            else
+            else if (_asymmetric.AsymmetricAlgorithm == null && _set.Symmetric == Secure.Algorithm.Symmetric.None)
             {
-                byte[] symmetricKey = new byte[Symmetric.KeySize(_set.Symmetric)];
-
-                int s = 0;
-                while (s < symmetricKey.Length)
-                    s += client.GetStream().Read(symmetricKey, s, symmetricKey.Length - s);
-
-                Client result = new Client(client, symmetricKey, _set);
+                Client result = new Client(client, new byte[0], _set);
                 _clients.Add(result);
 
-                while (client.GetStream().CanWrite == false) ;
-
-                byte[] buffer = result.Symmetric.Encrypt("OK".GetBytes(), new byte[Symmetric.BlockSize(_set.Symmetric)]);
-                client.GetStream().Write(buffer, 0, buffer.Length);
-
                 return result;
+            }
+            else
+            {
+                throw new InvalidCombinationException();
             }
         }
     }

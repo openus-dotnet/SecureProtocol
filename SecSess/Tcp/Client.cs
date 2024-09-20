@@ -67,64 +67,60 @@ namespace SecSess.Tcp
         /// <param name="serverEP"/>Server IP end point</param>
         /// <param name="retry">Maximum retry to connect</param>
         /// </summary>
-        public void Connect(IPEndPoint serverEP, int retry = 100)
+        public void Connect(IPEndPoint serverEP, int retry = 0)
         {
-            int noneSymmetric = "OK".GetBytes().Length;
-
-            for (int i = 0; i < retry; i++)
+            if (retry == 0)
             {
-                try
+                _client.Connect(serverEP);
+            }
+            else
+            {
+                for (int i = 0; i < retry; i++)
                 {
-                    _client.Connect(serverEP);
-                    
-                    break;
-                }
-                catch (SocketException)
-                {
-                    continue;
+                    try
+                    {
+                        _client.Connect(serverEP);
+
+                        break;
+                    }
+                    catch (SocketException)
+                    {
+                        continue;
+                    }
                 }
             }
 
             while (CanUseStream() == false);
 
-            if (_asymmetric.AsymmetricAlgorithm != null)
+            if (_asymmetric.AsymmetricAlgorithm != null && _symmetric.Algorithm != Secure.Algorithm.Symmetric.None)
             {
-                byte[] symmetricKey = _asymmetric.AsymmetricAlgorithm.Encrypt(_symmetricKey, RSAEncryptionPadding.Pkcs1);
+                int nonSymmetric = "OK".GetBytes().Length;
+
+                byte[] symmetricKey = _asymmetric.Encrypt(_symmetricKey);
                 _client.GetStream().Write(symmetricKey, 0, symmetricKey.Length);
 
-                byte[] buffer = new byte[Math.Max(Symmetric.BlockSize(_symmetric.Algorithm), noneSymmetric)];
+                byte[] buffer = new byte[Math.Max(Symmetric.BlockSize(_symmetric.Algorithm), nonSymmetric)];
 
                 int s = 0;
                 while (s < buffer.Length)
                     s += _client.GetStream().Read(buffer, s, buffer.Length - s);
 
-                string res = new Symmetric(_symmetricKey, _set.Symmetric).Decrypt(buffer, new byte[Symmetric.BlockSize(_symmetric.Algorithm)]).GetString();
-
                 _symmetric = new Symmetric(_symmetricKey, _set.Symmetric);
+
+                string res = _symmetric.Decrypt(buffer, new byte[Symmetric.BlockSize(_symmetric.Algorithm)]).GetString();
 
                 if (res.StartsWith("OK") == false)
                 {
                     throw new SecSessRefuesedException();
                 }
             }
+            else if (_asymmetric.AsymmetricAlgorithm == null && _symmetric.Algorithm == Secure.Algorithm.Symmetric.None)
+            {
+
+            }
             else
             {
-                _client.GetStream().Write(_symmetricKey, 0, _symmetricKey.Length);
-
-                byte[] buffer = new byte[Math.Max(Symmetric.BlockSize(_symmetric.Algorithm), noneSymmetric)];
-
-                int s = 0;
-                while (s < buffer.Length)
-                    s += _client.GetStream().Read(buffer, s, buffer.Length - s);
-
-                string res = new Symmetric(_symmetricKey, _set.Symmetric).Decrypt(buffer, new byte[Symmetric.BlockSize(_symmetric.Algorithm)]).GetString();
-
-                _symmetric = new Symmetric(_symmetricKey, _set.Symmetric);
-
-                if (res.StartsWith("OK") == false)
-                {
-                    throw new SecSessRefuesedException();
-                }
+                 throw new InvalidCombinationException();
             }
         }
 

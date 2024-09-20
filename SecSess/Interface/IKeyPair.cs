@@ -1,4 +1,5 @@
 ﻿using SecSess.Key;
+using SecSess.Secure.Algorithm;
 
 namespace SecSess.Interface
 {
@@ -8,6 +9,6 @@ namespace SecSess.Interface
     public interface IKeyPair<T> where T : AsymmetricKeyBase
     {
         public abstract void Save(string path);
-        public abstract static T Load(string path);
+        public abstract static T Load(Asymmetric algorithm, string path);
     }
 }

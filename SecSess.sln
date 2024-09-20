@@ -13,7 +13,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		version = version
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Benchmarker", "Benchmarker\Benchmarker.csproj", "{E6519C11-5E42-4291-866B-097E38628F62}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Benchmarker", "Benchmarker\Benchmarker.csproj", "{E6519C11-5E42-4291-866B-097E38628F62}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

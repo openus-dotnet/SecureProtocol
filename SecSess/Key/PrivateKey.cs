@@ -1,5 +1,6 @@
 ﻿using System.Security.Cryptography;
 using SecSess.Interface;
+using SecSess.Secure.Algorithm;
 
 namespace SecSess.Key
 {
@@ -11,10 +12,20 @@ namespace SecSess.Key
         /// <summary>
         /// Create a private key
         /// </summary>
-        /// <param name="parameters">Actual RSA parameters (with private key parameter)</param>
-        internal PrivateKey(RSAParameters parameters)
+        /// <param name="algorithm">Asymmetric algorithm to use</param>
+        /// <param name="parameters">Actual algorithm parameters (with private key parameter)</param>
+        internal PrivateKey(Asymmetric algorithm, object parameters)
         {
-            InnerRSA = parameters;
+            Algorithm = algorithm;
+
+            switch (algorithm)
+            {
+                case Asymmetric.RSA:
+                    InnerRSA = (RSAParameters)parameters;
+                    break;
+                default:
+                    throw new ArgumentException("This algorithm can not use.");
+            }
         }
 
         /// <summary>
@@ -23,31 +34,48 @@ namespace SecSess.Key
         /// <param name="path">Path to save the key</param>
         public void Save(string path)
         {
-            RSA rsa = RSA.Create(InnerRSA);
+            byte[] result;
+
+            switch (Algorithm)
+            {
+                case Asymmetric.RSA:
+                    RSA rsa = RSA.Create(InnerRSA);
+                    result = rsa.ExportRSAPrivateKey();
+                    break;
+                default:
+                    throw new ArgumentException("Invalid algorithm to save");
+            }
 
             using (BinaryWriter sw = new BinaryWriter(new FileStream(path, FileMode.OpenOrCreate)))
             {
-                sw.Write(rsa.ExportRSAPrivateKey());
+                sw.Write(result);
             }
         }
 
         /// <summary>
         /// Load keys saved in binary format
         /// </summary>
+        /// <param name="algorithm">Asymmetric algorithm to use</param>
         /// <param name="path">Path from load the key</param>
         /// <returns>Wrapped private key</returns>
-        public static PrivateKey Load(string path)
+        public static PrivateKey Load(Asymmetric algorithm, string path)
         {
-            RSA rsa = RSA.Create();
-
+            byte[] result; 
+            
             using (BinaryReader r = new BinaryReader(new FileStream(path, FileMode.Open, FileAccess.Read)))
             {
-                rsa.ImportRSAPrivateKey(r.ReadBytes((int)r.BaseStream.Length), out int o);
+                result = r.ReadBytes((int)r.BaseStream.Length);
             }
 
-            PrivateKey result = new PrivateKey(rsa.ExportParameters(true));
-
-            return result;
+            switch (algorithm)
+            {
+                case Asymmetric.RSA:
+                    RSA rsa = RSA.Create();
+                    rsa.ImportRSAPrivateKey(result, out int o1);
+                    return new PrivateKey(algorithm, rsa.ExportParameters(true));
+                default:
+                    throw new ArgumentException("Invalid algorithm to save");
+            }
         }
     }
 }

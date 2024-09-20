@@ -9,8 +9,11 @@
 
   <ItemGroup>
     <Compile Remove="Properties\**" />
+    <Compile Remove="test-key-set\**" />
     <EmbeddedResource Remove="Properties\**" />
+    <EmbeddedResource Remove="test-key-set\**" />
     <None Remove="Properties\**" />
+    <None Remove="test-key-set\**" />
   </ItemGroup>
 
   <ItemGroup>

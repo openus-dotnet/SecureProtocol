@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography;
+﻿using SecSess.Secure.Algorithm;
+using System.Security.Cryptography;
 
 namespace SecSess.Key
 {
@@ -15,6 +16,10 @@ namespace SecSess.Key
         /// Private keys paired with public keys
         /// </summary>
         public required PrivateKey PrivateKey { get; set; }
+        /// <summary>
+        /// Asymmetric algorithm to use
+        /// </summary>
+        public required Asymmetric Algorithm { get; set; }
 
         /// <summary>
         /// Generate a new RSA key pair
@@ -26,8 +31,9 @@ namespace SecSess.Key
 
             return new KeyPair()
             {
-                PrivateKey = new PrivateKey(rsa.ExportParameters(true)),
-                PublicKey = new PublicKey(rsa.ExportParameters(false)),
+                PrivateKey = new PrivateKey(Asymmetric.RSA, rsa.ExportParameters(true)),
+                PublicKey = new PublicKey(Asymmetric.RSA, rsa.ExportParameters(false)),
+                Algorithm = Asymmetric.RSA,
             };
         }
     }

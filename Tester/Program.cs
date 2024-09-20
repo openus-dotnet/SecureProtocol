@@ -28,16 +28,20 @@ internal class Program
         int Repeat = int.Parse(args[2]);
         string Ip = args[3];
 
+        int port = 1234;
+
         List<double> ConnectTotals = new List<double>();
         List<double> CommunicateTotals = new List<double>();
-        int port = 1234;
+
+        PublicKey pubkey = PublicKey.Load(set.Asymmetric, "test.pub");
+        PrivateKey privkey = PrivateKey.Load(set.Asymmetric, "test.priv");
 
         switch (RoleAndType)
         {
             case "ss":
                 for (int re = 0; re < Retry; re++)
                 {
-                    Server server = Server.Create(IPEndPoint.Parse($"{Ip}:{port}"), PrivateKey.Load("test.priv"), set);
+                    Server server = Server.Create(IPEndPoint.Parse($"{Ip}:{port}"), privkey, set);
                     server.Start();
 
                     Server.Client sclient = server.AcceptClient();
@@ -60,7 +64,7 @@ internal class Program
                 {
                     DateTime time1 = DateTime.Now;
 
-                    Client client = Client.Create(PublicKey.Load("test.pub"), set);
+                    Client client = Client.Create(pubkey, set);
                     client.Connect(IPEndPoint.Parse($"{Ip}:{port}"));
 
                     TimeSpan span1 = DateTime.Now - time1;

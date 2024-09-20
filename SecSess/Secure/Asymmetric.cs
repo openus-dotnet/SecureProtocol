@@ -7,12 +7,12 @@ namespace SecSess.Secure
     /// <summary>
     /// Custom asymmetric algorighm wrapper
     /// </summary>
-    public class Asymmetric
+    internal class Asymmetric
     {
         /// <summary>
         /// Asymmetric algorithm that actually works
         /// </summary>
-        public RSA? AsymmetricAlgorithm { get; private set; }
+        public AsymmetricAlgorithm? AsymmetricAlgorithm { get; private set; }
 
         /// <summary>
         /// Asymmetric algorithm to use
@@ -36,6 +36,40 @@ namespace SecSess.Secure
                 case Secure.Algorithm.Asymmetric.RSA:
                     AsymmetricAlgorithm = RSA.Create(param.InnerRSA); 
                     break;
+                default:
+                    throw new InvalidOperationException("Use invalid symmetric algorithm");
+            }
+        }
+
+        /// <summary>
+        /// Encrypt to use asymmetric algorithm
+        /// </summary>
+        /// <param name="data">Will encrypt data</param>
+        /// <returns>Encrypted data</returns>
+        public byte[] Encrypt(byte[] data) 
+        {
+            switch (Algorithm)
+            {
+                case Secure.Algorithm.Asymmetric.RSA:
+                    return (AsymmetricAlgorithm as RSA)!.Encrypt(data, RSAEncryptionPadding.Pkcs1);
+                default:
+                    throw new InvalidOperationException("Use invalid symmetric algorithm");
+            }
+        }
+
+        /// <summary>
+        /// Decrypt to use asymmetric algorithm
+        /// </summary>
+        /// <param name="data">Will decrypt data</param>
+        /// <returns>Decrypted data</returns>
+        public byte[] Decrypt(byte[] data)
+        {
+            switch (Algorithm)
+            {
+                case Secure.Algorithm.Asymmetric.RSA:
+                    return (AsymmetricAlgorithm as RSA)!.Decrypt(data, RSAEncryptionPadding.Pkcs1);
+                default:
+                    throw new InvalidOperationException("Use invalid symmetric algorithm");
             }
         }
     }
