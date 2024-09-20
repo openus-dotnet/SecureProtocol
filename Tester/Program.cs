@@ -33,8 +33,8 @@ internal class Program
         List<double> ConnectTotals = new List<double>();
         List<double> CommunicateTotals = new List<double>();
 
-        PublicKey pubkey = PublicKey.Load(set.Asymmetric, "test.pub");
-        PrivateKey privkey = PrivateKey.Load(set.Asymmetric, "test.priv");
+        PublicKey pubkey = PublicKey.Load(Asymmetric.RSA, "test.pub");
+        PrivateKey privkey = PrivateKey.Load(Asymmetric.RSA, "test.priv");
 
         switch (RoleAndType)
         {

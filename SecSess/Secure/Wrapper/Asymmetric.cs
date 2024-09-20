@@ -1,4 +1,5 @@
 ﻿using SecSess.Key;
+using SecSess.Util;
 using System.Security.Cryptography;
 
 namespace SecSess.Secure.Wrapper
@@ -23,8 +24,13 @@ namespace SecSess.Secure.Wrapper
         /// </summary>
         /// <param name="param"> Asymmetric algorithm parameter</param>
         /// <param name="algorithm"> Asymmetric algorithm to use</param>
-        public Asymmetric(AsymmetricKeyBase param, Algorithm.Asymmetric algorithm)
+        public Asymmetric(AsymmetricKeyBase? param, Algorithm.Asymmetric algorithm)
         {
+            if (param == null ^ algorithm == Secure.Algorithm.Asymmetric.None)
+            {
+                throw new InvalidOperationException("Can null param when only algorithm is None.");
+            }
+
             Algorithm = algorithm;
 
             switch (algorithm)
@@ -33,10 +39,10 @@ namespace SecSess.Secure.Wrapper
                     AsymmetricAlgorithm = null;
                     break;
                 case Secure.Algorithm.Asymmetric.RSA:
-                    AsymmetricAlgorithm = RSA.Create(param.InnerRSA);
+                    AsymmetricAlgorithm = RSA.Create(param!.InnerRSA);
                     break;
                 default:
-                    throw new InvalidOperationException("Use invalid symmetric algorithm");
+                    throw new InvalidOperationException("Use invalid symmetric algorithm.");
             }
         }
 
@@ -52,7 +58,7 @@ namespace SecSess.Secure.Wrapper
                 case Secure.Algorithm.Asymmetric.RSA:
                     return (AsymmetricAlgorithm as RSA)!.Encrypt(data, RSAEncryptionPadding.Pkcs1);
                 default:
-                    throw new InvalidOperationException("Use invalid symmetric algorithm");
+                    throw new InvalidOperationException("Use invalid symmetric algorithm.");
             }
         }
 
@@ -68,7 +74,7 @@ namespace SecSess.Secure.Wrapper
                 case Secure.Algorithm.Asymmetric.RSA:
                     return (AsymmetricAlgorithm as RSA)!.Decrypt(data, RSAEncryptionPadding.Pkcs1);
                 default:
-                    throw new InvalidOperationException("Use invalid symmetric algorithm");
+                    throw new InvalidOperationException("Use invalid symmetric algorithm.");
             }
         }
     }

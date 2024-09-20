@@ -4,6 +4,7 @@ using SecSess.Secure.Wrapper;
 using SecSess.Util;
 using System.Net;
 using System.Net.Sockets;
+using System.Security.Authentication;
 using System.Security.Cryptography;
 
 namespace SecSess.Tcp
@@ -30,6 +31,10 @@ namespace SecSess.Tcp
         /// </summary>
         private byte[] _symmetricKey;
         /// <summary>
+        /// The HMAC key used to communicate with this server
+        /// </summary>
+        private byte[] _hmacKey;
+        /// <summary>
         /// Algorithm set to use
         /// </summary>
         private Secure.Algorithm.Set _set;
@@ -37,15 +42,18 @@ namespace SecSess.Tcp
         /// <summary>
         /// Create client
         /// </summary>
-        /// <param name="rsa">Asymmetric key base without private key for client</param>
+        /// <param name="parameter">Asymmetric key base without private key for client</param>
         /// <param name="set">Algorithm set to use</param>
-        private Client(AsymmetricKeyBase rsa, Secure.Algorithm.Set set)
+        private Client(AsymmetricKeyBase? parameter, Secure.Algorithm.Set set)
         {
             _symmetricKey = new byte[Symmetric.KeySize(set.Symmetric)];
+            _hmacKey = new byte[Hash.HMacKeySize(set.Hash)];
+
             RandomNumberGenerator.Fill(_symmetricKey);
+            RandomNumberGenerator.Fill(_hmacKey);
 
             _client = new TcpClient();
-            _asymmetric = new Asymmetric(rsa, set.Asymmetric);
+            _asymmetric = new Asymmetric(parameter, set.Asymmetric);
             _symmetric = new Symmetric(_symmetricKey, set.Symmetric);
             _set = set;
         }
@@ -56,7 +64,7 @@ namespace SecSess.Tcp
         /// <param name="key">Public key for server</param>
         /// <param name="set">Algorithm set to use</param>
         /// <returns>Client created (not Connect())</returns>
-        public static Client Create(PublicKey key, Secure.Algorithm.Set set)
+        public static Client Create(PublicKey? key, Secure.Algorithm.Set set)
         {
             return new Client(key, set);
         }
@@ -93,17 +101,22 @@ namespace SecSess.Tcp
 
             if (_asymmetric.AsymmetricAlgorithm != null && _symmetric.Algorithm != Secure.Algorithm.Symmetric.None)
             {
-                byte[] symmetricKey = _asymmetric.Encrypt(_symmetricKey);
-                _client.GetStream().Write(symmetricKey, 0, symmetricKey.Length);
+                byte[] buffer = new byte[_symmetricKey.Length + _hmacKey.Length];
+                
+                Buffer.BlockCopy(_symmetricKey, 0, buffer, 0, _symmetricKey.Length);
+                Buffer.BlockCopy(_hmacKey, 0, buffer, _symmetricKey.Length, _hmacKey.Length);
+
+                byte[] enc = _asymmetric.Encrypt(buffer);
+                _client.GetStream().Write(enc, 0, enc.Length);
 
                 byte[] response = Read();
-                byte[] compare = IStream.Hash(_set.Hash, _symmetricKey);
+                byte[] compare = Hash.HashData(_set.Hash, buffer);
 
                 _symmetric = new Symmetric(_symmetricKey, _set.Symmetric);
 
                 if (compare.SequenceEqual(response) == false)
                 {
-                    throw new SecSessRefuesedException();
+                    throw new AuthenticationException("Failed to create a secure session.");
                 }
             }
             else if (_asymmetric.AsymmetricAlgorithm == null && _symmetric.Algorithm == Secure.Algorithm.Symmetric.None)
@@ -112,7 +125,7 @@ namespace SecSess.Tcp
             }
             else
             {
-                 throw new InvalidCombinationException();
+                 throw new InvalidOperationException("Invalid combination between asymmetric to symmetric algorithm.");
             }
         }
 
@@ -131,7 +144,7 @@ namespace SecSess.Tcp
         /// <param name="data">Data that write to server</param>
         public void Write(byte[] data)
         {
-            IStream.InternalWrite(data, _symmetric, _client);
+            IStream.InternalWrite(data, _symmetric, _hmacKey, _set.Hash, _client);
         }
 
         /// <summary>
@@ -140,7 +153,7 @@ namespace SecSess.Tcp
         /// <returns>Data that read from server</returns>
         public byte[] Read()
         {
-            return IStream.InternalRead(_symmetric, _client);
+            return IStream.InternalRead(_symmetric, _hmacKey, _set.Hash, _client);
         }
 
         /// <summary>

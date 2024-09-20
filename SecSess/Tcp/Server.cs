@@ -4,6 +4,7 @@ using SecSess.Secure.Wrapper;
 using SecSess.Util;
 using System.Net;
 using System.Net.Sockets;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace SecSess.Tcp
 {
@@ -26,21 +27,32 @@ namespace SecSess.Tcp
             /// </summary>
             internal byte[] SymmetricKey { get; set; }
             /// <summary>
+            /// The HMAC key used to communicate with this client
+            /// </summary>
+            internal byte[] HMacKey { get; set; }
+            /// <summary>
             /// Symmetric algorithm supporter
             /// </summary>
             internal Symmetric Symmetric { get; set; }
+            /// <summary>
+            /// Hash algorithm to use
+            /// </summary>
+            internal Secure.Algorithm.Hash HashAlgorithm { get; set; }
 
             /// <summary>
             /// Create a server side client
             /// </summary>
             /// <param name="client">Client that actually works</param>
             /// <param name="symmetricKey">The AES key used to communicate with this client</param>
+            /// <param name="hmacKey">The HMAC key used to communicate with this client</param>
             /// <param name="set">Algorithm set to use</param>
-            internal Client(TcpClient client, byte[] symmetricKey, Secure.Algorithm.Set set)
+            internal Client(TcpClient client, byte[] symmetricKey, byte[] hmacKey, Secure.Algorithm.Set set)
             {
                 InnerClient = client;
                 SymmetricKey = symmetricKey;
+                HMacKey = hmacKey;
                 Symmetric = new Symmetric(symmetricKey, set.Symmetric);
+                HashAlgorithm = set.Hash;
             }
 
             /// <summary>
@@ -49,7 +61,7 @@ namespace SecSess.Tcp
             /// <param name="data">Data that write to client</param>
             public void Write(byte[] data)
             {
-                IStream.InternalWrite(data, Symmetric, InnerClient);
+                IStream.InternalWrite(data, Symmetric, HMacKey, HashAlgorithm, InnerClient);
             }
 
             /// <summary>
@@ -58,7 +70,7 @@ namespace SecSess.Tcp
             /// <returns>Data that read from client</returns>
             public byte[] Read()
             {
-                return IStream.InternalRead(Symmetric, InnerClient);
+                return IStream.InternalRead(Symmetric, HMacKey, HashAlgorithm, InnerClient);
             }
 
             /// <summary>
@@ -105,7 +117,7 @@ namespace SecSess.Tcp
         /// <param name="listener">A TCP listener that actually works</param>
         /// <param name="parameters">Asymmetric key base with private key for server</param>
         /// <param name="set">Algorithm set to use</param>
-        private Server(TcpListener listener, AsymmetricKeyBase parameters, Secure.Algorithm.Set set) 
+        private Server(TcpListener listener, AsymmetricKeyBase? parameters, Secure.Algorithm.Set set) 
         {
             _listener = listener;
             _clients = new List<Client>();
@@ -120,7 +132,7 @@ namespace SecSess.Tcp
         /// <param name="key">Private key for server</param>
         /// <param name="set">Algorithm set to use</param>
         /// <returns>Server created (not Start())</returns>
-        public static Server Create(IPEndPoint endPoint, PrivateKey key, Secure.Algorithm.Set set)
+        public static Server Create(IPEndPoint endPoint, PrivateKey? key, Secure.Algorithm.Set set)
         {
             return new Server(new TcpListener(endPoint), key, set);
         }
@@ -159,27 +171,29 @@ namespace SecSess.Tcp
                 while (s < buffer.Length)
                     s += client.GetStream().Read(buffer, s, buffer.Length - s);
 
-                byte[] symmetricKey = _asymmetric.Decrypt(buffer);
+                byte[] concat = _asymmetric.Decrypt(buffer);
+                byte[] symmetricKey = concat[0..Symmetric.KeySize(_set.Symmetric)];
+                byte[] hmacKey = concat[Symmetric.KeySize(_set.Symmetric)..(Symmetric.KeySize(_set.Symmetric) + Hash.HMacKeySize(_set.Hash))];
 
-                Client result = new Client(client, symmetricKey, _set);
+                Client result = new Client(client, symmetricKey, hmacKey, _set);
                 _clients.Add(result);
 
                 while (client.GetStream().CanWrite == false) ;
 
-                result.Write(IStream.Hash(_set.Hash, symmetricKey));
+                result.Write(Hash.HashData(_set.Hash, concat));
 
                 return result;
             }
             else if (_asymmetric.AsymmetricAlgorithm == null && _set.Symmetric == Secure.Algorithm.Symmetric.None)
             {
-                Client result = new Client(client, new byte[0], _set);
+                Client result = new Client(client, Array.Empty<byte>(), Array.Empty<byte>(), _set);
                 _clients.Add(result);
 
                 return result;
             }
             else
             {
-                throw new InvalidCombinationException();
+                throw new InvalidOperationException("Invalid combination between asymmetric to symmetric algorithm.");
             }
         }
     }

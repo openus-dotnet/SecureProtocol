@@ -41,7 +41,7 @@ namespace SecSess.Secure.Wrapper
                     _algorithm = Aes.Create();
                     break;
                 default:
-                    throw new InvalidOperationException("Use invalid symmetric algorithm");
+                    throw new InvalidOperationException("Use invalid symmetric algorithm.");
             }
 
             if (_algorithm != null)
@@ -100,7 +100,7 @@ namespace SecSess.Secure.Wrapper
                 case Secure.Algorithm.Symmetric.AES:
                     return 32;
                 default:
-                    throw new InvalidOperationException("Use invalid symmetric algorithm");
+                    throw new InvalidOperationException("Use invalid symmetric algorithm.");
             }
         }
 
@@ -122,7 +122,7 @@ namespace SecSess.Secure.Wrapper
                 case Secure.Algorithm.Symmetric.AES:
                     return 16;
                 default:
-                    throw new InvalidOperationException("Use invalid symmetric algorithm");
+                    throw new InvalidOperationException("Use invalid symmetric algorithm.");
             }
         }
     }
