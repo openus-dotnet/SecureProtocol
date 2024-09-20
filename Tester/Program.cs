@@ -36,7 +36,7 @@ internal class Program
             case "ss":
                 for (int re = 0; re < Retry; re++)
                 {
-                    Server server = Server.Create($"{Ip}:1234", PrivateKey.Load("test.priv"), set);
+                    Server server = Server.Create(IPEndPoint.Parse($"{Ip}:1234"), PrivateKey.Load("test.priv"), set);
                     server.Start();
 
                     Server.Client sclient = server.AcceptClient();
@@ -56,8 +56,8 @@ internal class Program
             case "sc":
                 for (int re = 0; re < Retry; re++)
                 {
-                    Client client = Client.Create($"{Ip}:1234", PublicKey.Load("test.pub"), set);
-                    client.Connect();
+                    Client client = Client.Create(PublicKey.Load("test.pub"), set);
+                    client.Connect(IPEndPoint.Parse($"{Ip}:1234"));
 
                     byte[] buffer = new byte[Size];
                     new Random().NextBytes(buffer);

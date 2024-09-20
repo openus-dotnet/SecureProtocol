@@ -23,10 +23,6 @@ namespace SecSess.Tcp
         /// </summary>
         private Asymmetric _asymmetric;
         /// <summary>
-        /// IP of the server to which you want to connect
-        /// </summary>
-        private IPEndPoint _serverPoint;
-        /// <summary>
         /// Symmetric algorithm supporter
         /// </summary>
         private Symmetric _symmetric { get; set; }
@@ -42,13 +38,11 @@ namespace SecSess.Tcp
         /// <summary>
         /// Create client
         /// </summary>
-        /// <param name="endPoint">IP end point for server</param>
         /// <param name="rsa">Asymmetric key base without private key for client</param>
         /// <param name="set">Algorithm set to use</param>
-        private Client(IPEndPoint endPoint, AsymmetricKeyBase rsa, Secure.Algorithm.Set set)
+        private Client(AsymmetricKeyBase rsa, Secure.Algorithm.Set set)
         {
             _client = new TcpClient();
-            _serverPoint = endPoint;
             _asymmetric = new Asymmetric(rsa, set.Asymmetric);
             _symmetricKey = new byte[Symmetric.KeySize(set.Symmetric)];
             _symmetric = new Symmetric(_symmetricKey, set.Symmetric);
@@ -60,56 +54,21 @@ namespace SecSess.Tcp
         /// <summary>
         /// Create a client where secure sessions are provided
         /// </summary>
-        /// <param name="ip">IP string for server like (X.X.X.X)</param>
-        /// <param name="port">Port number for server</param>
         /// <param name="key">Public key for server</param>
         /// <param name="set">Algorithm set to use</param>
         /// <returns>Client created (not Connect())</returns>
-        public static Client Create(string ip, int port, PublicKey key, Secure.Algorithm.Set set)
+        public static Client Create(PublicKey key, Secure.Algorithm.Set set)
         {
-            return new Client(IPEndPoint.Parse($"{ip}:{port}"), key, set);
-        }
-        /// <summary>
-        /// Create a client where secure sessions are provided
-        /// </summary>
-        /// <param name="endPoint">IP string for server like (X.X.X.X:X)</param>
-        /// <param name="key">Public key for server</param>
-        /// <param name="set">Algorithm set to use</param>
-        /// <returns>Client created (not Connect())</returns>
-        public static Client Create(string endPoint, PublicKey key, Secure.Algorithm.Set set)
-        {
-            return new Client(IPEndPoint.Parse(endPoint), key, set);
-        }
-        /// <summary>
-        /// Create a client where secure sessions are provided
-        /// </summary>
-        /// <param name="address">IP address for server</param>
-        /// <param name="port">Port number for server</param>
-        /// <param name="key">Public key for server</param>
-        /// <param name="set">Algorithm set to use</param>
-        /// <returns>Client created (not Connect())</returns>
-        public static Client Create(IPAddress address, int port, PublicKey key, Secure.Algorithm.Set set)
-        {
-            return new Client(new IPEndPoint(address, port), key, set);
-        }
-        /// <summary>
-        /// Create a client where secure sessions are provided
-        /// </summary>
-        /// <param name="endPoint">IP end point for server</param>
-        /// <param name="key">Public key for server</param>
-        /// <param name="set">Algorithm set to use</param>
-        /// <returns>Client created (not Connect())</returns>
-        public static Client Create(IPEndPoint endPoint, PublicKey key, Secure.Algorithm.Set set)
-        {
-            return new Client(endPoint, key, set);
+            return new Client(key, set);
         }
 
         /// <summary>
         /// Connect to a preconfigured server
+        /// <paramref name="serverEP"/>Server IP end point</param>
         /// </summary>
-        public void Connect()
+        public void Connect(IPEndPoint serverEP)
         {
-            _client.Connect(_serverPoint);
+            _client.Connect(serverEP);
 
             while (CanUseStream() == false) ;
 

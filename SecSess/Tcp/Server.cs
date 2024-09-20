@@ -119,41 +119,6 @@ namespace SecSess.Tcp
         /// <summary>
         /// Create a server where secure sessions are provided
         /// </summary>
-        /// <param name="ip">IP string like (X.X.X.X)</param>
-        /// <param name="port">Port number</param>
-        /// <param name="key">Private key for server</param>
-        /// <param name="set">Algorithm set to use</param>
-        /// <returns>Server created (not Start())</returns>
-        public static Server Create(string ip, int port, PrivateKey key, Secure.Algorithm.Set set)
-        {
-            return new Server(new TcpListener(IPEndPoint.Parse($"{ip}:{port}")), key, set);
-        }
-        /// <summary>
-        /// Create a server where secure sessions are provided
-        /// </summary>
-        /// <param name="endPoint">IP string like (X.X.X.X:X)</param>
-        /// <param name="key">Private key for server</param>
-        /// <param name="set">Algorithm set to use</param>
-        /// <returns>Server created (not Start())</returns>
-        public static Server Create(string endPoint, PrivateKey key, Secure.Algorithm.Set set)
-        {
-            return new Server(new TcpListener(IPEndPoint.Parse(endPoint)), key, set);
-        }
-        /// <summary>
-        /// Create a server where secure sessions are provided
-        /// </summary>
-        /// <param name="address">IP address</param>
-        /// <param name="port">Port number</param>
-        /// <param name="key">Private key for server</param>
-        /// <param name="set">Algorithm set to use</param>
-        /// <returns>Server created (not Start())</returns>
-        public static Server Create(IPAddress address, int port, PrivateKey key, Secure.Algorithm.Set set)
-        {
-            return new Server(new TcpListener(new IPEndPoint(address, port)), key, set);
-        }
-        /// <summary>
-        /// Create a server where secure sessions are provided
-        /// </summary>
         /// <param name="endPoint">IP end point</param>
         /// <param name="key">Private key for server</param>
         /// <param name="set">Algorithm set to use</param>
