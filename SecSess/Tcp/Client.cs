@@ -65,12 +65,24 @@ namespace SecSess.Tcp
         /// <summary>
         /// Connect to a preconfigured server
         /// <param name="serverEP"/>Server IP end point</param>
+        /// <param name="retry">Maximum retry to connect</param>
         /// </summary>
-        public void Connect(IPEndPoint serverEP)
+        public void Connect(IPEndPoint serverEP, int retry = 10)
         {
             int noneSymmetric = "OK".GetBytes().Length;
 
-            _client.ConnectAsync(serverEP);
+            for (int i = 0; i < retry; i++)
+            {
+                try
+                {
+                    _client.ConnectAsync(serverEP);
+                    break;
+                }
+                catch (SocketException)
+                {
+                    continue;
+                }
+            }
 
             while (CanUseStream() == false);
 
