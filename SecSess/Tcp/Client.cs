@@ -119,6 +119,7 @@ namespace SecSess.Tcp
         public void Close()
         {
             _client.Close();
+            _client.Dispose();
         }
 
         /// <summary>

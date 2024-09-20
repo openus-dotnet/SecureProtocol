@@ -142,6 +142,7 @@ namespace SecSess.Tcp
         public void Stop()
         {
             _listener.Stop();
+            _listener.Dispose();
         }
 
         /// <summary>
