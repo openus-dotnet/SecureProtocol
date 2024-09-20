@@ -31,12 +31,17 @@ namespace SecSess.Secure
                 case Secure.Algorithm.Symmetric.None: 
                     _algorithm = null; 
                     break;
+                case Secure.Algorithm.Symmetric.DES:
+                    _algorithm = DES.Create();
+                    break;
                 case Secure.Algorithm.Symmetric.TripleDES: 
                     _algorithm = TripleDES.Create(); 
                     break;
                 case Secure.Algorithm.Symmetric.AES: 
                     _algorithm = Aes.Create(); 
                     break;
+                default:
+                    throw new InvalidOperationException("Use invalid symmetric algorithm");
             }
 
             if (_algorithm != null)
@@ -88,11 +93,34 @@ namespace SecSess.Secure
             {
                 case Secure.Algorithm.Symmetric.None: 
                     return 0;
-                case Secure.Algorithm.Symmetric.DES: 
+                case Secure.Algorithm.Symmetric.DES:
+                    return 8;
                 case Secure.Algorithm.Symmetric.TripleDES:
-                    return 16;
+                    return 24;
                 case Secure.Algorithm.Symmetric.AES:
                     return 32;
+                default:
+                    throw new InvalidOperationException("Use invalid symmetric algorithm");
+            }
+        }
+
+        /// <summary>
+        /// Return symmetric block size for using algorithm
+        /// </summary>
+        /// <param name="algorithm">Symmetric algorithm to use</param>
+        /// <returns></returns>
+        public static int BlockSize(Algorithm.Symmetric algorithm)
+        {
+            switch (algorithm)
+            {
+                case Secure.Algorithm.Symmetric.None:
+                    return 0;
+                case Secure.Algorithm.Symmetric.DES:
+                    return 8;
+                case Secure.Algorithm.Symmetric.TripleDES:
+                    return 8;
+                case Secure.Algorithm.Symmetric.AES:
+                    return 16;
                 default:
                     throw new InvalidOperationException("Use invalid symmetric algorithm");
             }

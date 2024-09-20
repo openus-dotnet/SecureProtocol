@@ -169,7 +169,8 @@ namespace SecSess.Tcp
 
                 while (client.GetStream().CanWrite == false) ;
 
-                client.GetStream().Write(result.Symmetric.Encrypt("OK".GetBytes(), new byte[16]), 0, 16);
+                buffer = result.Symmetric.Encrypt("OK".GetBytes(), new byte[Symmetric.BlockSize(_set.Symmetric)]);
+                client.GetStream().Write(buffer, 0, buffer.Length);
 
                 return result;
             }
@@ -186,10 +187,10 @@ namespace SecSess.Tcp
 
                 while (client.GetStream().CanWrite == false) ;
 
-                client.GetStream().Write(result.Symmetric.Encrypt("OK".GetBytes(), new byte[16]), 0, 16);
+                byte[] buffer = result.Symmetric.Encrypt("OK".GetBytes(), new byte[Symmetric.BlockSize(_set.Symmetric)]);
+                client.GetStream().Write(buffer, 0, buffer.Length);
 
                 return result;
-
             }
         }
     }

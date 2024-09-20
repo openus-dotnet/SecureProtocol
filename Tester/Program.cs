@@ -1,10 +1,9 @@
 ﻿using SecSess.Key;
 using SecSess.Secure.Algorithm;
 using SecSess.Tcp;
-using System.Diagnostics;
+using System;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
 using System.Text.Json;
 
 internal class Program
@@ -19,7 +18,7 @@ internal class Program
 
         Set set = new Set()
         {
-            Asymmetric = Asymmetric.RSA,
+            Asymmetric = Asymmetric.None,
             Symmetric = Symmetric.AES,
             Hash = Hash.SHA256,
         };
@@ -29,7 +28,8 @@ internal class Program
         int Repeat = int.Parse(args[2]);
         string Ip = args[3];
 
-        List<double> Totals = new List<double>();
+        List<double> ConnectTotals = new List<double>();
+        List<double> CommunicateTotals = new List<double>();
         int port = 1234;
 
         switch (RoleAndType)
@@ -58,15 +58,19 @@ internal class Program
             case "sc":
                 for (int re = 0; re < Retry; re++)
                 {
+                    DateTime time1 = DateTime.Now;
+
                     Client client = Client.Create(PublicKey.Load("test.pub"), set);
                     client.Connect(IPEndPoint.Parse($"{Ip}:{port}"));
+
+                    TimeSpan span1 = DateTime.Now - time1;
 
                     byte[] buffer = new byte[Size];
                     new Random().NextBytes(buffer);
 
                     byte[] check = (byte[])buffer.Clone();
 
-                    DateTime time = DateTime.Now;
+                    DateTime time2 = DateTime.Now;
 
                     for (int i = 0; i < Repeat; i++)
                     {
@@ -76,7 +80,7 @@ internal class Program
                         client.FlushStream();
                     }
 
-                    TimeSpan span = DateTime.Now - time;
+                    TimeSpan span2 = DateTime.Now - time2;
 
                     for (int i = 0; i < buffer.Length; i++)
                     {
@@ -86,11 +90,13 @@ internal class Program
 
                     if ((re - 9) % 10 == 0)
                     {
-                        Console.WriteLine($"{re + 1}. Total: {span.TotalSeconds}s");
+                        Console.WriteLine($"{re + 1}. Con. Total: {span1.TotalSeconds}s");
+                        Console.WriteLine($"{re + 1}. Com. Total: {span2.TotalSeconds}s");
                     }
                     if (re != 0)
                     {
-                        Totals.Add(span.TotalSeconds);
+                        ConnectTotals.Add(span1.TotalSeconds);
+                        CommunicateTotals.Add(span2.TotalSeconds);
                     }
 
                     client.Close();
@@ -103,7 +109,8 @@ internal class Program
                         RoleAndType,
                         Size,
                         Repeat,
-                        Average = Totals.Sum() / Retry,
+                        ConAverage = ConnectTotals.Sum() / Retry,
+                        ComAverage = CommunicateTotals.Sum() / Retry,
                     }));
                 }
 
@@ -136,15 +143,19 @@ internal class Program
             case "nc":
                 for (int re = 0; re < Retry; re++)
                 {
+                    DateTime time1 = DateTime.Now;
+
                     TcpClient client = new TcpClient();
                     client.Connect(IPEndPoint.Parse($"{Ip}:{port}"));
+
+                    TimeSpan span1 = DateTime.Now - time1;
 
                     byte[] buffer = new byte[Size];
                     new Random().NextBytes(buffer);
 
                     byte[] check = (byte[])buffer.Clone();
 
-                    DateTime time = DateTime.Now;
+                    DateTime time2 = DateTime.Now;
 
                     for (int i = 0; i < Repeat; i++)
                     {
@@ -156,7 +167,7 @@ internal class Program
                         client.GetStream().Flush();
                     }
 
-                    TimeSpan span = DateTime.Now - time;
+                    TimeSpan span2 = DateTime.Now - time2;
 
                     for (int i = 0; i < buffer.Length; i++)
                     {
@@ -166,11 +177,13 @@ internal class Program
 
                     if ((re - 9) % 10 == 0)
                     {
-                        Console.WriteLine($"{re + 1}. Total: {span.TotalSeconds}s");
+                        Console.WriteLine($"{re + 1}. Con. Total: {span1.TotalSeconds}s");
+                        Console.WriteLine($"{re + 1}. Com. Total: {span2.TotalSeconds}s");
                     }
                     if (re != 0)
                     {
-                        Totals.Add(span.TotalSeconds);
+                        ConnectTotals.Add(span1.TotalSeconds);
+                        CommunicateTotals.Add(span2.TotalSeconds);
                     }
 
                     client.Close();
@@ -183,7 +196,8 @@ internal class Program
                         RoleAndType,
                         Size,
                         Repeat,
-                        Average = Totals.Sum() / Retry,
+                        ConAverage = ConnectTotals.Sum() / Retry,
+                        ComAverage = CommunicateTotals.Sum() / Retry,
                     }));
                 }
 

@@ -42,13 +42,13 @@ namespace SecSess.Tcp
         /// <param name="set">Algorithm set to use</param>
         private Client(AsymmetricKeyBase rsa, Secure.Algorithm.Set set)
         {
+            _symmetricKey = new byte[Symmetric.KeySize(set.Symmetric)];
+            new Random(DateTime.Now.Microsecond).NextBytes(_symmetricKey);
+
             _client = new TcpClient();
             _asymmetric = new Asymmetric(rsa, set.Asymmetric);
-            _symmetricKey = new byte[Symmetric.KeySize(set.Symmetric)];
             _symmetric = new Symmetric(_symmetricKey, set.Symmetric);
             _set = set;
-
-            new Random(DateTime.Now.Microsecond).NextBytes(_symmetricKey);
         }
 
         /// <summary>
@@ -65,22 +65,12 @@ namespace SecSess.Tcp
         /// <summary>
         /// Connect to a preconfigured server
         /// <param name="serverEP"/>Server IP end point</param>
-        /// <param name="retry">Maximum retry to connect</param>
         /// </summary>
-        public void Connect(IPEndPoint serverEP, int retry = 10)
+        public void Connect(IPEndPoint serverEP)
         {
-            while (true)
-            {
-                try
-                {
-                    _client.Connect(serverEP);
-                    break;
-                }
-                catch (SocketException)
-                {
-                    continue;
-                }
-            }
+            int noneSymmetric = "OK".GetBytes().Length;
+
+            _client.ConnectAsync(serverEP);
 
             while (CanUseStream() == false);
 
@@ -89,13 +79,13 @@ namespace SecSess.Tcp
                 byte[] symmetricKey = _asymmetric.AsymmetricAlgorithm.Encrypt(_symmetricKey, RSAEncryptionPadding.Pkcs1);
                 _client.GetStream().Write(symmetricKey, 0, symmetricKey.Length);
 
-                byte[] buffer = new byte[16];
+                byte[] buffer = new byte[Math.Max(Symmetric.BlockSize(_symmetric.Algorithm), noneSymmetric)];
 
                 int s = 0;
                 while (s < buffer.Length)
                     s += _client.GetStream().Read(buffer, s, buffer.Length - s);
 
-                string res = new Symmetric(_symmetricKey, _set.Symmetric).Decrypt(buffer, new byte[16]).GetString();
+                string res = new Symmetric(_symmetricKey, _set.Symmetric).Decrypt(buffer, new byte[Symmetric.BlockSize(_symmetric.Algorithm)]).GetString();
 
                 _symmetric = new Symmetric(_symmetricKey, _set.Symmetric);
 
@@ -108,13 +98,13 @@ namespace SecSess.Tcp
             {
                 _client.GetStream().Write(_symmetricKey, 0, _symmetricKey.Length);
 
-                byte[] buffer = new byte[16];
+                byte[] buffer = new byte[Math.Max(Symmetric.BlockSize(_symmetric.Algorithm), noneSymmetric)];
 
                 int s = 0;
                 while (s < buffer.Length)
                     s += _client.GetStream().Read(buffer, s, buffer.Length - s);
 
-                string res = new Symmetric(_symmetricKey, _set.Symmetric).Decrypt(buffer, new byte[16]).GetString();
+                string res = new Symmetric(_symmetricKey, _set.Symmetric).Decrypt(buffer, new byte[Symmetric.BlockSize(_symmetric.Algorithm)]).GetString();
 
                 _symmetric = new Symmetric(_symmetricKey, _set.Symmetric);
 
