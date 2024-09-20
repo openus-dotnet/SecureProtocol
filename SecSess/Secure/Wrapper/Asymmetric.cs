@@ -1,8 +1,7 @@
-﻿using SecSess.Interface;
-using SecSess.Key;
+﻿using SecSess.Key;
 using System.Security.Cryptography;
 
-namespace SecSess.Secure
+namespace SecSess.Secure.Wrapper
 {
     /// <summary>
     /// Custom asymmetric algorighm wrapper
@@ -31,10 +30,10 @@ namespace SecSess.Secure
             switch (algorithm)
             {
                 case Secure.Algorithm.Asymmetric.None:
-                    AsymmetricAlgorithm = null; 
+                    AsymmetricAlgorithm = null;
                     break;
                 case Secure.Algorithm.Asymmetric.RSA:
-                    AsymmetricAlgorithm = RSA.Create(param.InnerRSA); 
+                    AsymmetricAlgorithm = RSA.Create(param.InnerRSA);
                     break;
                 default:
                     throw new InvalidOperationException("Use invalid symmetric algorithm");
@@ -46,7 +45,7 @@ namespace SecSess.Secure
         /// </summary>
         /// <param name="data">Will encrypt data</param>
         /// <returns>Encrypted data</returns>
-        public byte[] Encrypt(byte[] data) 
+        public byte[] Encrypt(byte[] data)
         {
             switch (Algorithm)
             {

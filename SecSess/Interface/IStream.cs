@@ -1,7 +1,6 @@
-﻿using SecSess.Secure;
+﻿using SecSess.Secure.Wrapper;
 using SecSess.Tcp;
 using System.Net.Sockets;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace SecSess.Interface
 {

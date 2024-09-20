@@ -1,6 +1,6 @@
 ﻿using System.Security.Cryptography;
 
-namespace SecSess.Secure
+namespace SecSess.Secure.Wrapper
 {
     /// <summary>
     /// Custom symmetric algorighm wrapper
@@ -28,17 +28,17 @@ namespace SecSess.Secure
 
             switch (algorithm)
             {
-                case Secure.Algorithm.Symmetric.None: 
-                    _algorithm = null; 
+                case Secure.Algorithm.Symmetric.None:
+                    _algorithm = null;
                     break;
                 case Secure.Algorithm.Symmetric.DES:
                     _algorithm = DES.Create();
                     break;
-                case Secure.Algorithm.Symmetric.TripleDES: 
-                    _algorithm = TripleDES.Create(); 
+                case Secure.Algorithm.Symmetric.TripleDES:
+                    _algorithm = TripleDES.Create();
                     break;
-                case Secure.Algorithm.Symmetric.AES: 
-                    _algorithm = Aes.Create(); 
+                case Secure.Algorithm.Symmetric.AES:
+                    _algorithm = Aes.Create();
                     break;
                 default:
                     throw new InvalidOperationException("Use invalid symmetric algorithm");
@@ -91,7 +91,7 @@ namespace SecSess.Secure
         {
             switch (algorithm)
             {
-                case Secure.Algorithm.Symmetric.None: 
+                case Secure.Algorithm.Symmetric.None:
                     return 0;
                 case Secure.Algorithm.Symmetric.DES:
                     return 8;

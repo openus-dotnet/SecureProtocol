@@ -1,11 +1,9 @@
 ﻿using SecSess.Interface;
 using SecSess.Key;
-using SecSess.Secure;
+using SecSess.Secure.Wrapper;
 using SecSess.Util;
-using System;
 using System.Net;
 using System.Net.Sockets;
-using System.Security.Cryptography;
 
 namespace SecSess.Tcp
 {
