@@ -64,13 +64,25 @@ namespace SecSess.Tcp
 
         /// <summary>
         /// Connect to a preconfigured server
-        /// <paramref name="serverEP"/>Server IP end point</param>
+        /// <param name="serverEP"/>Server IP end point</param>
+        /// <param name="retry">Maximum retry to connect</param>
         /// </summary>
-        public void Connect(IPEndPoint serverEP)
+        public void Connect(IPEndPoint serverEP, int retry = 10)
         {
-            _client.Connect(serverEP);
+            while (true)
+            {
+                try
+                {
+                    _client.Connect(serverEP);
+                    break;
+                }
+                catch (SocketException)
+                {
+                    continue;
+                }
+            }
 
-            while (CanUseStream() == false) ;
+            while (CanUseStream() == false);
 
             if (_asymmetric.AsymmetricAlgorithm != null)
             {
