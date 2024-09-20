@@ -6,7 +6,7 @@ namespace SecSess.Key
     /// <summary>
     /// Public key warpper type
     /// </summary>
-    public class PublicKey : RSAKeyBase, IKeyPair<PublicKey>
+    public class PublicKey : AsymmetricKeyBase, IKeyPair<PublicKey>
     {
         /// <summary>
         /// Create a public key

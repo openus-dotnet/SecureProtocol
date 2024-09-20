@@ -5,7 +5,7 @@ namespace SecSess.Key
     /// <summary>
     /// Abstract key base types for defining public/private key types
     /// </summary>
-    public abstract class RSAKeyBase
+    public abstract class AsymmetricKeyBase
     {
         /// <summary>
         /// RSA parameters for actual RSA encryption

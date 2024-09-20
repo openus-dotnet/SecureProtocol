@@ -24,24 +24,25 @@ namespace SecSess.Tcp
             /// </summary>
             internal TcpClient InnerClient { get; set; }
             /// <summary>
-            /// The AES key used to communicate with this client
+            /// The symmetric key used to communicate with this client
             /// </summary>
-            internal byte[] AESKey { get; set; }
+            internal byte[] SymmetricKey { get; set; }
             /// <summary>
-            /// AES support wrapper
+            /// Symmetric algorithm supporter
             /// </summary>
-            internal AESWrapper AESWrapper { get; set; }
+            internal Symmetric Symmetric { get; set; }
 
             /// <summary>
             /// Create a server side client
             /// </summary>
             /// <param name="client">Client that actually works</param>
-            /// <param name="aesKey">The AES key used to communicate with this client</param>
-            internal Client(TcpClient client, byte[] aesKey)
+            /// <param name="symmetricKey">The AES key used to communicate with this client</param>
+            /// <param name="set">Algorithm set to use</param>
+            internal Client(TcpClient client, byte[] symmetricKey, Secure.Algorithm.Set set)
             {
                 InnerClient = client;
-                AESKey = aesKey;
-                AESWrapper = new AESWrapper(aesKey);
+                SymmetricKey = symmetricKey;
+                Symmetric = new Symmetric(symmetricKey, set.Symmetric);
             }
 
             /// <summary>
@@ -50,7 +51,7 @@ namespace SecSess.Tcp
             /// <param name="data">Data that write to client</param>
             public void Write(byte[] data)
             {
-                IStream.InternalWrite(data, AESWrapper, InnerClient);
+                IStream.InternalWrite(data, Symmetric, InnerClient);
             }
 
             /// <summary>
@@ -59,7 +60,7 @@ namespace SecSess.Tcp
             /// <returns>Data that read from client</returns>
             public byte[] Read()
             {
-                return IStream.InternalRead(AESWrapper, InnerClient);
+                return IStream.InternalRead(Symmetric, InnerClient);
             }
 
             /// <summary>
@@ -92,20 +93,26 @@ namespace SecSess.Tcp
         /// </summary>
         private List<Client> _clients;
         /// <summary>
-        /// RSA with private key for server
+        /// Asymmetric algorithm with private key for server
         /// </summary>
-        private RSA _rsa;
+        private Asymmetric _asymmetric;
+        /// <summary>
+        /// Algorithm set to use
+        /// </summary>
+        private Secure.Algorithm.Set _set;
 
         /// <summary>
         /// General constructor for server
         /// </summary>
         /// <param name="listener">A TCP listener that actually works</param>
-        /// <param name="parameters">RSA parameters with private values for server</param>
-        private Server(TcpListener listener, RSAParameters parameters) 
+        /// <param name="parameters">Asymmetric key base with private key for server</param>
+        /// <param name="set">Algorithm set to use</param>
+        private Server(TcpListener listener, AsymmetricKeyBase parameters, Secure.Algorithm.Set set) 
         {
             _listener = listener;
             _clients = new List<Client>();
-            _rsa = RSA.Create(parameters);
+            _asymmetric = new Asymmetric(parameters, set.Asymmetric);
+            _set = set;
         }
 
         /// <summary>
@@ -114,20 +121,22 @@ namespace SecSess.Tcp
         /// <param name="ip">IP string like (X.X.X.X)</param>
         /// <param name="port">Port number</param>
         /// <param name="key">Private key for server</param>
+        /// <param name="set">Algorithm set to use</param>
         /// <returns>Server created (not Start())</returns>
-        public static Server Create(string ip, int port, PrivateKey key)
+        public static Server Create(string ip, int port, PrivateKey key, Secure.Algorithm.Set set)
         {
-            return new Server(new TcpListener(IPEndPoint.Parse($"{ip}:{port}")), key.InnerRSA);
+            return new Server(new TcpListener(IPEndPoint.Parse($"{ip}:{port}")), key, set);
         }
         /// <summary>
         /// Create a server where secure sessions are provided
         /// </summary>
         /// <param name="endPoint">IP string like (X.X.X.X:X)</param>
         /// <param name="key">Private key for server</param>
+        /// <param name="set">Algorithm set to use</param>
         /// <returns>Server created (not Start())</returns>
-        public static Server Create(string endPoint, PrivateKey key)
+        public static Server Create(string endPoint, PrivateKey key, Secure.Algorithm.Set set)
         {
-            return new Server(new TcpListener(IPEndPoint.Parse(endPoint)), key.InnerRSA);
+            return new Server(new TcpListener(IPEndPoint.Parse(endPoint)), key, set);
         }
         /// <summary>
         /// Create a server where secure sessions are provided
@@ -135,20 +144,22 @@ namespace SecSess.Tcp
         /// <param name="address">IP address</param>
         /// <param name="port">Port number</param>
         /// <param name="key">Private key for server</param>
+        /// <param name="set">Algorithm set to use</param>
         /// <returns>Server created (not Start())</returns>
-        public static Server Create(IPAddress address, int port, PrivateKey key)
+        public static Server Create(IPAddress address, int port, PrivateKey key, Secure.Algorithm.Set set)
         {
-            return new Server(new TcpListener(new IPEndPoint(address, port)), key.InnerRSA);
+            return new Server(new TcpListener(new IPEndPoint(address, port)), key, set);
         }
         /// <summary>
         /// Create a server where secure sessions are provided
         /// </summary>
         /// <param name="endPoint">IP end point</param>
         /// <param name="key">Private key for server</param>
+        /// <param name="set">Algorithm set to use</param>
         /// <returns>Server created (not Start())</returns>
-        public static Server Create(IPEndPoint endPoint, PrivateKey key)
+        public static Server Create(IPEndPoint endPoint, PrivateKey key, Secure.Algorithm.Set set)
         {
-            return new Server(new TcpListener(endPoint), key.InnerRSA);
+            return new Server(new TcpListener(endPoint), key, set);
         }
 
         /// <summary>
@@ -176,22 +187,29 @@ namespace SecSess.Tcp
 
             while (client.Connected == false || client.GetStream().CanRead == false) ;
 
-            byte[] buffer = new byte[512];
+            if (_asymmetric.AsymmetricAlgorithm != null)
+            {
+                byte[] buffer = new byte[512];
 
-            int s = 0;
-            while (s < buffer.Length) 
-                s += client.GetStream().Read(buffer, s, buffer.Length - s);
+                int s = 0;
+                while (s < buffer.Length)
+                    s += client.GetStream().Read(buffer, s, buffer.Length - s);
 
-            byte[] aesKey = _rsa.Decrypt(buffer, RSAEncryptionPadding.Pkcs1);
+                byte[] symmetricKey = _asymmetric.AsymmetricAlgorithm.Decrypt(buffer, RSAEncryptionPadding.Pkcs1);
 
-            Client result = new Client(client, aesKey);
-            _clients.Add(result);
+                Client result = new Client(client, symmetricKey, _set);
+                _clients.Add(result);
 
-            while (client.GetStream().CanWrite == false) ;
+                while (client.GetStream().CanWrite == false) ;
 
-            client.GetStream().Write(result.AESWrapper.Encrypt("OK".GetBytes(), new byte[16]), 0, 16);
+                client.GetStream().Write(result.Symmetric.Encrypt("OK".GetBytes(), new byte[16]), 0, 16);
 
-            return result;
+                return result;
+            }
+            else
+            {
+
+            }
         }
     }
 }

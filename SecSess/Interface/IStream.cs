@@ -1,8 +1,6 @@
 ﻿using SecSess.Secure;
 using SecSess.Tcp;
 using System.Net.Sockets;
-using System.Security.Cryptography;
-using static SecSess.Tcp.Server;
 
 namespace SecSess.Interface
 {
@@ -17,7 +15,7 @@ namespace SecSess.Interface
         /// <param name="data">Data that write</param>
         /// <param name="aes">AES support wrapper</param>
         /// <param name="client">A TCP client that actually works</param>
-        internal static void InternalWrite(byte[] data, AESWrapper aes, TcpClient client)
+        internal static void InternalWrite(byte[] data, Symmetric aes, TcpClient client)
         {
             byte[] iv = new byte[16];
             new Random().NextBytes(iv);
@@ -55,7 +53,7 @@ namespace SecSess.Interface
         /// <param name="aes">AES support wrapper</param>
         /// <param name="client">A TCP client that actually works</param>
         /// <returns>Data that read</returns>
-        internal static byte[] InternalRead(AESWrapper aes, TcpClient client)
+        internal static byte[] InternalRead(Symmetric aes, TcpClient client)
         {
             byte[] iv = new byte[16];
 
