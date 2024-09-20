@@ -1,6 +1,6 @@
-﻿using SecSess.Secure.Wrapper;
-using SecSess.Tcp;
+﻿using SecSess.Tcp;
 using System.Net.Sockets;
+using System.Security.Cryptography;
 
 namespace SecSess.Interface
 {
@@ -15,11 +15,11 @@ namespace SecSess.Interface
         /// <param name="data">Data that write</param>
         /// <param name="symmetric">Symmetric secure algorithm</param>
         /// <param name="client">A TCP client that actually works</param>
-        internal static void InternalWrite(byte[] data, Symmetric symmetric, TcpClient client)
+        internal static void InternalWrite(byte[] data, Secure.Wrapper.Symmetric symmetric, TcpClient client)
         {
             if (symmetric.Algorithm != Secure.Algorithm.Symmetric.None)
             {
-                int blockSize = Symmetric.BlockSize(symmetric.Algorithm);
+                int blockSize = Secure.Wrapper.Symmetric.BlockSize(symmetric.Algorithm);
 
                 byte[] iv = new byte[blockSize];
                 new Random().NextBytes(iv);
@@ -74,11 +74,11 @@ namespace SecSess.Interface
         /// <param name="symmetric">Symmetric secure algorithm</param>
         /// <param name="client">A TCP client that actually works</param>
         /// <returns>Data that read</returns>
-        internal static byte[] InternalRead(Symmetric symmetric, TcpClient client)
+        internal static byte[] InternalRead(Secure.Wrapper.Symmetric symmetric, TcpClient client)
         {
             if (symmetric.Algorithm != Secure.Algorithm.Symmetric.None)
             {
-                int blockSize = Symmetric.BlockSize(symmetric.Algorithm);
+                int blockSize = Secure.Wrapper.Symmetric.BlockSize(symmetric.Algorithm);
 
                 byte[] iv = new byte[blockSize];
 
@@ -143,6 +143,27 @@ namespace SecSess.Interface
                     s2 += client.GetStream().Read(msg, s2, msg.Length - s2);
 
                 return msg;
+            }
+        }
+
+        /// <summary>
+        /// Hash data using selected hash algorithm
+        /// </summary>
+        /// <param name="algorithm">Hash algorithm to use</param>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        internal static byte[] Hash(Secure.Algorithm.Hash algorithm, byte[] data)
+        {
+            switch (algorithm)
+            {
+                case Secure.Algorithm.Hash.SHA1: return SHA1.HashData(data);
+                case Secure.Algorithm.Hash.SHA256: return SHA256.HashData(data);
+                case Secure.Algorithm.Hash.SHA384: return SHA384.HashData(data);
+                case Secure.Algorithm.Hash.SHA512: return SHA512.HashData(data);
+                case Secure.Algorithm.Hash.SHA3_256: return SHA3_256.HashData(data);
+                case Secure.Algorithm.Hash.SHA3_384: return SHA3_384.HashData(data);
+                case Secure.Algorithm.Hash.SHA3_512: return SHA3_512.HashData(data);
+                default: return data;
             }
         }
 

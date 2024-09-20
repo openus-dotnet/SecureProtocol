@@ -4,7 +4,6 @@ using SecSess.Secure.Wrapper;
 using SecSess.Util;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
 
 namespace SecSess.Tcp
 {
@@ -167,8 +166,7 @@ namespace SecSess.Tcp
 
                 while (client.GetStream().CanWrite == false) ;
 
-                buffer = result.Symmetric.Encrypt("OK".GetBytes(), new byte[Symmetric.BlockSize(_set.Symmetric)]);
-                client.GetStream().Write(buffer, 0, buffer.Length);
+                result.Write(IStream.Hash(_set.Hash, symmetricKey));
 
                 return result;
             }

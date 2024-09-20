@@ -4,6 +4,7 @@ using SecSess.Secure.Wrapper;
 using SecSess.Util;
 using System.Net;
 using System.Net.Sockets;
+using System.Security.Cryptography;
 
 namespace SecSess.Tcp
 {
@@ -41,7 +42,7 @@ namespace SecSess.Tcp
         private Client(AsymmetricKeyBase rsa, Secure.Algorithm.Set set)
         {
             _symmetricKey = new byte[Symmetric.KeySize(set.Symmetric)];
-            new Random(DateTime.Now.Microsecond).NextBytes(_symmetricKey);
+            RandomNumberGenerator.Fill(_symmetricKey);
 
             _client = new TcpClient();
             _asymmetric = new Asymmetric(rsa, set.Asymmetric);
@@ -92,22 +93,15 @@ namespace SecSess.Tcp
 
             if (_asymmetric.AsymmetricAlgorithm != null && _symmetric.Algorithm != Secure.Algorithm.Symmetric.None)
             {
-                int nonSymmetric = "OK".GetBytes().Length;
-
                 byte[] symmetricKey = _asymmetric.Encrypt(_symmetricKey);
                 _client.GetStream().Write(symmetricKey, 0, symmetricKey.Length);
 
-                byte[] buffer = new byte[Math.Max(Symmetric.BlockSize(_symmetric.Algorithm), nonSymmetric)];
-
-                int s = 0;
-                while (s < buffer.Length)
-                    s += _client.GetStream().Read(buffer, s, buffer.Length - s);
+                byte[] response = Read();
+                byte[] compare = IStream.Hash(_set.Hash, _symmetricKey);
 
                 _symmetric = new Symmetric(_symmetricKey, _set.Symmetric);
 
-                string res = _symmetric.Decrypt(buffer, new byte[Symmetric.BlockSize(_symmetric.Algorithm)]).GetString();
-
-                if (res.StartsWith("OK") == false)
+                if (compare.SequenceEqual(response) == false)
                 {
                     throw new SecSessRefuesedException();
                 }
