@@ -22,7 +22,7 @@ namespace SecSess.Key
         /// <returns></returns>
         public static KeyPair GenerateRSA()
         {
-            RSA rsa = RSA.Create(4096);
+            RSA rsa = RSA.Create(2048);
 
             return new KeyPair()
             {

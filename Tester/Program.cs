@@ -13,8 +13,8 @@ internal class Program
     private static void Main(string[] args)
     {
         //var pair = KeyPair.GenerateRSA();
-        //pair.PublicKey.Save("pub");
-        //pair.PrivateKey.Save("priv");
+        //pair.PublicKey.Save("test.pub");
+        //pair.PrivateKey.Save("test.priv");
 
         Set set = new Set()
         {

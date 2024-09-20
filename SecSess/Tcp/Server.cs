@@ -156,7 +156,7 @@ namespace SecSess.Tcp
 
             if (_asymmetric.AsymmetricAlgorithm != null)
             {
-                byte[] buffer = new byte[512];
+                byte[] buffer = new byte[256];
 
                 int s = 0;
                 while (s < buffer.Length)
