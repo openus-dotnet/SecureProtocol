@@ -1,4 +1,5 @@
 ﻿using SecSess.Key;
+using SecSess.Secure.Algorithm;
 using SecSess.Tcp;
 using System.Diagnostics;
 using System.Net;
@@ -16,6 +17,13 @@ internal class Program
         //pair.PublicKey.Save("pub");
         //pair.PrivateKey.Save("priv");
 
+        Set set = new Set()
+        {
+            Asymmetric = Asymmetric.RSA,
+            Symmetric = Symmetric.AES,
+            Hash = Hash.SHA256,
+        };
+
         string RoleAndType = args[0];
         int Size = 1 << int.Parse(args[1]);
         int Repeat = int.Parse(args[2]);
@@ -28,7 +36,7 @@ internal class Program
             case "ss":
                 for (int re = 0; re < Retry; re++)
                 {
-                    Server server = Server.Create($"{Ip}:1234", PrivateKey.Load("test.priv"));
+                    Server server = Server.Create($"{Ip}:1234", PrivateKey.Load("test.priv"), set);
                     server.Start();
 
                     Server.Client sclient = server.AcceptClient();
@@ -48,7 +56,7 @@ internal class Program
             case "sc":
                 for (int re = 0; re < Retry; re++)
                 {
-                    Client client = Client.Create($"{Ip}:1234", PublicKey.Load("test.pub"));
+                    Client client = Client.Create($"{Ip}:1234", PublicKey.Load("test.pub"), set);
                     client.Connect();
 
                     byte[] buffer = new byte[Size];

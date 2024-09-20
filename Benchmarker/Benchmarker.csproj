@@ -12,7 +12,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="benchmark.md" />
   </ItemGroup>
 
 </Project>

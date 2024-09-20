@@ -1,49 +1,52 @@
 ﻿using System.Text.Json;
 
-internal class Program
+namespace Benchmarker
 {
-    private class Log
+    internal class Program
     {
-        public required string Type { get; set; }
-        public required int Size { get; set; }
-        public required int Repeat {  get; set; }
-        public required float Average { get; set; }
-    }
-
-    private static void Main(string[] args)
-    {
-        List<Log> logs = new List<Log>();
-
-        using (StreamReader sr = new StreamReader(args[0]))
+        private class Log
         {
-            while (sr.EndOfStream == false)
-            {
-                string json = sr.ReadLine()!;
-                Log? log = JsonSerializer.Deserialize<Log>(json);
+            public required string Type { get; set; }
+            public required int Size { get; set; }
+            public required int Repeat { get; set; }
+            public required float Average { get; set; }
+        }
 
-                if (log != null)
+        private static void Main(string[] args)
+        {
+            List<Log> logs = new List<Log>();
+
+            using (StreamReader sr = new StreamReader(args[0]))
+            {
+                while (sr.EndOfStream == false)
                 {
-                    logs.Add(log);
+                    string json = sr.ReadLine()!;
+                    Log? log = JsonSerializer.Deserialize<Log>(json);
+
+                    if (log != null)
+                    {
+                        logs.Add(log);
+                    }
                 }
             }
-        }
 
-        logs = logs
-            .GroupBy(log => new { log.Type, log.Size, log.Repeat })
-            .Select(group => new Log
+            logs = logs
+                .GroupBy(log => new { log.Type, log.Size, log.Repeat })
+                .Select(group => new Log
+                {
+                    Type = group.Key.Type,
+                    Size = group.Key.Size,
+                    Repeat = group.Key.Repeat,
+                    Average = group.Average(log => log.Average)
+                })
+                .ToList();
+
+            foreach (Log log in logs)
             {
-                Type = group.Key.Type,
-                Size = group.Key.Size,
-                Repeat = group.Key.Repeat,
-                Average = group.Average(log => log.Average)
-            })
-            .ToList();
+                Console.WriteLine(JsonSerializer.Serialize(log));
+            }
 
-        foreach (Log log in logs)
-        {
-            Console.WriteLine(JsonSerializer.Serialize(log));
+
         }
-
-        
     }
 }
