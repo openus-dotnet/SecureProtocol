@@ -76,5 +76,26 @@ namespace SecSess.Secure
 
             return _algorithm.DecryptCbc(data, iv, paddingMode: PaddingMode.Zeros);
         }
+
+        /// <summary>
+        /// Return symmetric key size for using algorithm
+        /// </summary>
+        /// <param name="algorithm">Symmetric algorithm to use</param>
+        /// <returns></returns>
+        public static int KeySize(Algorithm.Symmetric algorithm)
+        {
+            switch (algorithm)
+            {
+                case Secure.Algorithm.Symmetric.None: 
+                    return 0;
+                case Secure.Algorithm.Symmetric.DES: 
+                case Secure.Algorithm.Symmetric.TripleDES:
+                    return 16;
+                case Secure.Algorithm.Symmetric.AES:
+                    return 32;
+                default:
+                    throw new InvalidOperationException("Use invalid symmetric algorithm");
+            }
+        }
     }
 }

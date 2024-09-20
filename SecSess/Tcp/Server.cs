@@ -2,6 +2,7 @@
 using SecSess.Key;
 using SecSess.Secure;
 using SecSess.Util;
+using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
@@ -208,6 +209,20 @@ namespace SecSess.Tcp
             }
             else
             {
+                byte[] symmetricKey = new byte[Symmetric.KeySize(_set.Symmetric)];
+
+                int s = 0;
+                while (s < symmetricKey.Length)
+                    s += client.GetStream().Read(symmetricKey, s, symmetricKey.Length - s);
+
+                Client result = new Client(client, symmetricKey, _set);
+                _clients.Add(result);
+
+                while (client.GetStream().CanWrite == false) ;
+
+                client.GetStream().Write(result.Symmetric.Encrypt("OK".GetBytes(), new byte[16]), 0, 16);
+
+                return result;
 
             }
         }

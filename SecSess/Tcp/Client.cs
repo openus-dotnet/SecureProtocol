@@ -2,6 +2,7 @@
 using SecSess.Key;
 using SecSess.Secure;
 using SecSess.Util;
+using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
@@ -49,7 +50,7 @@ namespace SecSess.Tcp
             _client = new TcpClient();
             _serverPoint = endPoint;
             _asymmetric = new Asymmetric(rsa, set.Asymmetric);
-            _symmetricKey = new byte[32];
+            _symmetricKey = new byte[Symmetric.KeySize(set.Symmetric)];
             _symmetric = new Symmetric(_symmetricKey, set.Symmetric);
             _set = set;
 
@@ -116,6 +117,25 @@ namespace SecSess.Tcp
             {
                 byte[] symmetricKey = _asymmetric.AsymmetricAlgorithm.Encrypt(_symmetricKey, RSAEncryptionPadding.Pkcs1);
                 _client.GetStream().Write(symmetricKey, 0, symmetricKey.Length);
+
+                byte[] buffer = new byte[16];
+
+                int s = 0;
+                while (s < buffer.Length)
+                    s += _client.GetStream().Read(buffer, s, buffer.Length - s);
+
+                string res = new Symmetric(_symmetricKey, _set.Symmetric).Decrypt(buffer, new byte[16]).GetString();
+
+                _symmetric = new Symmetric(_symmetricKey, _set.Symmetric);
+
+                if (res.StartsWith("OK") == false)
+                {
+                    throw new SecSessRefuesedException();
+                }
+            }
+            else
+            {
+                _client.GetStream().Write(_symmetricKey, 0, _symmetricKey.Length);
 
                 byte[] buffer = new byte[16];
 
