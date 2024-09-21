@@ -133,6 +133,24 @@ namespace SecSess.Interface
                 }
                 else
                 {
+                    byte[] concat = new byte[iv.Length + enc1.Length];
+
+                    Buffer.BlockCopy(iv, 0, concat, 0, iv.Length);
+                    Buffer.BlockCopy(enc1, 0, concat, iv.Length, enc1.Length);
+
+                    byte[] hmacs = new byte[Hash.HashDataSize(hash)];
+
+                    int s4 = 0;
+                    while (s4 < hmacs.Length)
+                        s4 += client.GetStream().Read(hmacs, s4, hmacs.Length - s4);
+
+                    byte[] compare = Hash.HMacData(hash, hmacKey, concat);
+
+                    if (compare.SequenceEqual(hmacs) == false)
+                    {
+                        throw new AuthenticationException("HMAC authentication is failed.");
+                    }
+
                     return msg1[4..(len + 4)];
                 }
             }
