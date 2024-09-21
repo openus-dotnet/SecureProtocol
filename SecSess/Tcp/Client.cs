@@ -1,7 +1,6 @@
-﻿using SecSess.Interface;
+﻿using SecSess.Interface.Tcp;
 using SecSess.Key;
 using SecSess.Secure.Wrapper;
-using SecSess.Util;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Authentication;
@@ -15,6 +14,15 @@ namespace SecSess.Tcp
     public class Client : IStream
     {
         /// <summary>
+        /// The symmetric key used to communicate with this server
+        /// </summary>
+        public byte[] SymmetricKey { get; private set; }
+        /// <summary>
+        /// The HMAC key used to communicate with this server
+        /// </summary>
+        public byte[] HMacKey { get; private set; }
+
+        /// <summary>
         /// A TCP client that actually works
         /// </summary>
         private TcpClient _client;
@@ -27,14 +35,6 @@ namespace SecSess.Tcp
         /// </summary>
         private Symmetric _symmetric { get; set; }
         /// <summary>
-        /// The symmetric key used to communicate with this server
-        /// </summary>
-        private byte[] _symmetricKey;
-        /// <summary>
-        /// The HMAC key used to communicate with this server
-        /// </summary>
-        private byte[] _hmacKey;
-        /// <summary>
         /// Algorithm set to use
         /// </summary>
         private Secure.Algorithm.Set _set;
@@ -46,15 +46,15 @@ namespace SecSess.Tcp
         /// <param name="set">Algorithm set to use</param>
         private Client(AsymmetricKeyBase? parameter, Secure.Algorithm.Set set)
         {
-            _symmetricKey = new byte[Symmetric.KeySize(set.Symmetric)];
-            _hmacKey = new byte[Hash.HMacKeySize(set.Hash)];
+            SymmetricKey = new byte[Symmetric.KeySize(set.Symmetric)];
+            HMacKey = new byte[Hash.HMacKeySize(set.Hash)];
 
-            RandomNumberGenerator.Fill(_symmetricKey);
-            RandomNumberGenerator.Fill(_hmacKey);
+            RandomNumberGenerator.Fill(SymmetricKey);
+            RandomNumberGenerator.Fill(HMacKey);
 
             _client = new TcpClient();
             _asymmetric = new Asymmetric(parameter, set.Asymmetric);
-            _symmetric = new Symmetric(_symmetricKey, set.Symmetric);
+            _symmetric = new Symmetric(SymmetricKey, set.Symmetric);
             _set = set;
         }
 
@@ -101,10 +101,10 @@ namespace SecSess.Tcp
 
             if (_asymmetric.AsymmetricAlgorithm != null && _symmetric.Algorithm != Secure.Algorithm.Symmetric.None)
             {
-                byte[] buffer = new byte[_symmetricKey.Length + _hmacKey.Length];
+                byte[] buffer = new byte[SymmetricKey.Length + HMacKey.Length];
                 
-                Buffer.BlockCopy(_symmetricKey, 0, buffer, 0, _symmetricKey.Length);
-                Buffer.BlockCopy(_hmacKey, 0, buffer, _symmetricKey.Length, _hmacKey.Length);
+                Buffer.BlockCopy(SymmetricKey, 0, buffer, 0, SymmetricKey.Length);
+                Buffer.BlockCopy(HMacKey, 0, buffer, SymmetricKey.Length, HMacKey.Length);
 
                 byte[] enc = _asymmetric.Encrypt(buffer);
                 _client.GetStream().Write(enc, 0, enc.Length);
@@ -112,7 +112,7 @@ namespace SecSess.Tcp
                 byte[] response = Read();
                 byte[] compare = Hash.HashData(_set.Hash, buffer);
 
-                _symmetric = new Symmetric(_symmetricKey, _set.Symmetric);
+                _symmetric = new Symmetric(SymmetricKey, _set.Symmetric);
 
                 if (compare.SequenceEqual(response) == false)
                 {
@@ -144,7 +144,7 @@ namespace SecSess.Tcp
         /// <param name="data">Data that write to server</param>
         public void Write(byte[] data)
         {
-            IStream.InternalWrite(data, _symmetric, _hmacKey, _set.Hash, _client);
+            IStream.InternalWrite(data, _symmetric, HMacKey, _set.Hash, _client);
         }
 
         /// <summary>
@@ -153,7 +153,7 @@ namespace SecSess.Tcp
         /// <returns>Data that read from server</returns>
         public byte[] Read()
         {
-            return IStream.InternalRead(_symmetric, _hmacKey, _set.Hash, _client);
+            return IStream.InternalRead(_symmetric, HMacKey, _set.Hash, _client);
         }
 
         /// <summary>

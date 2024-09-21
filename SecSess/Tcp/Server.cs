@@ -1,10 +1,8 @@
-﻿using SecSess.Interface;
+﻿using SecSess.Interface.Tcp;
 using SecSess.Key;
 using SecSess.Secure.Wrapper;
-using SecSess.Util;
 using System.Net;
 using System.Net.Sockets;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace SecSess.Tcp
 {
@@ -19,17 +17,18 @@ namespace SecSess.Tcp
         public class Client : IStream
         {
             /// <summary>
-            /// Client that actually works
-            /// </summary>
-            internal TcpClient InnerClient { get; set; }
-            /// <summary>
             /// The symmetric key used to communicate with this client
             /// </summary>
-            internal byte[] SymmetricKey { get; set; }
+            public byte[] SymmetricKey { get; private set; }
             /// <summary>
             /// The HMAC key used to communicate with this client
             /// </summary>
-            internal byte[] HMacKey { get; set; }
+            public byte[] HMacKey { get; private set; }
+
+            /// <summary>
+            /// Client that actually works
+            /// </summary>
+            internal TcpClient InnerClient { get; set; }
             /// <summary>
             /// Symmetric algorithm supporter
             /// </summary>

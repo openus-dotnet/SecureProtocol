@@ -1,10 +1,9 @@
 ﻿using SecSess.Secure.Wrapper;
 using SecSess.Tcp;
-using SecSess.Util;
 using System.Net.Sockets;
 using System.Security.Authentication;
 
-namespace SecSess.Interface
+namespace SecSess.Interface.Tcp
 {
     /// <summary>
     /// The interface that manages the stream (mainly on the client side)
@@ -175,6 +174,7 @@ namespace SecSess.Interface
 
         public abstract void Write(byte[] data);
         public abstract byte[] Read();
+
         public abstract bool CanUseStream(StreamType type = StreamType.All);
         public abstract void FlushStream();
     }

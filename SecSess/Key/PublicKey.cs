@@ -1,5 +1,5 @@
 ﻿using System.Security.Cryptography;
-using SecSess.Interface;
+using SecSess.Interface.Key;
 using SecSess.Secure.Algorithm;
 
 namespace SecSess.Key
@@ -7,7 +7,7 @@ namespace SecSess.Key
     /// <summary>
     /// Public key warpper type
     /// </summary>
-    public class PublicKey : AsymmetricKeyBase, IKeyPair<PublicKey>
+    public class PublicKey : AsymmetricKeyBase, IAsymmetricKey<PublicKey>
     {
         /// <summary>
         /// Create a public key
