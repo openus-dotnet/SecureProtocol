@@ -13,7 +13,7 @@ namespace SecSess.Secure.Wrapper
         /// <param name="algorithm">Hash algorithm to use</param>
         /// <param name="data">Data to hash</param>
         /// <returns></returns>
-        internal static byte[] HashData(Algorithm.Hash algorithm, byte[] data)
+        public static byte[] HashData(Algorithm.Hash algorithm, byte[] data)
         {
             switch (algorithm)
             {
@@ -35,7 +35,7 @@ namespace SecSess.Secure.Wrapper
         /// <param name="key">Key for HMAC</param>
         /// <param name="data">Data to hash</param>
         /// <returns></returns>
-        internal static byte[] HMacData(Algorithm.Hash algorithm, byte[] key, byte[] data)
+        public static byte[] HMacData(Algorithm.Hash algorithm, byte[] key, byte[] data)
         {
             switch (algorithm)
             {
@@ -55,7 +55,7 @@ namespace SecSess.Secure.Wrapper
         /// </summary>
         /// <param name="algorithm">Hash algorithm to use</param>
         /// <returns></returns>
-        internal static int HashDataSize(Algorithm.Hash algorithm)
+        public static int HashDataSize(Algorithm.Hash algorithm)
         {
             switch (algorithm)
             {
@@ -75,7 +75,7 @@ namespace SecSess.Secure.Wrapper
         /// </summary>
         /// <param name="algorithm">Hash algorithm to use</param>
         /// <returns></returns>
-        internal static int HMacKeySize(Algorithm.Hash algorithm)
+        public static int HMacKeySize(Algorithm.Hash algorithm)
         {
             switch (algorithm)
             {
