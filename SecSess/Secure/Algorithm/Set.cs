@@ -19,5 +19,15 @@
         /// Hash algorithm to use
         /// </summary>
         public required Hash Hash { get; set; }
+
+        /// <summary>
+        /// Return all none algorithms set
+        /// </summary>
+        public static Set NoneSet => new Set()
+        {
+            Symmetric = Symmetric.None,
+            Hash = Hash.None,
+            Asymmetric = Asymmetric.None,
+        };
     }
 }

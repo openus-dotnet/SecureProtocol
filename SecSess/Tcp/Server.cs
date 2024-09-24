@@ -129,12 +129,22 @@ namespace SecSess.Tcp
         }
 
         /// <summary>
-        /// Create a server where secure sessions are provided
+        /// Create a server without secure session
+        /// </summary>
+        /// <param name="endPoint"></param>
+        /// <returns>Server created (already not Start())</returns>
+        public static Server Craete(IPEndPoint endPoint)
+        {
+            return new Server(new TcpListener(endPoint), null, Secure.Algorithm.Set.NoneSet);
+        }
+
+        /// <summary>
+        /// Create a server where secure session is provided
         /// </summary>
         /// <param name="endPoint">IP end point</param>
         /// <param name="key">Private key for server</param>
         /// <param name="set">Algorithm set to use</param>
-        /// <returns>Server created (not Start())</returns>
+        /// <returns>Server created (already not Start())</returns>
         public static Server Create(IPEndPoint endPoint, PrivateKey? key, Secure.Algorithm.Set set)
         {
             return new Server(new TcpListener(endPoint), key, set);

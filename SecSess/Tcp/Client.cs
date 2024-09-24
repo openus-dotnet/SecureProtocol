@@ -63,11 +63,20 @@ namespace SecSess.Tcp
         }
 
         /// <summary>
+        /// Create a client without secure session
+        /// </summary>
+        /// <returns>Client created (already not Connect())</returns>
+        public static Client Craete()
+        {
+            return new Client(null, Secure.Algorithm.Set.NoneSet);
+        }
+
+        /// <summary>
         /// Create a client where secure sessions are provided
         /// </summary>
         /// <param name="key">Public key for server</param>
         /// <param name="set">Algorithm set to use</param>
-        /// <returns>Client created (not Connect())</returns>
+        /// <returns>Client created (already not Connect())</returns>
         public static Client Create(PublicKey? key, Secure.Algorithm.Set set)
         {
             return new Client(key, set);
@@ -80,13 +89,15 @@ namespace SecSess.Tcp
         /// </summary>
         public void Connect(IPEndPoint serverEP, int retry = 0)
         {
+            ArgumentOutOfRangeException.ThrowIfNegative(retry);
+            
             if (retry == 0)
             {
                 _client.Connect(serverEP);
             }
             else
             {
-                for (int i = 0; i < retry; i++)
+                for (int i = 0; i <= retry; i++)
                 {
                     try
                     {
