@@ -4,10 +4,10 @@ e.g. AES & HMAC Key Exchange from RSA
 
 - Assume that the RSA publik key on the server is already guaranteed by other means.
 
-Client -> Server: ⓐ: (RSA(S_PUBLIC_KEY, AES_KEY + HMAC_KEY))
-Server:	          RSA(S_PRIVATE_KEY, ⓐ) -> AES_KEY + HMAC_KEY
-Server -> Client: AES(AES_KEY, HMAC(HMAC_KEY, AES_KEY + HMAC_KEY))
-Client:           Check HMAC
+1. Client -> Server: ⓐ: (RSA(S_PUBLIC_KEY, AES_KEY + HMAC_KEY))
+2. Server:	          RSA(S_PRIVATE_KEY, ⓐ) -> AES_KEY + HMAC_KEY
+3. Server -> Client: AES(AES_KEY, HMAC(HMAC_KEY, AES_KEY + HMAC_KEY))
+4. Client:           Check HMAC
 
 e.g. RSA-AES(CBC) Mode SecSess Packet
 
