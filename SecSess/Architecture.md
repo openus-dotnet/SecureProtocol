@@ -17,62 +17,55 @@
 |04|Server side|`RSA(S_PRIVATE_KEY, 🔐)` → **Decrypt to** `🔑`|
 |05|Server side|`🔑` → **Get** `AES_KEY` and `HMAC_KEY`|
 |06|Server side|`HMAC(HMAC_KEY, 🔑)` → **Hash to** `📜ˢ`|
-|07|Server side|`SecSess-TCP(AES_KEY, 📜ˢ)` → **Encrypt to** `🔏ˢ`|
+|07|Server side|`SecSess-AES(AES_KEY, 📜ˢ)` → **Encrypt to** `🔏ˢ`|
 |08|Server ↣ Client|**Send** `🔏ˢ`|
-|09|Client side|`SecSess-TCP(AES_KEY, 🔏ˢ)` → **Decrypt to** `📜ˢ`|
+|09|Client side|`SecSess-AES(AES_KEY, 🔏ˢ)` → **Decrypt to** `📜ˢ`|
 |10|Client side|`HMAC(HMAC_KEY, 🔑)` → **Hash to** `📜ᶜ`|
 |11|Client side|**Compare** `📜ˢ` is `📜ᶜ`|
 
 > - `🔑`: `AES_KEY + HMAC_KEY`
->   - ≓ Keys for SecSess-TCP
+>   - ≓ Keys for SecSess-AES
 > - `🔐`: `RSA(S_PUBLIC_KEY, 🔑)`
->   - ≓ Encrypted keys for SecSess-TCP, and this can decrypt only Server
+>   - ≓ Encrypted keys for SecSess-AES, and this can decrypt only Server
 > - `📜`: `HMAC(HMAC_KEY, 🔑)`
->   - ≓ Authentication hash message in SecSess-TCP
-> - `🔏`: `SecSess-TCP(AES_KEY, 📜)`
->   - ≓ Encrypted authentication hash message in SecSess-TCP
+>   - ≓ Authentication hash message in SecSess-AES
+> - `🔏`: `SecSess-AES(AES_KEY, 📜)`
+>   - ≓ Encrypted authentication hash message in SecSess-AES
 
-## 2nd. SecSess-TCP(TCP-AES-CBC) Packet Sent Structure
+## 2nd. SecSess-AES(TCP-AES-CBC) Packet Sent Structure
 
 - Define `IV + AES(AES_KEY, NONCE + MSG_LENGTH + MSG)` is `α` so, the `α` mean encrypted packet.
 - Write AES packet is only follow the structure that `α + HMAC(HMAC_KEY, α)`
 
 ### More Structure Information
 
+- Remember, in this case...
+  - AES block size is 128 bits.
+  - HMAC hashed data size is 256 bits.
+
 <table border="1px solid black">
     <tr>
         <td>
-            <p align="center">IV</p>
+            <p align="center">IV (128)</p>
         </td>
         <td>
-            <p align="center">AES Encrypted Message</p>
+            <p align="center">AES Encrypted Message (128 * <i>N</i>)</p>
             <table border="1px solid black">
                 <tr>
                     <td>
-                        <p align="center">Nonce</p>
+                        <p align="center">Nonce (32)</p>
                     </td>
                     <td>
-                        <p align="center">Message Length</p>
+                        <p align="center">Message Length (32)</p>
                     </td>
                     <td>
-                        <p align="center">Real Message(Write by You)</p>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <p align="center">4 Bytes</p>
-                    </td>
-                    <td>
-                        <p align="center">4 Bytes</p>
-                    </td>
-                    <td>
-                        <p align="center">Message.Length</p>
+                        <p align="center">Message</p>
                     </td>
                 </tr>
             </table>
         </td>
         <td>
-            <p align="center">HMAC Hashed Packet</p>
+            <p align="center">HMAC Hashed Packet (256)</p>
             <table border="1px solid black">
                 <tr>
                     <td>
@@ -89,24 +82,13 @@
                                     <p align="center">Message Length</p>
                                 </td>
                                 <td>
-                                    <p align="center">Real Message(Write by You)</p>
+                                    <p align="center">Message</p>
                                 </td>
                             </tr>
                         </table>
                     </td>
                 </tr>
             </table>
-        </td>
-    </tr>
-    <tr>
-        <td>
-            <p align="center">16 Bytes</p>
-        </td>
-        <td>
-            <p align="center">16 Bytes * N</p>
-        </td>
-        <td>
-            <p align="center">32 Bytes</p>
         </td>
     </tr>
 </table>
@@ -218,5 +200,5 @@ for (int i = 0; i < buffer.Length; i++)
 client.Close();
 ```
 
-- This example is like repeated 100 times Ping-Pong, through SecSess-RSA & TCP.
+- This example is like repeated 100 times Ping-Pong, through SecSess-RSA & AES.
 - And last, check that message is corrupted.
