@@ -69,7 +69,10 @@
             <table border="1px solid black">
                 <tr>
                     <td>
-                        <p align="center">IV + AES Encrypted Message<br>128(n+1) bits</p>
+                        <p align="center">IV<br>128 bits</p>
+                    </td>
+                    <td>
+                        <p align="center">AES Encrypted Message<br>128n bits</p>
                     </td>
                 </tr>
             </table>
@@ -79,8 +82,9 @@
 
 ### Provide from Structure
 
-- Data *confidentiality* through **AES(CBC)**.
-- Data *integrity* and *Authentication* through **HMAC**.
+- Data ***Confidentiality*** through **AES(CBC)**.
+- Data ***Integrity*** and ***Authentication*** through **HMAC**.
+- In now, has plan that provide simple ***Availability*** like support blacklist system.
 
 > - AES_KEY, HMAC_KEY generate and exchange in the before time(in RSA) during the SecSess.
 > - IV is randomly generated for each communication.
