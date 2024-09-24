@@ -38,6 +38,10 @@ namespace SecSess.Tcp
         /// Algorithm set to use
         /// </summary>
         private Secure.Algorithm.Set _set;
+        /// <summary>
+        /// Nonce for preventing retransmission attacks
+        /// </summary>
+        private int _nonce;
 
         /// <summary>
         /// Create client
@@ -144,7 +148,7 @@ namespace SecSess.Tcp
         /// <param name="data">Data that write to server</param>
         public void Write(byte[] data)
         {
-            IStream.InternalWrite(data, _symmetric, HMacKey, _set.Hash, _client);
+            IStream.InternalWrite(data, _symmetric, HMacKey, _set.Hash, _client, ref _nonce);
         }
 
         /// <summary>
@@ -153,7 +157,7 @@ namespace SecSess.Tcp
         /// <returns>Data that read from server</returns>
         public byte[] Read()
         {
-            return IStream.InternalRead(_symmetric, HMacKey, _set.Hash, _client);
+            return IStream.InternalRead(_symmetric, HMacKey, _set.Hash, _client, ref _nonce);
         }
 
         /// <summary>

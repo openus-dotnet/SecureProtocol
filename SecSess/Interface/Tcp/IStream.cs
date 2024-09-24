@@ -1,7 +1,13 @@
 ﻿using SecSess.Secure.Wrapper;
 using SecSess.Tcp;
+using SecSess.Util;
+using System.Buffers.Text;
+using System.Diagnostics;
 using System.Net.Sockets;
 using System.Security.Authentication;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
 
 namespace SecSess.Interface.Tcp
 {
@@ -18,18 +24,24 @@ namespace SecSess.Interface.Tcp
         /// <param name="hmacKey">HMAC key for auth</param>
         /// <param name="hash">Hash algorithm to use</param>
         /// <param name="client">A TCP client that actually works</param>
-        internal static void InternalWrite(byte[] data, Symmetric symmetric, byte[] hmacKey, Secure.Algorithm.Hash hash, TcpClient client)
+        /// <param name="nonce">Nonce for preventing retransmission attacks</param>
+        internal static void InternalWrite(byte[] data, Symmetric symmetric, byte[] hmacKey,
+            Secure.Algorithm.Hash hash, TcpClient client, ref int nonce)
         {
             if (symmetric.Algorithm != Secure.Algorithm.Symmetric.None)
             {
+                nonce += new Random(DateTime.Now.Microsecond).Next(1, 10);
+
                 byte[] iv = new byte[Symmetric.BlockSize(symmetric.Algorithm)];
                 new Random().NextBytes(iv);
 
+                byte[] nonceBit = BitConverter.GetBytes(nonce);
                 byte[] lenBit = BitConverter.GetBytes(data.Length);
-                byte[] msg = new byte[data.Length + 4];
+                byte[] msg = new byte[nonceBit.Length + lenBit.Length + data.Length];
 
-                Buffer.BlockCopy(lenBit, 0, msg, 0, lenBit.Length);
-                Buffer.BlockCopy(data, 0, msg, lenBit.Length, data.Length);
+                Buffer.BlockCopy(nonceBit, 0, msg, 0, nonceBit.Length);
+                Buffer.BlockCopy(lenBit, 0, msg, nonceBit.Length, lenBit.Length);
+                Buffer.BlockCopy(data, 0, msg, nonceBit.Length + lenBit.Length, data.Length);
 
                 byte[] enc = symmetric.Encrypt(msg, iv);
                 byte[] packet = new byte[iv.Length + enc.Length];
@@ -44,9 +56,10 @@ namespace SecSess.Interface.Tcp
                 else
                 {
                     byte[] hmacs = new byte[packet.Length + Hash.HashDataSize(hash)];
+                    byte[] hmac = Hash.HMacData(hash, hmacKey, packet);
 
                     Buffer.BlockCopy(packet, 0, hmacs, 0, packet.Length);
-                    Buffer.BlockCopy(Hash.HMacData(hash, hmacKey, packet), 0, hmacs, packet.Length, Hash.HashDataSize(hash));
+                    Buffer.BlockCopy(hmac, 0, hmacs, packet.Length, hmac.Length);
 
                     client.GetStream().Write(hmacs, 0, hmacs.Length);
                 }
@@ -70,8 +83,10 @@ namespace SecSess.Interface.Tcp
         /// <param name="hmacKey">HMAC key for auth</param>
         /// <param name="hash">Hash algorithm to use</param>
         /// <param name="client">A TCP client that actually works</param>
+        /// <param name="nonce">Nonce for preventing retransmission attacks</param>
         /// <returns>Data that read</returns>
-        internal static byte[] InternalRead(Symmetric symmetric, byte[] hmacKey, Secure.Algorithm.Hash hash, TcpClient client)
+        internal static byte[] InternalRead(Symmetric symmetric, byte[] hmacKey,
+            Secure.Algorithm.Hash hash, TcpClient client, ref int nonce)
         {
             if (symmetric.Algorithm != Secure.Algorithm.Symmetric.None)
             {
@@ -89,8 +104,17 @@ namespace SecSess.Interface.Tcp
 
                 byte[] msg1 = symmetric.Decrypt(enc1, iv);
 
-                int len = BitConverter.ToInt32(msg1[0..4]);
-                int blockCount = (len + 4) / enc1.Length + ((len + 4) % enc1.Length == 0 ? 0 : 1);
+                int readNonce = BitConverter.ToInt32(msg1[0..4]);
+
+                if (readNonce <= nonce)
+                {
+                    throw new AuthenticationException("Nonce is incorrected.");
+                }
+
+                nonce = readNonce;
+
+                int len = BitConverter.ToInt32(msg1[4..8]);
+                int blockCount = (8 + len) / enc1.Length + ((8 + len) % enc1.Length == 0 ? 0 : 1);
 
                 byte[] enc2 = new byte[(blockCount - 1) * enc1.Length];
 
@@ -103,8 +127,8 @@ namespace SecSess.Interface.Tcp
                     byte[] msg2 = symmetric.Decrypt(enc2, enc1);
                     byte[] data = new byte[len];
 
-                    Buffer.BlockCopy(msg1, 4, data, 0, msg1.Length - 4);
-                    Buffer.BlockCopy(msg2, 0, data, msg1.Length - 4, len - (msg1.Length - 4));
+                    Buffer.BlockCopy(msg1, 8, data, 0, msg1.Length - 8);
+                    Buffer.BlockCopy(msg2, 0, data, msg1.Length - 8, len - (msg1.Length - 8));
 
                     if (hmacKey.Length != 0)
                     {
@@ -150,7 +174,7 @@ namespace SecSess.Interface.Tcp
                         throw new AuthenticationException("HMAC authentication is failed.");
                     }
 
-                    return msg1[4..(len + 4)];
+                    return msg1[8..(len + 8)];
                 }
             }
             else

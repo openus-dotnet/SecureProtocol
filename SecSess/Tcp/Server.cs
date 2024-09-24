@@ -28,15 +28,19 @@ namespace SecSess.Tcp
             /// <summary>
             /// Client that actually works
             /// </summary>
-            internal TcpClient InnerClient { get; set; }
+            private TcpClient _client;
             /// <summary>
             /// Symmetric algorithm supporter
             /// </summary>
-            internal Symmetric Symmetric { get; set; }
+            private Symmetric _symmetric;
             /// <summary>
             /// Hash algorithm to use
             /// </summary>
-            internal Secure.Algorithm.Hash HashAlgorithm { get; set; }
+            private Secure.Algorithm.Hash _hash;
+            /// <summary>
+            /// Nonce for preventing retransmission attacks
+            /// </summary>
+            private int _nonce;
 
             /// <summary>
             /// Create a server side client
@@ -47,11 +51,11 @@ namespace SecSess.Tcp
             /// <param name="set">Algorithm set to use</param>
             internal Client(TcpClient client, byte[] symmetricKey, byte[] hmacKey, Secure.Algorithm.Set set)
             {
-                InnerClient = client;
+                _client = client;
                 SymmetricKey = symmetricKey;
                 HMacKey = hmacKey;
-                Symmetric = new Symmetric(symmetricKey, set.Symmetric);
-                HashAlgorithm = set.Hash;
+                _symmetric = new Symmetric(symmetricKey, set.Symmetric);
+                _hash = set.Hash;
             }
 
             /// <summary>
@@ -60,7 +64,7 @@ namespace SecSess.Tcp
             /// <param name="data">Data that write to client</param>
             public void Write(byte[] data)
             {
-                IStream.InternalWrite(data, Symmetric, HMacKey, HashAlgorithm, InnerClient);
+                IStream.InternalWrite(data, _symmetric, HMacKey, _hash, _client, ref _nonce);
             }
 
             /// <summary>
@@ -69,7 +73,7 @@ namespace SecSess.Tcp
             /// <returns>Data that read from client</returns>
             public byte[] Read()
             {
-                return IStream.InternalRead(Symmetric, HMacKey, HashAlgorithm, InnerClient);
+                return IStream.InternalRead(_symmetric, HMacKey, _hash, _client, ref _nonce);
             }
 
             /// <summary>
@@ -79,9 +83,9 @@ namespace SecSess.Tcp
             /// <returns></returns>
             public bool CanUseStream(StreamType type = StreamType.All)
             {
-                return (type.HasFlag(StreamType.Connect) == true ? InnerClient.Connected : true)
-                    && (type.HasFlag(StreamType.Read) == true ? InnerClient.GetStream().CanRead : true)
-                    && (type.HasFlag(StreamType.Write) == true ? InnerClient.GetStream().CanWrite : true);
+                return (type.HasFlag(StreamType.Connect) == true ? _client.Connected : true)
+                    && (type.HasFlag(StreamType.Read) == true ? _client.GetStream().CanRead : true)
+                    && (type.HasFlag(StreamType.Write) == true ? _client.GetStream().CanWrite : true);
             }
 
             /// <summary>
@@ -89,7 +93,7 @@ namespace SecSess.Tcp
             /// </summary>
             public void FlushStream()
             {
-                InnerClient.GetStream().Flush();
+                _client.GetStream().Flush();
             }
         }
 

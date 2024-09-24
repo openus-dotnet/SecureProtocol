@@ -2,6 +2,7 @@
 using SecSess.Secure.Algorithm;
 using SecSess.Tcp;
 using System;
+using System.Drawing;
 using System.Net;
 using System.Net.Sockets;
 using System.Text.Json;
@@ -12,7 +13,84 @@ internal class Program
 
     private static void Main(string[] args)
     {
-        //var pair = KeyPair.GenerateRSA();
+        PublicKey pubkey = PublicKey.Load(Asymmetric.RSA, "test.pub");
+        PrivateKey privkey = PrivateKey.Load(Asymmetric.RSA, "test.priv");
+
+        Set set = new Set()
+        {
+            Asymmetric = Asymmetric.RSA,
+            Symmetric = Symmetric.AES,
+            Hash = Hash.SHA256,
+        };
+
+        new Thread(() =>
+        {
+            for (int re = 0; re < Retry; re++)
+            {
+                Server server = Server.Create(IPEndPoint.Parse($"127.0.0.1:12345"), privkey, set);
+                server.Start();
+
+                Server.Client sclient = server.AcceptClient();
+
+                for (int i = 0; i < 100; i++)
+                {
+                    byte[] buffer = sclient.Read();
+                    sclient.Write(buffer);
+
+                    sclient.FlushStream();
+                }
+
+                server.Stop();
+            }
+        }).Start();
+        new Thread(() =>
+        {
+            for (int re = 0; re < Retry; re++)
+            {
+                DateTime time1 = DateTime.Now;
+
+                Client client = Client.Create(pubkey, set);
+                client.Connect(IPEndPoint.Parse($"127.0.0.1:12345"));
+
+                TimeSpan span1 = DateTime.Now - time1;
+
+                byte[] buffer = new byte[1024];
+                new Random().NextBytes(buffer);
+
+                byte[] check = (byte[])buffer.Clone();
+
+                DateTime time2 = DateTime.Now;
+
+                for (int i = 0; i < 100; i++)
+                {
+                    client.Write(buffer);
+                    buffer = client.Read();
+
+                    client.FlushStream();
+                }
+
+                TimeSpan span2 = DateTime.Now - time2;
+
+                for (int i = 0; i < buffer.Length; i++)
+                {
+                    if (buffer[i] != check[i])
+                        throw new Exception("buffer is corrupted");
+                }
+
+                if ((re - 9) % 10 == 0)
+                {
+                    Console.WriteLine($"{re + 1}. Con. Total: {span1.TotalSeconds}s");
+                    Console.WriteLine($"{re + 1}. Com. Total: {span2.TotalSeconds}s");
+                }
+
+                client.Close();
+            }
+        }).Start();
+    }
+}
+
+/*
+//var pair = KeyPair.GenerateRSA();
         //pair.PublicKey.Save("test.pub");
         //pair.PrivateKey.Save("test.priv");
 
@@ -207,5 +285,4 @@ internal class Program
 
                 break;
         }
-    }
-}
+ */
