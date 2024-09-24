@@ -1,5 +1,7 @@
 ﻿# SecSess Architecture
 
+- Assume that symmetric key algorithm is using AES.
+
 ## 1st. AES & HMAC Key Exchange from SecSess-RSA
 
 - Assume that the RSA public key on the server is already guaranteed by other means.
@@ -24,15 +26,15 @@
 
 ## 2nd. SecSess-TCP(TCP-AES-CBC) Packet Sent Structure
 
-- Def. `(IV + AES(AES_KEY, NONCE + MSG_LENGTH + MSG))` is `α` so, the `α` is same encrypted packet.
-- Write AES packet is only structure that `α + HMAC(HMAC_KEY, α)`
+- Define `IV + AES(AES_KEY, NONCE + MSG_LENGTH + MSG)` is `α` so, the `α` is meaned encrypted packet.
+- Write AES packet is only follow the structure that `α + HMAC(HMAC_KEY, α)`
 
 > - Data *confidentiality* through **AES(CBC)**.
 > - Data *integrity* and *Authentication* through **HMAC**.
 
-> - AES_KEY, HMAC_KEY use the exchange in the initial key exchange during the SecSess.
+> - AES_KEY, HMAC_KEY generate and exchange in the before time(in RSA) during the SecSess.
 > - IV is randomly generated for each communication.
-> - NONCE uses the last read NONCE, increasing by 1 to 10 in each Write, and when Reading, if the NONCE did not increase based on its NONCE, it is judged as an incorrect packet.
+> - Used the last read NONCE, Write increased NONCE by 1 to 10 in each write, and when Reading, if the NONCE did not increase based on last read NONCE, it is judged as an incorrect packet.
 
 ## 3rd. Usage
 
