@@ -17,9 +17,9 @@
 |04|Server side|`RSA(S_PRIVATE_KEY, 🔐)` → **Decrypt to** `🔑`|
 |05|Server side|`🔑` → **Get** `AES_KEY` and `HMAC_KEY`|
 |06|Server side|`HMAC(HMAC_KEY, 🔑)` → **Hash to** `📜ˢ`|
-|07|Server side|`SecSess-TCP(AES_KEY, 📜ˢ)` → **Encrypt to** `🔏`|
-|08|Server ↣ Client|**Send** `🔏`|
-|09|Client side|`SecSess-TCP(AES_KEY, 🔏)` → **Decrypt to** `📜ˢ`|
+|07|Server side|`SecSess-TCP(AES_KEY, 📜ˢ)` → **Encrypt to** `🔏ˢ`|
+|08|Server ↣ Client|**Send** `🔏ˢ`|
+|09|Client side|`SecSess-TCP(AES_KEY, 🔏ˢ)` → **Decrypt to** `📜ˢ`|
 |10|Client side|`HMAC(HMAC_KEY, 🔑)` → **Hash to** `📜ᶜ`|
 |11|Client side|**Compare** `📜ˢ` is `📜ᶜ`|
 
@@ -37,8 +37,84 @@
 - Define `IV + AES(AES_KEY, NONCE + MSG_LENGTH + MSG)` is `α` so, the `α` mean encrypted packet.
 - Write AES packet is only follow the structure that `α + HMAC(HMAC_KEY, α)`
 
-> - Data *confidentiality* through **AES(CBC)**.
-> - Data *integrity* and *Authentication* through **HMAC**.
+### More Structure Information
+
+<table border="1px solid black">
+    <tr>
+        <td>
+            <p align="center">IV</p>
+        </td>
+        <td>
+            <p align="center">AES Encrypted Message</p>
+            <table border="1px solid black">
+                <tr>
+                    <td>
+                        <p align="center">Nonce</p>
+                    </td>
+                    <td>
+                        <p align="center">Message Length</p>
+                    </td>
+                    <td>
+                        <p align="center">Real Message(Write by You)</p>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <p align="center">4 Bytes</p>
+                    </td>
+                    <td>
+                        <p align="center">4 Bytes</p>
+                    </td>
+                    <td>
+                        <p align="center">Message.Length</p>
+                    </td>
+                </tr>
+            </table>
+        </td>
+        <td>
+            <p align="center">HMAC Hashed Packet</p>
+            <table border="1px solid black">
+                <tr>
+                    <td>
+                        <p align="center">IV</p>
+                    </td>
+                    <td>
+                        <p align="center">AES Encrypted Message</p>
+                        <table border="1px solid black">
+                            <tr>
+                                <td>
+                                    <p align="center">Nonce</p>
+                                </td>
+                                <td>
+                                    <p align="center">Message Length</p>
+                                </td>
+                                <td>
+                                    <p align="center">Real Message(Write by You)</p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <p align="center">16 Bytes</p>
+        </td>
+        <td>
+            <p align="center">16 Bytes * N</p>
+        </td>
+        <td>
+            <p align="center">32 Bytes</p>
+        </td>
+    </tr>
+</table>
+
+### Provide from Structure
+
+- Data *confidentiality* through **AES(CBC)**.
+- Data *integrity* and *Authentication* through **HMAC**.
 
 > - AES_KEY, HMAC_KEY generate and exchange in the before time(in RSA) during the SecSess.
 > - IV is randomly generated for each communication.
