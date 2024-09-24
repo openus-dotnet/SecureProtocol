@@ -14,7 +14,7 @@
 |6|Client side|**Compare** `ⓓ` and `HMAC(HMAC_KEY, ⓑ)`|
 
 > - `ⓐ`: `RSA(S_PUBLIC_KEY, AES_KEY + HMAC_KEY)`
->   - ≓ Only read Server keys for SecSess-TCP
+>   - ≓ Keys for SecSess-TCP is only can read Server
 > - `ⓑ`: `AES_KEY + HMAC_KEY`
 >   - ≓ Keys for SecSess-TCP
 > - `ⓒ`: `SecSess-TCP(AES_KEY, HMAC(HMAC_KEY, ⓑ))`
