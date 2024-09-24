@@ -1,6 +1,9 @@
 ﻿# SecSess Architecture
 
-- Assume that symmetric key algorithm is using AES.
+- Assume algorithm set is follow that.
+  - Symmetric key algorithm is using AES.
+  - Asymmetric key algorithm is using RSA.
+  - Hash and HMAC algorithm is using SHA256.
 
 ## 1st. AES & HMAC Key Exchange from SecSess-RSA
 
@@ -8,25 +11,30 @@
 
 |#|Location|Work|
 |-|--------|----|
-|1|Client side|**Generate** `AES_KEY` and `HMAC_KEY`|
-|2|Client ↣ Server|`RSA(S_PUBLIC_KEY, AES_KEY + HMAC_KEY)`|
-|3|Server side|`RSA(S_PRIVATE_KEY, ⓐ)` → `AES_KEY + HMAC_KEY`|
-|4|Server ↣ Client|`SecSess-TCP(AES_KEY, HMAC(HMAC_KEY, ⓑ))`|
-|5|Client side|`SecSess-TCP(AES_KEY, ⓒ)` → `ⓓ`|
-|6|Client side|**Compare** `ⓓ` and `HMAC(HMAC_KEY, ⓑ)`|
+|01|Client side|**Generate** `AES_KEY` and `HMAC_KEY` → **Get** `🔑`|
+|02|Client side|`RSA(S_PUBLIC_KEY, 🔑)` → **Encrypt to** `🔐`|
+|03|Client ↣ Server|**Send** `🔐`|
+|04|Server side|`RSA(S_PRIVATE_KEY, 🔐)` → **Decrypt to** `🔑`|
+|05|Server side|`🔑` → **Get** `AES_KEY` and `HMAC_KEY`|
+|06|Server side|`HMAC(HMAC_KEY, 🔑)` → **Hash to** `📜`|
+|07|Server side|`SecSess-TCP(AES_KEY, 📜)` → **Encrypt to** `🔏`|
+|08|Server ↣ Client|**Send** `🔏`|
+|09|Client side|`SecSess-TCP(AES_KEY, 🔏)` → **Decrypt to** `❓`|
+|10|Client side|`HMAC(HMAC_KEY, 🔑)` → **Hash to** `📜`|
+|11|Client side|**Compare** `❓` is `📜`|
 
-> - `ⓐ`: `RSA(S_PUBLIC_KEY, AES_KEY + HMAC_KEY)`
->   - ≓ Keys for SecSess-TCP is only can read Server
-> - `ⓑ`: `AES_KEY + HMAC_KEY`
+> - `🔑`: `AES_KEY + HMAC_KEY`
 >   - ≓ Keys for SecSess-TCP
-> - `ⓒ`: `SecSess-TCP(AES_KEY, HMAC(HMAC_KEY, ⓑ))`
+> - `🔐`: `RSA(S_PUBLIC_KEY, 🔑)`
+>   - ≓ Encrypted keys for SecSess-TCP, and this can decrypt only Server
+> - `📜`: `HMAC(HMAC_KEY, 🔑)`
+>   - ≓ Authentication hash message in SecSess-TCP
+> - `🔏`: `SecSess-TCP(AES_KEY, 📜)`
 >   - ≓ Encrypted authentication hash message in SecSess-TCP
-> - `ⓓ`: `SecSess-TCP(AES_KEY, ⓒ)`
->   - ≓ Decrypted authentication hash message in SecSess-TCP
 
 ## 2nd. SecSess-TCP(TCP-AES-CBC) Packet Sent Structure
 
-- Define `IV + AES(AES_KEY, NONCE + MSG_LENGTH + MSG)` is `α` so, the `α` is meaned encrypted packet.
+- Define `IV + AES(AES_KEY, NONCE + MSG_LENGTH + MSG)` is `α` so, the `α` mean encrypted packet.
 - Write AES packet is only follow the structure that `α + HMAC(HMAC_KEY, α)`
 
 > - Data *confidentiality* through **AES(CBC)**.
@@ -36,7 +44,7 @@
 > - IV is randomly generated for each communication.
 > - Used the last read NONCE, Write increased NONCE by 1 to 10 in each write, and when Reading, if the NONCE did not increase based on last read NONCE, it is judged as an incorrect packet.
 
-## 3rd. Usage
+## 3rd. Usage Example
 
 ### Key Generator
 
