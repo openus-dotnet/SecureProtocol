@@ -189,4 +189,4 @@ client.Close();
 ```
 
 - This example is like repeated 100 times Ping-Pong, through SecSess-RSA & AES.
-- And last, check that message is corrupted.
+- And last, its check that message is corrupted.
