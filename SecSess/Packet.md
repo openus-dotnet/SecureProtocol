@@ -4,14 +4,14 @@ e.g. AES & HMAC Key Exchange from RSA
 
 - Assume that the RSA publik key on the server is already guaranteed by other means.
 
-1. Client -> Server: ⓐ: (RSA(S_PUBLIC_KEY, AES_KEY + HMAC_KEY))
+1. Client -> Server: (RSA(S_PUBLIC_KEY, AES_KEY + HMAC_KEY))...ⓐ
 2. Server:	          RSA(S_PRIVATE_KEY, ⓐ) -> AES_KEY + HMAC_KEY
 3. Server -> Client: AES(AES_KEY, HMAC(HMAC_KEY, AES_KEY + HMAC_KEY))
 4. Client:           Check HMAC
 
 e.g. RSA-AES(CBC) Mode SecSess Packet
 
-ⓑ: (IV + AES(AES_KEY, NONCE + MSG_LENGTH + MSG)) + HMAC(HMAC_KEY, ⓑ)
+(IV + AES(AES_KEY, NONCE + MSG_LENGTH + MSG))...ⓑ + HMAC(HMAC_KEY, ⓑ)
 
 - AES_KEY, HMAC_KEY use the exchange in the initial key exchange during the SecSess.
 - IV is randomly generated for each communication
