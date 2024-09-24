@@ -46,46 +46,30 @@
 <table border="1px solid black">
     <tr>
         <td>
-            <p align="center">IV (128)</p>
+            <p align="center">IV<br>128 bits</p>
         </td>
         <td>
-            <p align="center">AES Encrypted Message (128 * <i>N</i>)</p>
+            <p align="center">AES Encrypted Message<br>128n bits</p>
             <table border="1px solid black">
-                <tr>
+                <tr align="center">
                     <td>
-                        <p align="center">Nonce (32)</p>
+                        <p align="center">Nonce<br>32 bits</p>
                     </td>
                     <td>
-                        <p align="center">Message Length (32)</p>
+                        <p align="center">Message Length<br>32 bits</p>
                     </td>
                     <td>
-                        <p align="center">Message</p>
+                        <p align="center">Message<br>32m bits</p>
                     </td>
                 </tr>
             </table>
         </td>
         <td>
-            <p align="center">HMAC Hashed Packet (256)</p>
+            <p align="center">HMAC Hash<br>256 bits</p>
             <table border="1px solid black">
                 <tr>
                     <td>
-                        <p align="center">IV</p>
-                    </td>
-                    <td>
-                        <p align="center">AES Encrypted Message</p>
-                        <table border="1px solid black">
-                            <tr>
-                                <td>
-                                    <p align="center">Nonce</p>
-                                </td>
-                                <td>
-                                    <p align="center">Message Length</p>
-                                </td>
-                                <td>
-                                    <p align="center">Message</p>
-                                </td>
-                            </tr>
-                        </table>
+                        <p align="center">IV + AES Encrypted Message<br>128(n+1) bits</p>
                     </td>
                 </tr>
             </table>
