@@ -59,7 +59,7 @@
                         <p align="center">Message Length<br>32 bits</p>
                     </td>
                     <td>
-                        <p align="center">Message<br>32m bits</p>
+                        <p align="center">Message<br>m bits(Z-Padding)</p>
                     </td>
                 </tr>
             </table>
