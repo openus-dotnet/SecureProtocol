@@ -9,7 +9,7 @@ internal class Program
 
     private static void Main(string[] args)
     {
-        if (args.Length > 0)
+        if (args.Length > 0 && args[0] == "k")
         {
             var keys = KeyPair.GenerateRSA();
 
@@ -32,58 +32,64 @@ internal class Program
         {
             Thread s = new Thread(() =>
             {
-                Server server = Server.Create(IPEndPoint.Parse($"127.0.0.1:12345"), privkey, set);
-                server.Start();
-
-                Server.Client sclient = server.AcceptClient();
-
-                for (int i = 0; i < 100; i++)
+                if (args.Length == 0 || args.Length > 0 && args[0] == "s")
                 {
-                    byte[] buffer = sclient.Read();
+                    Server server = Server.Create(new IPEndPoint(IPAddress.Any, 12345), privkey, set);
+                    server.Start();
 
-                    sclient.Write(buffer);
+                    Server.Client sclient = server.AcceptClient();
+
+                    for (int i = 0; i < 100; i++)
+                    {
+                        byte[] buffer = sclient.Read();
+
+                        sclient.Write(buffer);
+                    }
+
+                    server.Stop();
                 }
-
-                server.Stop();
             });
             Thread c = new Thread(() =>
             {
-                DateTime time1 = DateTime.Now;
-
-                Client client = Client.Create(pubkey, set);
-                client.Connect(IPEndPoint.Parse($"127.0.0.1:12345"), 100);
-
-                TimeSpan span1 = DateTime.Now - time1;
-
-                byte[] buffer = new byte[1024];
-                new Random().NextBytes(buffer);
-
-                byte[] check = (byte[])buffer.Clone();
-
-                DateTime time2 = DateTime.Now;
-
-                for (int i = 0; i < 100; i++)
+                if (args.Length == 0 || args.Length > 0 && args[0] == "c")
                 {
-                    client.Write(buffer);
+                    DateTime time1 = DateTime.Now;
 
-                    buffer = client.Read();
+                    Client client = Client.Create(pubkey, set);
+                    client.Connect(new IPEndPoint(IPAddress.Any, 12345), 100);
+
+                    TimeSpan span1 = DateTime.Now - time1;
+
+                    byte[] buffer = new byte[1024];
+                    new Random().NextBytes(buffer);
+
+                    byte[] check = (byte[])buffer.Clone();
+
+                    DateTime time2 = DateTime.Now;
+
+                    for (int i = 0; i < 100; i++)
+                    {
+                        client.Write(buffer);
+
+                        buffer = client.Read();
+                    }
+
+                    TimeSpan span2 = DateTime.Now - time2;
+
+                    for (int i = 0; i < buffer.Length; i++)
+                    {
+                        if (buffer[i] != check[i])
+                            throw new Exception("buffer is corrupted");
+                    }
+
+                    if ((re - 9) % 10 == 0)
+                    {
+                        Console.WriteLine($"{re + 1}. Con. Total: {span1.TotalSeconds}s");
+                        Console.WriteLine($"{re + 1}. Com. Total: {span2.TotalSeconds}s");
+                    }
+
+                    client.Close();
                 }
-
-                TimeSpan span2 = DateTime.Now - time2;
-
-                for (int i = 0; i < buffer.Length; i++)
-                {
-                    if (buffer[i] != check[i])
-                        throw new Exception("buffer is corrupted");
-                }
-
-                if ((re - 9) % 10 == 0)
-                {
-                    Console.WriteLine($"{re + 1}. Con. Total: {span1.TotalSeconds}s");
-                    Console.WriteLine($"{re + 1}. Com. Total: {span2.TotalSeconds}s");
-                }
-
-                client.Close();
             });
 
             s.Start();
