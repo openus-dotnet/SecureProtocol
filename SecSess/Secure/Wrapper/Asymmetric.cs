@@ -1,4 +1,4 @@
-﻿using Openus.Net.SecSess.Key;
+﻿using Openus.Net.SecSess.Abstract.Key;
 using Openus.Net.SecSess.Secure.Algorithm;
 using System.Security.Cryptography;
 
@@ -24,7 +24,7 @@ namespace Openus.Net.SecSess.Secure.Wrapper
         /// </summary>
         /// <param name="param"> Asymmetric algorithm parameter</param>
         /// <param name="algorithm"> Asymmetric algorithm to use</param>
-        public Asymmetric(AsymmetricKeyBase? param, AsymmetricType algorithm)
+        public Asymmetric(BaseAsymmetricKey? param, AsymmetricType algorithm)
         {
             if (param == null ^ algorithm == AsymmetricType.None)
             {

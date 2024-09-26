@@ -1,10 +1,11 @@
 ﻿using Openus.Net.SecSess.Abstract.Tcp;
 using Openus.Net.SecSess.Interface.Tcp;
-using Openus.Net.SecSess.Key;
+using Openus.Net.SecSess.Key.Asymmetric;
 using Openus.Net.SecSess.Secure.Algorithm;
 using Openus.Net.SecSess.Secure.Wrapper;
-using System.Net;
 using System.Net.Sockets;
+using System.Net;
+using Openus.Net.SecSess.Abstract.Key;
 
 namespace Openus.Net.SecSess.Transport.Tcp
 {
@@ -116,7 +117,7 @@ namespace Openus.Net.SecSess.Transport.Tcp
         /// <param name="listener">A TCP listener that actually works</param>
         /// <param name="parameters">Asymmetric key base with private key for server</param>
         /// <param name="set">Algorithm set to use</param>
-        private Server(TcpListener listener, AsymmetricKeyBase? parameters, Set set)
+        private Server(TcpListener listener, BaseAsymmetricKey? parameters, Set set)
         {
             _listener = listener;
             _clients = new List<Client>();

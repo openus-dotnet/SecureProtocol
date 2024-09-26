@@ -1,13 +1,14 @@
-﻿using Openus.Net.SecSess.Interface.Key;
+﻿using Openus.Net.SecSess.Abstract.Key;
+using Openus.Net.SecSess.Interface.Key;
 using Openus.Net.SecSess.Secure.Algorithm;
 using System.Security.Cryptography;
 
-namespace Openus.Net.SecSess.Key
+namespace Openus.Net.SecSess.Key.Asymmetric
 {
     /// <summary>
     /// Public key warpper type
     /// </summary>
-    public class PublicKey : AsymmetricKeyBase, IAsymmetricKey<PublicKey>
+    public class PublicKey : BaseAsymmetricKey, IAsymmetricKey<PublicKey>
     {
         /// <summary>
         /// Create a public key

@@ -1,13 +1,14 @@
-﻿using Openus.Net.SecSess.Interface.Key;
+﻿using Openus.Net.SecSess.Abstract.Key;
+using Openus.Net.SecSess.Interface.Key;
 using Openus.Net.SecSess.Secure.Algorithm;
 using System.Security.Cryptography;
 
-namespace Openus.Net.SecSess.Key
+namespace Openus.Net.SecSess.Key.Asymmetric
 {
     /// <summary>
     /// Private key warpper type
     /// </summary>
-    public class PrivateKey : AsymmetricKeyBase, IAsymmetricKey<PrivateKey>
+    public class PrivateKey : BaseAsymmetricKey, IAsymmetricKey<PrivateKey>
     {
         /// <summary>
         /// Create a private key
@@ -60,8 +61,8 @@ namespace Openus.Net.SecSess.Key
         /// <returns>Wrapped private key</returns>
         public static PrivateKey Load(AsymmetricType algorithm, string path)
         {
-            byte[] result; 
-            
+            byte[] result;
+
             using (BinaryReader r = new BinaryReader(new FileStream(path, FileMode.Open, FileAccess.Read)))
             {
                 result = r.ReadBytes((int)r.BaseStream.Length);

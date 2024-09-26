@@ -1,6 +1,7 @@
-﻿using Openus.Net.SecSess.Abstract.Tcp;
+﻿using Openus.Net.SecSess.Abstract.Key;
+using Openus.Net.SecSess.Abstract.Tcp;
 using Openus.Net.SecSess.Interface.Tcp;
-using Openus.Net.SecSess.Key;
+using Openus.Net.SecSess.Key.Asymmetric;
 using Openus.Net.SecSess.Secure.Algorithm;
 using Openus.Net.SecSess.Secure.Wrapper;
 using System.Net;
@@ -27,7 +28,7 @@ namespace Openus.Net.SecSess.Transport.Tcp
         /// <param name="set">Algorithm set to use</param>
         /// <param name="hmacKey">HMAC key to use</param>
         /// <param name="symmetricKey">Symmetric key to use</param>
-        private Client(AsymmetricKeyBase? parameter, Set set, byte[] symmetricKey, byte[] hmacKey)
+        private Client(BaseAsymmetricKey? parameter, Set set, byte[] symmetricKey, byte[] hmacKey)
             : base(new TcpClient(), set, symmetricKey, hmacKey)
         {
             _asymmetric = new Asymmetric(parameter, set.Asymmetric);
