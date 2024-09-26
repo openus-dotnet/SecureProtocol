@@ -4,7 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <RootNamespace>Open.Net.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
+    <RootNamespace>Openus.Net.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
   </PropertyGroup>
 
 </Project>
