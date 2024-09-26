@@ -1,8 +1,8 @@
-﻿using System.Security.Cryptography;
-using SecSess.Interface.Key;
-using SecSess.Secure.Algorithm;
+﻿using Open.Net.SecSess.Interface.Key;
+using Open.Net.SecSess.Secure.Algorithm;
+using System.Security.Cryptography;
 
-namespace SecSess.Key
+namespace Open.Net.SecSess.Key
 {
     /// <summary>
     /// Private key warpper type

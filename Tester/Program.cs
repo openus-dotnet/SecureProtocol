@@ -1,11 +1,7 @@
-﻿using SecSess.Key;
-using SecSess.Secure.Algorithm;
-using SecSess.Tcp;
-using System;
-using System.Drawing;
+﻿using Open.Net.SecSess.Key;
+using Open.Net.SecSess.Secure.Algorithm;
+using Open.Net.SecSess.Tcp;
 using System.Net;
-using System.Net.Sockets;
-using System.Text.Json;
 
 internal class Program
 {

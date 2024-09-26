@@ -1,4 +1,4 @@
-﻿namespace SecSess.Secure.Algorithm
+﻿namespace Open.Net.SecSess.Secure.Algorithm
 {
     /// <summary>
     /// Symmetric key algorithm to use

@@ -1,4 +1,4 @@
-﻿namespace SecSess.Tcp
+﻿namespace Open.Net.SecSess.Tcp
 {
     /// <summary>
     /// The type of client state to judge

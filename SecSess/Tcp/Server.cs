@@ -1,10 +1,10 @@
-﻿using SecSess.Interface.Tcp;
-using SecSess.Key;
-using SecSess.Secure.Wrapper;
+﻿using Open.Net.SecSess.Interface.Tcp;
+using Open.Net.SecSess.Key;
+using Open.Net.SecSess.Secure.Wrapper;
 using System.Net;
 using System.Net.Sockets;
 
-namespace SecSess.Tcp
+namespace Open.Net.SecSess.Tcp
 {
     /// <summary>
     /// TCP server with secure sessions

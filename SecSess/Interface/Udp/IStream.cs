@@ -1,9 +1,9 @@
-﻿using SecSess.Secure.Wrapper;
+﻿using Open.Net.SecSess.Secure.Wrapper;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Authentication;
 
-namespace SecSess.Interface.Udp
+namespace Open.Net.SecSess.Interface.Udp
 {
     internal interface IStream
     {

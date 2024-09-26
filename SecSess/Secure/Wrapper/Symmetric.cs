@@ -1,6 +1,6 @@
 ﻿using System.Security.Cryptography;
 
-namespace SecSess.Secure.Wrapper
+namespace Open.Net.SecSess.Secure.Wrapper
 {
     /// <summary>
     /// Custom symmetric algorighm wrapper

@@ -1,15 +1,9 @@
-﻿using SecSess.Secure.Wrapper;
-using SecSess.Tcp;
-using SecSess.Util;
-using System.Buffers.Text;
-using System.Diagnostics;
+﻿using Open.Net.SecSess.Secure.Wrapper;
+using Open.Net.SecSess.Tcp;
 using System.Net.Sockets;
 using System.Security.Authentication;
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.Json;
 
-namespace SecSess.Interface.Tcp
+namespace Open.Net.SecSess.Interface.Tcp
 {
     /// <summary>
     /// The interface that manages the stream (mainly on the client side)

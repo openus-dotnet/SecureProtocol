@@ -1,10 +1,9 @@
-﻿using SecSess.Key;
-using System.Net.Sockets;
+﻿using Open.Net.SecSess.Secure.Wrapper;
+using Open.Net.SecSess.Interface.Udp;
 using System.Net;
-using SecSess.Secure.Wrapper;
-using SecSess.Interface.Udp;
+using System.Net.Sockets;
 
-namespace SecSess.Udp
+namespace Open.Net.SecSess.Udp
 {
     /// <summary>
     /// UDP server with secure sessions
