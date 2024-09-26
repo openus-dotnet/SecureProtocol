@@ -56,7 +56,7 @@ internal class Program
                     DateTime time1 = DateTime.Now;
 
                     Client client = Client.Create(pubkey, set);
-                    client.Connect(new IPEndPoint(IPAddress.Any, 12345), 100);
+                    client.Connect(new IPEndPoint(IPAddress.Parse(args.Length == 2 ? args[1] : "127.0.0.1"), 12345), 100);
 
                     TimeSpan span1 = DateTime.Now - time1;
 
