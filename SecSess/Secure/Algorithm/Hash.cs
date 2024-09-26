@@ -1,4 +1,4 @@
-﻿namespace Open.Net.SecSess.Secure.Algorithm
+﻿namespace Openus.Net.SecSess.Secure.Algorithm
 {
     /// <summary>
     /// Hash algorithm to use

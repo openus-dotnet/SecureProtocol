@@ -1,6 +1,6 @@
-﻿using Open.Net.SecSess.Key;
-using Open.Net.SecSess.Secure.Algorithm;
-using Open.Net.SecSess.Tcp;
+﻿using Openus.Net.SecSess.Key;
+using Openus.Net.SecSess.Secure.Algorithm;
+using Openus.Net.SecSess.Tcp;
 using System.Net;
 
 internal class Program
@@ -39,14 +39,14 @@ internal class Program
                 server.Stop();
             }
         }).Start();
-        new Thread(() =>
+        new Thread(async () =>
         {
             for (int re = 0; re < Retry; re++)
             {
                 DateTime time1 = DateTime.Now;
 
                 Client client = Client.Create(pubkey, set);
-                client.Connect(IPEndPoint.Parse($"127.0.0.1:12345"));
+                await client.ConnectAsync(IPEndPoint.Parse($"127.0.0.1:12345"));
 
                 TimeSpan span1 = DateTime.Now - time1;
 
@@ -59,7 +59,7 @@ internal class Program
 
                 for (int i = 0; i < 100; i++)
                 {
-                    client.Write(buffer);
+                    await client.WriteAsync(buffer);
                     buffer = client.Read();
 
                     client.FlushStream();

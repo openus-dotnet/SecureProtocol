@@ -1,7 +1,7 @@
-﻿using Open.Net.SecSess.Key;
-using Open.Net.SecSess.Secure.Algorithm;
+﻿using Openus.Net.SecSess.Key;
+using Openus.Net.SecSess.Secure.Algorithm;
 
-namespace Open.Net.SecSess.Interface.Key
+namespace Openus.Net.SecSess.Interface.Key
 {
     /// <summary>
     /// Interface that defines saves and loads in file

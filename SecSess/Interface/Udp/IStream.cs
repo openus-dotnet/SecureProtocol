@@ -1,13 +1,12 @@
-﻿using Open.Net.SecSess.Secure.Wrapper;
+﻿using Openus.Net.SecSess.Secure.Wrapper;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Authentication;
 
-namespace Open.Net.SecSess.Interface.Udp
+namespace Openus.Net.SecSess.Interface.Udp
 {
     internal interface IStream
     {
-
         /// <summary>
         /// Internal real implementation of a Write method
         /// </summary>

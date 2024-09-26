@@ -1,12 +1,12 @@
-﻿using Open.Net.SecSess.Interface.Tcp;
-using Open.Net.SecSess.Key;
-using Open.Net.SecSess.Secure.Wrapper;
+﻿using Openus.Net.SecSess.Interface.Tcp;
+using Openus.Net.SecSess.Key;
+using Openus.Net.SecSess.Secure.Wrapper;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Authentication;
 using System.Security.Cryptography;
 
-namespace Open.Net.SecSess.Tcp
+namespace Openus.Net.SecSess.Tcp
 {
     /// <summary>
     /// TCP client with secure sessions
@@ -60,6 +60,7 @@ namespace Open.Net.SecSess.Tcp
             _asymmetric = new Asymmetric(parameter, set.Asymmetric);
             _symmetric = new Symmetric(SymmetricKey, set.Symmetric);
             _set = set;
+            _nonce = -1;
         }
 
         /// <summary>
@@ -70,7 +71,6 @@ namespace Open.Net.SecSess.Tcp
         {
             return new Client(null, Secure.Algorithm.Set.NoneSet);
         }
-
         /// <summary>
         /// Create a client where secure sessions are provided
         /// </summary>
@@ -80,6 +80,15 @@ namespace Open.Net.SecSess.Tcp
         public static Client Create(PublicKey? key, Secure.Algorithm.Set set)
         {
             return new Client(key, set);
+        }
+
+        /// <summary>
+        /// Close the TCP client
+        /// </summary>
+        public void Close()
+        {
+            _client.Close();
+            _client.Dispose();
         }
 
         /// <summary>
@@ -143,14 +152,14 @@ namespace Open.Net.SecSess.Tcp
                  throw new InvalidOperationException("Invalid combination between asymmetric to symmetric algorithm.");
             }
         }
-
         /// <summary>
-        /// Close the TCP client
+        /// Connect to a preconfigured server
+        /// <param name="serverEP"/>Server IP end point</param>
+        /// <param name="retry">Maximum retry to connect</param>
         /// </summary>
-        public void Close()
+        public async Task ConnectAsync(IPEndPoint serverEP, int retry = 0)
         {
-            _client.Close();
-            _client.Dispose();
+            await Task.Run(() => Connect(serverEP, retry));
         }
 
         /// <summary>
@@ -189,6 +198,32 @@ namespace Open.Net.SecSess.Tcp
         public void FlushStream()
         {
             _client.GetStream().Flush();
+        }
+
+        /// <summary>
+        /// Write packet with secure session
+        /// </summary>
+        /// <param name="data">Data that write to server</param>
+        public async Task WriteAsync(byte[] data)
+        {
+            await Task.Run(() => Write(data));
+        }
+
+        /// <summary>
+        /// Read packet with secure session
+        /// </summary>
+        /// <returns>Data that read from server</returns>
+        public async Task<byte[]> ReadAsync()
+        {
+            return await Task.Run(() => Read());
+        }
+
+        /// <summary>
+        /// Flushes data from stream
+        /// </summary>
+        public async Task FlushStreamAsync()
+        {
+            await Task.Run(()=>FlushStream());
         }
     }
 }

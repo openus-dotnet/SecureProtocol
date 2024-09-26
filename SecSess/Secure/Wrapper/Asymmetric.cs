@@ -1,7 +1,7 @@
-﻿using Open.Net.SecSess.Key;
+﻿using Openus.Net.SecSess.Key;
 using System.Security.Cryptography;
 
-namespace Open.Net.SecSess.Secure.Wrapper
+namespace Openus.Net.SecSess.Secure.Wrapper
 {
     /// <summary>
     /// Custom asymmetric algorighm wrapper

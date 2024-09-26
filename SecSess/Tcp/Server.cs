@@ -1,10 +1,10 @@
-﻿using Open.Net.SecSess.Interface.Tcp;
-using Open.Net.SecSess.Key;
-using Open.Net.SecSess.Secure.Wrapper;
+﻿using Openus.Net.SecSess.Interface.Tcp;
+using Openus.Net.SecSess.Key;
+using Openus.Net.SecSess.Secure.Wrapper;
 using System.Net;
 using System.Net.Sockets;
 
-namespace Open.Net.SecSess.Tcp
+namespace Openus.Net.SecSess.Tcp
 {
     /// <summary>
     /// TCP server with secure sessions
@@ -94,6 +94,32 @@ namespace Open.Net.SecSess.Tcp
             public void FlushStream()
             {
                 _client.GetStream().Flush();
+            }
+
+            /// <summary>
+            /// Write packet with secure session
+            /// </summary>
+            /// <param name="data">Data that write to client</param>
+            public async Task WriteAsync(byte[] data)
+            {
+                await Task.Run(() => Write(data));
+            }
+
+            /// <summary>
+            /// Read packet with secure session
+            /// </summary>
+            /// <returns>Data that read from client</returns>
+            public async Task<byte[]> ReadAsync()
+            {
+                return await Task.Run(() => Read());
+            }
+
+            /// <summary>
+            /// Flushes data from stream
+            /// </summary>
+            public async Task FlushStreamAsync()
+            {
+                await Task.Run(() => FlushStream());
             }
         }
 
@@ -208,6 +234,15 @@ namespace Open.Net.SecSess.Tcp
             {
                 throw new InvalidOperationException("Invalid combination between asymmetric to symmetric algorithm.");
             }
+        }
+
+
+        /// <summary>
+        /// Accept a pending connection request
+        /// </summary>
+        public async Task<Client> AcceptClientAsync()
+        {
+            return await Task.Run(AcceptClient);
         }
     }
 }

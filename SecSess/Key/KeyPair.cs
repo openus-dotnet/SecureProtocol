@@ -1,7 +1,7 @@
-﻿using Open.Net.SecSess.Secure.Algorithm;
+﻿using Openus.Net.SecSess.Secure.Algorithm;
 using System.Security.Cryptography;
 
-namespace Open.Net.SecSess.Key
+namespace Openus.Net.SecSess.Key
 {
     /// <summary>
     /// Asymmetric key pair type

@@ -1,9 +1,9 @@
-﻿using Open.Net.SecSess.Secure.Wrapper;
-using Open.Net.SecSess.Tcp;
+﻿using Openus.Net.SecSess.Secure.Wrapper;
+using Openus.Net.SecSess.Tcp;
 using System.Net.Sockets;
 using System.Security.Authentication;
 
-namespace Open.Net.SecSess.Interface.Tcp
+namespace Openus.Net.SecSess.Interface.Tcp
 {
     /// <summary>
     /// The interface that manages the stream (mainly on the client side)
@@ -195,5 +195,9 @@ namespace Open.Net.SecSess.Interface.Tcp
 
         public abstract bool CanUseStream(StreamType type = StreamType.All);
         public abstract void FlushStream();
+
+        public abstract Task WriteAsync(byte[] data);
+        public abstract Task<byte[]> ReadAsync();
+        public abstract Task FlushStreamAsync();
     }
 }
