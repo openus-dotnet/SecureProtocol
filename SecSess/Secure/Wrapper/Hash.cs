@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography;
+﻿using Openus.Net.SecSess.Secure.Algorithm;
+using System.Security.Cryptography;
 
 namespace Openus.Net.SecSess.Secure.Wrapper
 {
@@ -13,17 +14,17 @@ namespace Openus.Net.SecSess.Secure.Wrapper
         /// <param name="algorithm">Hash algorithm to use</param>
         /// <param name="data">Data to hash</param>
         /// <returns></returns>
-        public static byte[] HashData(Algorithm.Hash algorithm, byte[] data)
+        public static byte[] HashData(HashType algorithm, byte[] data)
         {
             switch (algorithm)
             {
-                case Algorithm.Hash.SHA1: return SHA1.HashData(data);
-                case Algorithm.Hash.SHA256: return SHA256.HashData(data);
-                case Algorithm.Hash.SHA384: return SHA384.HashData(data);
-                case Algorithm.Hash.SHA512: return SHA512.HashData(data);
-                case Algorithm.Hash.SHA3_256: return SHA3_256.HashData(data);
-                case Algorithm.Hash.SHA3_384: return SHA3_384.HashData(data);
-                case Algorithm.Hash.SHA3_512: return SHA3_512.HashData(data);
+                case HashType.SHA1: return SHA1.HashData(data);
+                case HashType.SHA256: return SHA256.HashData(data);
+                case HashType.SHA384: return SHA384.HashData(data);
+                case HashType.SHA512: return SHA512.HashData(data);
+                case HashType.SHA3_256: return SHA3_256.HashData(data);
+                case HashType.SHA3_384: return SHA3_384.HashData(data);
+                case HashType.SHA3_512: return SHA3_512.HashData(data);
                 default: return data;
             }
         }
@@ -35,17 +36,17 @@ namespace Openus.Net.SecSess.Secure.Wrapper
         /// <param name="key">Key for HMAC</param>
         /// <param name="data">Data to hash</param>
         /// <returns></returns>
-        public static byte[] HMacData(Algorithm.Hash algorithm, byte[] key, byte[] data)
+        public static byte[] HMacData(HashType algorithm, byte[] key, byte[] data)
         {
             switch (algorithm)
             {
-                case Algorithm.Hash.SHA1: return HMACSHA1.HashData(key, data);
-                case Algorithm.Hash.SHA256: return HMACSHA256.HashData(key, data);
-                case Algorithm.Hash.SHA384: return HMACSHA384.HashData(key, data);
-                case Algorithm.Hash.SHA512: return HMACSHA512.HashData(key, data);
-                case Algorithm.Hash.SHA3_256: return HMACSHA3_256.HashData(key, data);
-                case Algorithm.Hash.SHA3_384: return HMACSHA3_384.HashData(key, data);
-                case Algorithm.Hash.SHA3_512: return HMACSHA3_512.HashData(key, data);
+                case HashType.SHA1: return HMACSHA1.HashData(key, data);
+                case HashType.SHA256: return HMACSHA256.HashData(key, data);
+                case HashType.SHA384: return HMACSHA384.HashData(key, data);
+                case HashType.SHA512: return HMACSHA512.HashData(key, data);
+                case HashType.SHA3_256: return HMACSHA3_256.HashData(key, data);
+                case HashType.SHA3_384: return HMACSHA3_384.HashData(key, data);
+                case HashType.SHA3_512: return HMACSHA3_512.HashData(key, data);
                 default: return data;
             }
         }
@@ -55,17 +56,17 @@ namespace Openus.Net.SecSess.Secure.Wrapper
         /// </summary>
         /// <param name="algorithm">Hash algorithm to use</param>
         /// <returns></returns>
-        public static int HashDataSize(Algorithm.Hash algorithm)
+        public static int HashDataSize(HashType algorithm)
         {
             switch (algorithm)
             {
-                case Algorithm.Hash.SHA1: return 20;
-                case Algorithm.Hash.SHA256: return 32;
-                case Algorithm.Hash.SHA384: return 48;
-                case Algorithm.Hash.SHA512: return 64;
-                case Algorithm.Hash.SHA3_256: return 32;
-                case Algorithm.Hash.SHA3_384: return 48;
-                case Algorithm.Hash.SHA3_512: return 64;
+                case HashType.SHA1: return 20;
+                case HashType.SHA256: return 32;
+                case HashType.SHA384: return 48;
+                case HashType.SHA512: return 64;
+                case HashType.SHA3_256: return 32;
+                case HashType.SHA3_384: return 48;
+                case HashType.SHA3_512: return 64;
                 default: return -1;
             }
         }
@@ -75,17 +76,17 @@ namespace Openus.Net.SecSess.Secure.Wrapper
         /// </summary>
         /// <param name="algorithm">Hash algorithm to use</param>
         /// <returns></returns>
-        public static int HMacKeySize(Algorithm.Hash algorithm)
+        public static int HMacKeySize(HashType algorithm)
         {
             switch (algorithm)
             {
-                case Algorithm.Hash.SHA1: return 64;
-                case Algorithm.Hash.SHA256: return 64;
-                case Algorithm.Hash.SHA384: return 128;
-                case Algorithm.Hash.SHA512: return 128;
-                case Algorithm.Hash.SHA3_256: return 136;
-                case Algorithm.Hash.SHA3_384: return 104;
-                case Algorithm.Hash.SHA3_512: return 72;
+                case HashType.SHA1: return 64;
+                case HashType.SHA256: return 64;
+                case HashType.SHA384: return 128;
+                case HashType.SHA512: return 128;
+                case HashType.SHA3_256: return 136;
+                case HashType.SHA3_384: return 104;
+                case HashType.SHA3_512: return 72;
                 default: return 0;
             }
         }

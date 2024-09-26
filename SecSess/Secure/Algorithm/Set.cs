@@ -8,26 +8,26 @@
         /// <summary>
         /// Asymmetric algorithm to use
         /// </summary>
-        public required Asymmetric Asymmetric { get; set; }
+        public required AsymmetricType Asymmetric { get; set; }
 
         /// <summary>
         /// Symmetric algorithm to use
         /// </summary>
-        public required Symmetric Symmetric { get; set; }
+        public required SymmetricType Symmetric { get; set; }
 
         /// <summary>
         /// Hash algorithm to use
         /// </summary>
-        public required Hash Hash { get; set; }
+        public required HashType Hash { get; set; }
 
         /// <summary>
         /// Return all none algorithms set
         /// </summary>
         public static Set NoneSet => new Set()
         {
-            Symmetric = Symmetric.None,
-            Hash = Hash.None,
-            Asymmetric = Asymmetric.None,
+            Symmetric = SymmetricType.None,
+            Hash = HashType.None,
+            Asymmetric = AsymmetricType.None,
         };
     }
 }

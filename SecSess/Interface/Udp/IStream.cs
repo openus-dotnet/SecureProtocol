@@ -1,4 +1,5 @@
 ﻿using Openus.Net.SecSess.Secure.Wrapper;
+using Openus.Net.SecSess.Secure.Algorithm;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Authentication;
@@ -16,9 +17,9 @@ namespace Openus.Net.SecSess.Interface.Udp
         /// <param name="hash">Hash algorithm to use</param>
         /// <param name="client">A UDP client that actually works</param>
         /// <param name="remoteEP">Remote IP end point to write or read</param>
-        internal static void InternalWrite(byte[] data, Symmetric symmetric, byte[] hmacKey, Secure.Algorithm.Hash hash, UdpClient client, IPEndPoint remoteEP)
+        internal static void InternalWrite(byte[] data, Symmetric symmetric, byte[] hmacKey, HashType hash, UdpClient client, IPEndPoint remoteEP)
         {
-            if (symmetric.Algorithm != Secure.Algorithm.Symmetric.None)
+            if (symmetric.Algorithm != SymmetricType.None)
             {
                 byte[] iv = new byte[Symmetric.BlockSize(symmetric.Algorithm)];
                 new Random().NextBytes(iv);
@@ -70,9 +71,9 @@ namespace Openus.Net.SecSess.Interface.Udp
         /// <param name="client">A UDP client that actually works</param>
         /// <param name="remoteEP">Remote IP end point to write or read</param>
         /// <returns>Data that read</returns>
-        internal static byte[] InternalRead(Symmetric symmetric, byte[] hmacKey, Secure.Algorithm.Hash hash, UdpClient client, ref IPEndPoint remoteEP)
+        internal static byte[] InternalRead(Symmetric symmetric, byte[] hmacKey, HashType hash, UdpClient client, ref IPEndPoint remoteEP)
         {
-            if (symmetric.Algorithm != Secure.Algorithm.Symmetric.None)
+            if (symmetric.Algorithm != SymmetricType.None)
             {
                 byte[] fullData = client.Receive(ref remoteEP);
 

@@ -3,7 +3,7 @@
     /// <summary>
     /// Symmetric key algorithm to use
     /// </summary>
-    public enum Symmetric
+    public enum SymmetricType
     {
         None = 0,
         DES = 1,

@@ -1,5 +1,6 @@
-﻿using Openus.Net.SecSess.Secure.Wrapper;
-using Openus.Net.SecSess.Tcp;
+﻿using Openus.Net.SecSess.Secure.Algorithm;
+using Openus.Net.SecSess.Secure.Wrapper;
+using Openus.Net.SecSess.Transport.Tcp;
 using System.Net.Sockets;
 using System.Security.Authentication;
 
@@ -20,9 +21,9 @@ namespace Openus.Net.SecSess.Interface.Tcp
         /// <param name="client">A TCP client that actually works</param>
         /// <param name="nonce">Nonce for preventing retransmission attacks</param>
         internal static void InternalWrite(byte[] data, Symmetric symmetric, byte[] hmacKey,
-            Secure.Algorithm.Hash hash, TcpClient client, ref int nonce)
+            HashType hash, TcpClient client, ref int nonce)
         {
-            if (symmetric.Algorithm != Secure.Algorithm.Symmetric.None)
+            if (symmetric.Algorithm != SymmetricType.None)
             {
                 nonce += new Random(DateTime.Now.Microsecond).Next(1, 10);
 
@@ -80,9 +81,9 @@ namespace Openus.Net.SecSess.Interface.Tcp
         /// <param name="nonce">Nonce for preventing retransmission attacks</param>
         /// <returns>Data that read</returns>
         internal static byte[] InternalRead(Symmetric symmetric, byte[] hmacKey,
-            Secure.Algorithm.Hash hash, TcpClient client, ref int nonce)
+            HashType hash, TcpClient client, ref int nonce)
         {
-            if (symmetric.Algorithm != Secure.Algorithm.Symmetric.None)
+            if (symmetric.Algorithm != SymmetricType.None)
             {
                 byte[] iv = new byte[Symmetric.BlockSize(symmetric.Algorithm)];
 
@@ -102,7 +103,7 @@ namespace Openus.Net.SecSess.Interface.Tcp
 
                 if (readNonce <= nonce)
                 {
-                    throw new AuthenticationException("Nonce is incorrected.");
+                    throw new AuthenticationException("_nonce is incorrected.");
                 }
 
                 nonce = readNonce;

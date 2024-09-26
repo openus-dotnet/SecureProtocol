@@ -19,7 +19,7 @@ namespace Openus.Net.SecSess.Key
         /// <summary>
         /// Asymmetric algorithm to use
         /// </summary>
-        public required Asymmetric Algorithm { get; set; }
+        public required AsymmetricType Algorithm { get; set; }
 
         /// <summary>
         /// Generate a new RSA key pair
@@ -31,9 +31,9 @@ namespace Openus.Net.SecSess.Key
 
             return new KeyPair()
             {
-                PrivateKey = new PrivateKey(Asymmetric.RSA, rsa.ExportParameters(true)),
-                PublicKey = new PublicKey(Asymmetric.RSA, rsa.ExportParameters(false)),
-                Algorithm = Asymmetric.RSA,
+                PrivateKey = new PrivateKey(AsymmetricType.RSA, rsa.ExportParameters(true)),
+                PublicKey = new PublicKey(AsymmetricType.RSA, rsa.ExportParameters(false)),
+                Algorithm = AsymmetricType.RSA,
             };
         }
     }

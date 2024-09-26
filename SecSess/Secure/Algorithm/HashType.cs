@@ -3,7 +3,7 @@
     /// <summary>
     /// Hash algorithm to use
     /// </summary>
-    public enum Hash
+    public enum HashType
     {
         None = 0,
         SHA1 = 1,

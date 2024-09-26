@@ -14,13 +14,13 @@ namespace Openus.Net.SecSess.Key
         /// </summary>
         /// <param name="algorithm">Asymmetric algorithm to use</param>
         /// <param name="parameters">Actual algorithm parameters (with private key parameter)</param>
-        internal PrivateKey(Asymmetric algorithm, object parameters)
+        internal PrivateKey(AsymmetricType algorithm, object parameters)
         {
             Algorithm = algorithm;
 
             switch (algorithm)
             {
-                case Asymmetric.RSA:
+                case AsymmetricType.RSA:
                     InnerRSA = (RSAParameters)parameters;
                     break;
                 default:
@@ -38,7 +38,7 @@ namespace Openus.Net.SecSess.Key
 
             switch (Algorithm)
             {
-                case Asymmetric.RSA:
+                case AsymmetricType.RSA:
                     RSA rsa = RSA.Create(InnerRSA);
                     result = rsa.ExportRSAPrivateKey();
                     break;
@@ -58,7 +58,7 @@ namespace Openus.Net.SecSess.Key
         /// <param name="algorithm">Asymmetric algorithm to use</param>
         /// <param name="path">Path from load the key</param>
         /// <returns>Wrapped private key</returns>
-        public static PrivateKey Load(Asymmetric algorithm, string path)
+        public static PrivateKey Load(AsymmetricType algorithm, string path)
         {
             byte[] result; 
             
@@ -69,7 +69,7 @@ namespace Openus.Net.SecSess.Key
 
             switch (algorithm)
             {
-                case Asymmetric.RSA:
+                case AsymmetricType.RSA:
                     RSA rsa = RSA.Create();
                     rsa.ImportRSAPrivateKey(result, out int o1);
                     return new PrivateKey(algorithm, rsa.ExportParameters(true));

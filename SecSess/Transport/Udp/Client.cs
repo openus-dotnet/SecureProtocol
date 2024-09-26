@@ -2,8 +2,9 @@
 using Openus.Net.SecSess.Interface.Udp;
 using System.Net;
 using System.Net.Sockets;
+using Openus.Net.SecSess.Secure.Algorithm;
 
-namespace Openus.Net.SecSess.Udp
+namespace Openus.Net.SecSess.Transport.Udp
 {
     /// <summary>
     /// UDP server with secure sessions
@@ -25,7 +26,7 @@ namespace Openus.Net.SecSess.Udp
         /// <summary>
         /// Algorithm set to use
         /// </summary>
-        private Secure.Algorithm.Set _set;
+        private Set _set;
 
         /// <summary>
         /// General constructor for UDP client
@@ -34,7 +35,7 @@ namespace Openus.Net.SecSess.Udp
         /// <param name="parameters">Symmetric wrapper</param>
         /// <param name="hmacKey">HMAC key</param>
         /// <param name="set">Algorithm set to use</param>
-        private Client(UdpClient client, Symmetric parameters, byte[] hmacKey, Secure.Algorithm.Set set)
+        private Client(UdpClient client, Symmetric parameters, byte[] hmacKey, Set set)
         {
             _client = client;
             _symmetric = parameters;
@@ -49,7 +50,7 @@ namespace Openus.Net.SecSess.Udp
         /// <param name="symmetricKey">Symmetric key for secure session</param>
         /// <param name="set">Algorithm set to use</param>
         /// <returns>Server created (not Start())</returns>
-        public static Client Create(IPEndPoint localEP, byte[] symmetricKey, byte[] hmacKey, Secure.Algorithm.Set set)
+        public static Client Create(IPEndPoint localEP, byte[] symmetricKey, byte[] hmacKey, Set set)
         {
             return new Client(new UdpClient(localEP), new Symmetric(symmetricKey, set.Symmetric), hmacKey, set);
         }

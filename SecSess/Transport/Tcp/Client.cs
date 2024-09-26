@@ -1,66 +1,36 @@
-﻿using Openus.Net.SecSess.Interface.Tcp;
+﻿using Openus.Net.SecSess.Abstract.Tcp;
+using Openus.Net.SecSess.Interface.Tcp;
 using Openus.Net.SecSess.Key;
+using Openus.Net.SecSess.Secure.Algorithm;
 using Openus.Net.SecSess.Secure.Wrapper;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Authentication;
 using System.Security.Cryptography;
 
-namespace Openus.Net.SecSess.Tcp
+namespace Openus.Net.SecSess.Transport.Tcp
 {
     /// <summary>
     /// TCP client with secure sessions
     /// </summary>
-    public class Client : IStream
+    public class Client : BaseClient, IStream
     {
-        /// <summary>
-        /// The symmetric key used to communicate with this server
-        /// </summary>
-        public byte[] SymmetricKey { get; private set; }
-        /// <summary>
-        /// The HMAC key used to communicate with this server
-        /// </summary>
-        public byte[] HMacKey { get; private set; }
-
-        /// <summary>
-        /// A TCP client that actually works
-        /// </summary>
-        private TcpClient _client;
         /// <summary>
         /// Asymmetric algorithm set without private key for client
         /// </summary>
         private Asymmetric _asymmetric;
-        /// <summary>
-        /// Symmetric algorithm supporter
-        /// </summary>
-        private Symmetric _symmetric { get; set; }
-        /// <summary>
-        /// Algorithm set to use
-        /// </summary>
-        private Secure.Algorithm.Set _set;
-        /// <summary>
-        /// Nonce for preventing retransmission attacks
-        /// </summary>
-        private int _nonce;
 
         /// <summary>
         /// Create client
         /// </summary>
         /// <param name="parameter">Asymmetric key base without private key for client</param>
         /// <param name="set">Algorithm set to use</param>
-        private Client(AsymmetricKeyBase? parameter, Secure.Algorithm.Set set)
+        /// <param name="hmacKey">HMAC key to use</param>
+        /// <param name="symmetricKey">Symmetric key to use</param>
+        private Client(AsymmetricKeyBase? parameter, Set set, byte[] symmetricKey, byte[] hmacKey)
+            : base(new TcpClient(), set, symmetricKey, hmacKey)
         {
-            SymmetricKey = new byte[Symmetric.KeySize(set.Symmetric)];
-            HMacKey = new byte[Hash.HMacKeySize(set.Hash)];
-
-            RandomNumberGenerator.Fill(SymmetricKey);
-            RandomNumberGenerator.Fill(HMacKey);
-
-            _client = new TcpClient();
             _asymmetric = new Asymmetric(parameter, set.Asymmetric);
-            _symmetric = new Symmetric(SymmetricKey, set.Symmetric);
-            _set = set;
-            _nonce = -1;
         }
 
         /// <summary>
@@ -69,7 +39,9 @@ namespace Openus.Net.SecSess.Tcp
         /// <returns>Client created (already not Connect())</returns>
         public static Client Craete()
         {
-            return new Client(null, Secure.Algorithm.Set.NoneSet);
+            var keys = GenerateKeySet(Set.NoneSet);
+
+            return new Client(null, Set.NoneSet, keys.Item1, keys.Item2);
         }
         /// <summary>
         /// Create a client where secure sessions are provided
@@ -77,9 +49,27 @@ namespace Openus.Net.SecSess.Tcp
         /// <param name="key">Public key for server</param>
         /// <param name="set">Algorithm set to use</param>
         /// <returns>Client created (already not Connect())</returns>
-        public static Client Create(PublicKey? key, Secure.Algorithm.Set set)
+        public static Client Create(PublicKey? key, Set set)
         {
-            return new Client(key, set);
+            var keys = GenerateKeySet(set);
+
+            return new Client(key, set, keys.Item1, keys.Item2);
+        }
+
+        /// <summary>
+        /// Generate symmetric session key and HMAC key
+        /// </summary>
+        /// <param name="set">Algorithm set to use</param>
+        /// <returns>(Symmetric key, HMAC key)</returns>
+        private static (byte[], byte[]) GenerateKeySet(Set set)
+        {
+            byte[] symmetricKey = new byte[Symmetric.KeySize(set.Symmetric)];
+            byte[] hmacKey = new byte[Hash.HMacKeySize(set.Hash)];
+
+            RandomNumberGenerator.Fill(symmetricKey);
+            RandomNumberGenerator.Fill(hmacKey);
+
+            return (symmetricKey, hmacKey);
         }
 
         /// <summary>
@@ -87,8 +77,8 @@ namespace Openus.Net.SecSess.Tcp
         /// </summary>
         public void Close()
         {
-            _client.Close();
-            _client.Dispose();
+            ActuallyClient.Close();
+            ActuallyClient.Dispose();
         }
 
         /// <summary>
@@ -99,10 +89,10 @@ namespace Openus.Net.SecSess.Tcp
         public void Connect(IPEndPoint serverEP, int retry = 0)
         {
             ArgumentOutOfRangeException.ThrowIfNegative(retry);
-            
+
             if (retry == 0)
             {
-                _client.Connect(serverEP);
+                ActuallyClient.Connect(serverEP);
             }
             else
             {
@@ -110,7 +100,7 @@ namespace Openus.Net.SecSess.Tcp
                 {
                     try
                     {
-                        _client.Connect(serverEP);
+                        ActuallyClient.Connect(serverEP);
 
                         break;
                     }
@@ -121,35 +111,33 @@ namespace Openus.Net.SecSess.Tcp
                 }
             }
 
-            while (CanUseStream() == false);
+            while (CanUseStream() == false) ;
 
-            if (_asymmetric.AsymmetricAlgorithm != null && _symmetric.Algorithm != Secure.Algorithm.Symmetric.None)
+            if (_asymmetric.AsymmetricAlgorithm != null && SymmetricWrapper.Algorithm != SymmetricType.None)
             {
                 byte[] buffer = new byte[SymmetricKey.Length + HMacKey.Length];
-                
+
                 Buffer.BlockCopy(SymmetricKey, 0, buffer, 0, SymmetricKey.Length);
                 Buffer.BlockCopy(HMacKey, 0, buffer, SymmetricKey.Length, HMacKey.Length);
 
                 byte[] enc = _asymmetric.Encrypt(buffer);
-                _client.GetStream().Write(enc, 0, enc.Length);
+                ActuallyClient.GetStream().Write(enc, 0, enc.Length);
 
                 byte[] response = Read();
-                byte[] compare = Hash.HashData(_set.Hash, buffer);
-
-                _symmetric = new Symmetric(SymmetricKey, _set.Symmetric);
+                byte[] compare = Hash.HashData(AlgorithmSet.Hash, buffer);
 
                 if (compare.SequenceEqual(response) == false)
                 {
                     throw new AuthenticationException("Failed to create a secure session.");
                 }
             }
-            else if (_asymmetric.AsymmetricAlgorithm == null && _symmetric.Algorithm == Secure.Algorithm.Symmetric.None)
+            else if (_asymmetric.AsymmetricAlgorithm == null && SymmetricWrapper.Algorithm == SymmetricType.None)
             {
 
             }
             else
             {
-                 throw new InvalidOperationException("Invalid combination between asymmetric to symmetric algorithm.");
+                throw new InvalidOperationException("Invalid combination between asymmetric to symmetric algorithm.");
             }
         }
         /// <summary>
@@ -168,7 +156,7 @@ namespace Openus.Net.SecSess.Tcp
         /// <param name="data">Data that write to server</param>
         public void Write(byte[] data)
         {
-            IStream.InternalWrite(data, _symmetric, HMacKey, _set.Hash, _client, ref _nonce);
+            IStream.InternalWrite(data, SymmetricWrapper, HMacKey, AlgorithmSet.Hash, ActuallyClient, ref _nonce);
         }
 
         /// <summary>
@@ -177,7 +165,7 @@ namespace Openus.Net.SecSess.Tcp
         /// <returns>Data that read from server</returns>
         public byte[] Read()
         {
-            return IStream.InternalRead(_symmetric, HMacKey, _set.Hash, _client, ref _nonce);
+            return IStream.InternalRead(SymmetricWrapper, HMacKey, AlgorithmSet.Hash, ActuallyClient, ref _nonce);
         }
 
         /// <summary>
@@ -187,9 +175,9 @@ namespace Openus.Net.SecSess.Tcp
         /// <returns></returns>
         public bool CanUseStream(StreamType type = StreamType.All)
         {
-            return (type.HasFlag(StreamType.Connect) == true ? _client.Connected : true)
-                && (type.HasFlag(StreamType.Read) == true ? _client.GetStream().CanRead : true)
-                && (type.HasFlag(StreamType.Write) == true ? _client.GetStream().CanWrite : true);
+            return (type.HasFlag(StreamType.Connect) == true ? ActuallyClient.Connected : true)
+                && (type.HasFlag(StreamType.Read) == true ? ActuallyClient.GetStream().CanRead : true)
+                && (type.HasFlag(StreamType.Write) == true ? ActuallyClient.GetStream().CanWrite : true);
         }
 
         /// <summary>
@@ -197,7 +185,7 @@ namespace Openus.Net.SecSess.Tcp
         /// </summary>
         public void FlushStream()
         {
-            _client.GetStream().Flush();
+            ActuallyClient.GetStream().Flush();
         }
 
         /// <summary>
@@ -223,7 +211,7 @@ namespace Openus.Net.SecSess.Tcp
         /// </summary>
         public async Task FlushStreamAsync()
         {
-            await Task.Run(()=>FlushStream());
+            await Task.Run(() => FlushStream());
         }
     }
 }

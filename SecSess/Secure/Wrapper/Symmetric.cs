@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography;
+﻿using Openus.Net.SecSess.Secure.Algorithm;
+using System.Security.Cryptography;
 
 namespace Openus.Net.SecSess.Secure.Wrapper
 {
@@ -15,29 +16,29 @@ namespace Openus.Net.SecSess.Secure.Wrapper
         /// <summary>
         /// Symmetric algorithm to use
         /// </summary>
-        public Algorithm.Symmetric Algorithm { get; private set; }
+        public SymmetricType Algorithm { get; private set; }
 
         /// <summary>
         /// Create an symmetric algorithm wrapper with the given key
         /// </summary>
         /// <param name="key"> Symmetric algorithm key</param>
         /// <param name="algorithm"> Symmetric algorithm to use</param>
-        public Symmetric(byte[] key, Algorithm.Symmetric algorithm)
+        public Symmetric(byte[] key, SymmetricType algorithm)
         {
             Algorithm = algorithm;
 
             switch (algorithm)
             {
-                case Secure.Algorithm.Symmetric.None:
+                case SymmetricType.None:
                     _algorithm = null;
                     break;
-                case Secure.Algorithm.Symmetric.DES:
+                case SymmetricType.DES:
                     _algorithm = DES.Create();
                     break;
-                case Secure.Algorithm.Symmetric.TripleDES:
+                case SymmetricType.TripleDES:
                     _algorithm = TripleDES.Create();
                     break;
-                case Secure.Algorithm.Symmetric.AES:
+                case SymmetricType.AES:
                     _algorithm = Aes.Create();
                     break;
                 default:
@@ -87,17 +88,17 @@ namespace Openus.Net.SecSess.Secure.Wrapper
         /// </summary>
         /// <param name="algorithm">Symmetric algorithm to use</param>
         /// <returns></returns>
-        public static int KeySize(Algorithm.Symmetric algorithm)
+        public static int KeySize(SymmetricType algorithm)
         {
             switch (algorithm)
             {
-                case Secure.Algorithm.Symmetric.None:
+                case SymmetricType.None:
                     return 0;
-                case Secure.Algorithm.Symmetric.DES:
+                case SymmetricType.DES:
                     return 8;
-                case Secure.Algorithm.Symmetric.TripleDES:
+                case SymmetricType.TripleDES:
                     return 24;
-                case Secure.Algorithm.Symmetric.AES:
+                case SymmetricType.AES:
                     return 32;
                 default:
                     throw new InvalidOperationException("Use invalid symmetric algorithm.");
@@ -109,17 +110,17 @@ namespace Openus.Net.SecSess.Secure.Wrapper
         /// </summary>
         /// <param name="algorithm">Symmetric algorithm to use</param>
         /// <returns></returns>
-        public static int BlockSize(Algorithm.Symmetric algorithm)
+        public static int BlockSize(SymmetricType algorithm)
         {
             switch (algorithm)
             {
-                case Secure.Algorithm.Symmetric.None:
+                case SymmetricType.None:
                     return 0;
-                case Secure.Algorithm.Symmetric.DES:
+                case SymmetricType.DES:
                     return 8;
-                case Secure.Algorithm.Symmetric.TripleDES:
+                case SymmetricType.TripleDES:
                     return 8;
-                case Secure.Algorithm.Symmetric.AES:
+                case SymmetricType.AES:
                     return 16;
                 default:
                     throw new InvalidOperationException("Use invalid symmetric algorithm.");

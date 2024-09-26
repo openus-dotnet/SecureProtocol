@@ -1,4 +1,5 @@
 ﻿using Openus.Net.SecSess.Key;
+using Openus.Net.SecSess.Secure.Algorithm;
 using System.Security.Cryptography;
 
 namespace Openus.Net.SecSess.Secure.Wrapper
@@ -16,16 +17,16 @@ namespace Openus.Net.SecSess.Secure.Wrapper
         /// <summary>
         /// Asymmetric algorithm to use
         /// </summary>
-        public Algorithm.Asymmetric Algorithm { get; private set; }
+        public AsymmetricType Algorithm { get; private set; }
 
         /// <summary>
         /// Create an asymmetric algorithm wrapper with the given key
         /// </summary>
         /// <param name="param"> Asymmetric algorithm parameter</param>
         /// <param name="algorithm"> Asymmetric algorithm to use</param>
-        public Asymmetric(AsymmetricKeyBase? param, Algorithm.Asymmetric algorithm)
+        public Asymmetric(AsymmetricKeyBase? param, AsymmetricType algorithm)
         {
-            if (param == null ^ algorithm == Secure.Algorithm.Asymmetric.None)
+            if (param == null ^ algorithm == AsymmetricType.None)
             {
                 throw new InvalidOperationException("Can null param when only algorithm is None.");
             }
@@ -34,10 +35,10 @@ namespace Openus.Net.SecSess.Secure.Wrapper
 
             switch (algorithm)
             {
-                case Secure.Algorithm.Asymmetric.None:
+                case AsymmetricType.None:
                     AsymmetricAlgorithm = null;
                     break;
-                case Secure.Algorithm.Asymmetric.RSA:
+                case AsymmetricType.RSA:
                     AsymmetricAlgorithm = RSA.Create(param!.InnerRSA);
                     break;
                 default:
@@ -54,7 +55,7 @@ namespace Openus.Net.SecSess.Secure.Wrapper
         {
             switch (Algorithm)
             {
-                case Secure.Algorithm.Asymmetric.RSA:
+                case AsymmetricType.RSA:
                     return (AsymmetricAlgorithm as RSA)!.Encrypt(data, RSAEncryptionPadding.Pkcs1);
                 default:
                     throw new InvalidOperationException("Use invalid symmetric algorithm.");
@@ -70,7 +71,7 @@ namespace Openus.Net.SecSess.Secure.Wrapper
         {
             switch (Algorithm)
             {
-                case Secure.Algorithm.Asymmetric.RSA:
+                case AsymmetricType.RSA:
                     return (AsymmetricAlgorithm as RSA)!.Decrypt(data, RSAEncryptionPadding.Pkcs1);
                 default:
                     throw new InvalidOperationException("Use invalid symmetric algorithm.");

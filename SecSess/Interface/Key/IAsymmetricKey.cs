@@ -9,6 +9,6 @@ namespace Openus.Net.SecSess.Interface.Key
     public interface IAsymmetricKey<T> where T : AsymmetricKeyBase
     {
         public abstract void Save(string path);
-        public abstract static T Load(Asymmetric algorithm, string path);
+        public abstract static T Load(AsymmetricType algorithm, string path);
     }
 }

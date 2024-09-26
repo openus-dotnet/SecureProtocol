@@ -3,7 +3,7 @@
     /// <summary>
     /// Asymmetric key algorithm to use
     /// </summary>
-    public enum Asymmetric
+    public enum AsymmetricType
     {
         None = 0,
         RSA = 1,

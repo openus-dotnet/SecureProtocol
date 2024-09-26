@@ -1,10 +1,12 @@
-﻿using Openus.Net.SecSess.Interface.Tcp;
+﻿using Openus.Net.SecSess.Abstract.Tcp;
+using Openus.Net.SecSess.Interface.Tcp;
 using Openus.Net.SecSess.Key;
+using Openus.Net.SecSess.Secure.Algorithm;
 using Openus.Net.SecSess.Secure.Wrapper;
 using System.Net;
 using System.Net.Sockets;
 
-namespace Openus.Net.SecSess.Tcp
+namespace Openus.Net.SecSess.Transport.Tcp
 {
     /// <summary>
     /// TCP server with secure sessions
@@ -14,34 +16,8 @@ namespace Openus.Net.SecSess.Tcp
         /// <summary>
         /// Clients accepted by the server side
         /// </summary>
-        public class Client : IStream
+        public class Client : BaseClient, IStream
         {
-            /// <summary>
-            /// The symmetric key used to communicate with this client
-            /// </summary>
-            public byte[] SymmetricKey { get; private set; }
-            /// <summary>
-            /// The HMAC key used to communicate with this client
-            /// </summary>
-            public byte[] HMacKey { get; private set; }
-
-            /// <summary>
-            /// Client that actually works
-            /// </summary>
-            private TcpClient _client;
-            /// <summary>
-            /// Symmetric algorithm supporter
-            /// </summary>
-            private Symmetric _symmetric;
-            /// <summary>
-            /// Hash algorithm to use
-            /// </summary>
-            private Secure.Algorithm.Hash _hash;
-            /// <summary>
-            /// Nonce for preventing retransmission attacks
-            /// </summary>
-            private int _nonce;
-
             /// <summary>
             /// Create a server side client
             /// </summary>
@@ -49,14 +25,8 @@ namespace Openus.Net.SecSess.Tcp
             /// <param name="symmetricKey">The AES key used to communicate with this client</param>
             /// <param name="hmacKey">The HMAC key used to communicate with this client</param>
             /// <param name="set">Algorithm set to use</param>
-            internal Client(TcpClient client, byte[] symmetricKey, byte[] hmacKey, Secure.Algorithm.Set set)
-            {
-                _client = client;
-                SymmetricKey = symmetricKey;
-                HMacKey = hmacKey;
-                _symmetric = new Symmetric(symmetricKey, set.Symmetric);
-                _hash = set.Hash;
-            }
+            internal Client(TcpClient client, byte[] symmetricKey, byte[] hmacKey, Set set)
+                : base(client, set, symmetricKey, hmacKey) { }
 
             /// <summary>
             /// Write packet with secure session
@@ -64,7 +34,7 @@ namespace Openus.Net.SecSess.Tcp
             /// <param name="data">Data that write to client</param>
             public void Write(byte[] data)
             {
-                IStream.InternalWrite(data, _symmetric, HMacKey, _hash, _client, ref _nonce);
+                IStream.InternalWrite(data, SymmetricWrapper, HMacKey, AlgorithmSet.Hash, ActuallyClient, ref _nonce);
             }
 
             /// <summary>
@@ -73,7 +43,7 @@ namespace Openus.Net.SecSess.Tcp
             /// <returns>Data that read from client</returns>
             public byte[] Read()
             {
-                return IStream.InternalRead(_symmetric, HMacKey, _hash, _client, ref _nonce);
+                return IStream.InternalRead(SymmetricWrapper, HMacKey, AlgorithmSet.Hash, ActuallyClient, ref _nonce);
             }
 
             /// <summary>
@@ -83,9 +53,9 @@ namespace Openus.Net.SecSess.Tcp
             /// <returns></returns>
             public bool CanUseStream(StreamType type = StreamType.All)
             {
-                return (type.HasFlag(StreamType.Connect) == true ? _client.Connected : true)
-                    && (type.HasFlag(StreamType.Read) == true ? _client.GetStream().CanRead : true)
-                    && (type.HasFlag(StreamType.Write) == true ? _client.GetStream().CanWrite : true);
+                return (type.HasFlag(StreamType.Connect) == true ? ActuallyClient.Connected : true)
+                    && (type.HasFlag(StreamType.Read) == true ? ActuallyClient.GetStream().CanRead : true)
+                    && (type.HasFlag(StreamType.Write) == true ? ActuallyClient.GetStream().CanWrite : true);
             }
 
             /// <summary>
@@ -93,7 +63,7 @@ namespace Openus.Net.SecSess.Tcp
             /// </summary>
             public void FlushStream()
             {
-                _client.GetStream().Flush();
+                ActuallyClient.GetStream().Flush();
             }
 
             /// <summary>
@@ -138,7 +108,7 @@ namespace Openus.Net.SecSess.Tcp
         /// <summary>
         /// Algorithm set to use
         /// </summary>
-        private Secure.Algorithm.Set _set;
+        private Set _set;
 
         /// <summary>
         /// General constructor for server
@@ -146,7 +116,7 @@ namespace Openus.Net.SecSess.Tcp
         /// <param name="listener">A TCP listener that actually works</param>
         /// <param name="parameters">Asymmetric key base with private key for server</param>
         /// <param name="set">Algorithm set to use</param>
-        private Server(TcpListener listener, AsymmetricKeyBase? parameters, Secure.Algorithm.Set set) 
+        private Server(TcpListener listener, AsymmetricKeyBase? parameters, Set set)
         {
             _listener = listener;
             _clients = new List<Client>();
@@ -161,7 +131,7 @@ namespace Openus.Net.SecSess.Tcp
         /// <returns>Server created (already not Start())</returns>
         public static Server Craete(IPEndPoint endPoint)
         {
-            return new Server(new TcpListener(endPoint), null, Secure.Algorithm.Set.NoneSet);
+            return new Server(new TcpListener(endPoint), null, Set.NoneSet);
         }
 
         /// <summary>
@@ -171,7 +141,7 @@ namespace Openus.Net.SecSess.Tcp
         /// <param name="key">Private key for server</param>
         /// <param name="set">Algorithm set to use</param>
         /// <returns>Server created (already not Start())</returns>
-        public static Server Create(IPEndPoint endPoint, PrivateKey? key, Secure.Algorithm.Set set)
+        public static Server Create(IPEndPoint endPoint, PrivateKey? key, Set set)
         {
             return new Server(new TcpListener(endPoint), key, set);
         }
@@ -202,7 +172,7 @@ namespace Openus.Net.SecSess.Tcp
 
             while (client.Connected == false || client.GetStream().CanRead == false) ;
 
-            if (_asymmetric.AsymmetricAlgorithm != null && _set.Symmetric != Secure.Algorithm.Symmetric.None)
+            if (_asymmetric.AsymmetricAlgorithm != null && _set.Symmetric != SymmetricType.None)
             {
                 byte[] buffer = new byte[256];
 
@@ -223,7 +193,7 @@ namespace Openus.Net.SecSess.Tcp
 
                 return result;
             }
-            else if (_asymmetric.AsymmetricAlgorithm == null && _set.Symmetric == Secure.Algorithm.Symmetric.None)
+            else if (_asymmetric.AsymmetricAlgorithm == null && _set.Symmetric == SymmetricType.None)
             {
                 Client result = new Client(client, Array.Empty<byte>(), Array.Empty<byte>(), _set);
                 _clients.Add(result);

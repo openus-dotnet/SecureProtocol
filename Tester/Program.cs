@@ -1,6 +1,6 @@
 ﻿using Openus.Net.SecSess.Key;
 using Openus.Net.SecSess.Secure.Algorithm;
-using Openus.Net.SecSess.Tcp;
+using Openus.Net.SecSess.Transport.Tcp;
 using System.Net;
 
 internal class Program
@@ -9,14 +9,14 @@ internal class Program
 
     private static void Main(string[] args)
     {
-        PublicKey pubkey = PublicKey.Load(Asymmetric.RSA, "test.pub");
-        PrivateKey privkey = PrivateKey.Load(Asymmetric.RSA, "test.priv");
+        PublicKey pubkey = PublicKey.Load(AsymmetricType.RSA, "test.pub");
+        PrivateKey privkey = PrivateKey.Load(AsymmetricType.RSA, "test.priv");
 
         Set set = new Set()
         {
-            Asymmetric = Asymmetric.RSA,
-            Symmetric = Symmetric.AES,
-            Hash = Hash.SHA256,
+            Asymmetric = AsymmetricType.RSA,
+            Symmetric = SymmetricType.AES,
+            Hash = HashType.SHA256,
         };
 
         new Thread(() =>

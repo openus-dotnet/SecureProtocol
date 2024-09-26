@@ -11,7 +11,7 @@ namespace Openus.Net.SecSess.Key
         /// <summary>
         /// Asymmetric algorithm to use
         /// </summary>
-        internal Asymmetric Algorithm { get; set; }
+        internal AsymmetricType Algorithm { get; set; }
         /// <summary>
         /// RSA parameters for actual RSA encryption
         /// </summary>
