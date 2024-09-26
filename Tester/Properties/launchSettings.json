@@ -1,8 +1,7 @@
 {
   "profiles": {
     "Tester": {
-      "commandName": "Project",
-      "commandLineArgs": "sc 0 1 127.0.0.1"
+      "commandName": "Project"
     }
   }
 }

@@ -1,5 +1,4 @@
 ﻿using Openus.Net.SecSess.Abstract.Tcp;
-using Openus.Net.SecSess.Interface.Tcp;
 using Openus.Net.SecSess.Key.Asymmetric;
 using Openus.Net.SecSess.Secure.Algorithm;
 using Openus.Net.SecSess.Secure.Wrapper;
@@ -17,7 +16,7 @@ namespace Openus.Net.SecSess.Transport.Tcp
         /// <summary>
         /// Clients accepted by the server side
         /// </summary>
-        public class Client : BaseClient, IStream
+        public class Client : BaseClient
         {
             /// <summary>
             /// Create a server side client
@@ -28,70 +27,6 @@ namespace Openus.Net.SecSess.Transport.Tcp
             /// <param name="set">Algorithm set to use</param>
             internal Client(TcpClient client, byte[] symmetricKey, byte[] hmacKey, Set set)
                 : base(client, set, symmetricKey, hmacKey) { }
-
-            /// <summary>
-            /// Write packet with secure session
-            /// </summary>
-            /// <param name="data">Data that write to client</param>
-            public void Write(byte[] data)
-            {
-                IStream.InternalWrite(data, SymmetricWrapper, HMacKey, AlgorithmSet.Hash, ActuallyClient, ref _nonce);
-            }
-
-            /// <summary>
-            /// Read packet with secure session
-            /// </summary>
-            /// <returns>Data that read from client</returns>
-            public byte[] Read()
-            {
-                return IStream.InternalRead(SymmetricWrapper, HMacKey, AlgorithmSet.Hash, ActuallyClient, ref _nonce);
-            }
-
-            /// <summary>
-            /// Determine if tcp client state is available
-            /// </summary>
-            /// <param name="type">The type of client state to judge</param>
-            /// <returns></returns>
-            public bool CanUseStream(StreamType type = StreamType.All)
-            {
-                return (type.HasFlag(StreamType.Connect) == true ? ActuallyClient.Connected : true)
-                    && (type.HasFlag(StreamType.Read) == true ? ActuallyClient.GetStream().CanRead : true)
-                    && (type.HasFlag(StreamType.Write) == true ? ActuallyClient.GetStream().CanWrite : true);
-            }
-
-            /// <summary>
-            /// Flushes data from stream
-            /// </summary>
-            public void FlushStream()
-            {
-                ActuallyClient.GetStream().Flush();
-            }
-
-            /// <summary>
-            /// Write packet with secure session
-            /// </summary>
-            /// <param name="data">Data that write to client</param>
-            public async Task WriteAsync(byte[] data)
-            {
-                await Task.Run(() => Write(data));
-            }
-
-            /// <summary>
-            /// Read packet with secure session
-            /// </summary>
-            /// <returns>Data that read from client</returns>
-            public async Task<byte[]> ReadAsync()
-            {
-                return await Task.Run(() => Read());
-            }
-
-            /// <summary>
-            /// Flushes data from stream
-            /// </summary>
-            public async Task FlushStreamAsync()
-            {
-                await Task.Run(() => FlushStream());
-            }
         }
 
         /// <summary>

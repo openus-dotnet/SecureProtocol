@@ -34,7 +34,7 @@ internal class Program
             {
                 if (args.Length == 0 || args.Length > 0 && args[0] == "s")
                 {
-                    Server server = Server.Create(new IPEndPoint(IPAddress.Any, 12345), privkey, set);
+                    Server server = Server.Create(IPEndPoint.Parse(args.Length == 2 ? args[1] : "127.0.0.1:12345"), privkey, set);
                     server.Start();
 
                     Server.Client sclient = server.AcceptClient();
@@ -56,7 +56,7 @@ internal class Program
                     DateTime time1 = DateTime.Now;
 
                     Client client = Client.Create(pubkey, set);
-                    client.Connect(new IPEndPoint(IPAddress.Parse(args.Length == 2 ? args[1] : "127.0.0.1"), 12345), 100);
+                    client.Connect(IPEndPoint.Parse(args.Length == 2 ? args[1] : "127.0.0.1:12345"));
 
                     TimeSpan span1 = DateTime.Now - time1;
 
