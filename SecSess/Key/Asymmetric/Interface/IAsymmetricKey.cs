@@ -1,7 +1,6 @@
-﻿using Openus.Net.SecSess.Key.Asymmetric;
-using Openus.Net.SecSess.Secure.Algorithm;
+﻿using Openus.Net.SecSess.Secure.Algorithm;
 
-namespace Openus.Net.SecSess.Interface.Key
+namespace Openus.Net.SecSess.Key.Asymmetric.Interface
 {
     /// <summary>
     /// Interface that defines saves and loads in file

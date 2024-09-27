@@ -1,4 +1,4 @@
-﻿using Openus.Net.SecSess.Interface.Key;
+﻿using Openus.Net.SecSess.Key.Asymmetric.Interface;
 using Openus.Net.SecSess.Secure.Algorithm;
 using System.Security.Cryptography;
 

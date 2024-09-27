@@ -64,7 +64,8 @@ namespace Openus.Net.SecSess.Secure.Wrapper
                 return data;
             }
 
-            byte[] dest = new byte[data.Length + (data.Length % BlockSize(Algorithm))];
+            byte[] dest = new byte[data.Length - (data.Length % BlockSize(Algorithm)) 
+                + (data.Length % BlockSize(Algorithm) == 0 ? 0 : BlockSize(Algorithm))];
             bool result = _symmetric.TryEncryptCbc(data, iv, dest, out int o, PaddingMode.Zeros);
 
             return result == true ? dest : null;

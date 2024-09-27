@@ -55,31 +55,6 @@ namespace Openus.Net.SecSess.Transport.Tcp
         }
 
         /// <summary>
-        /// Generate symmetric session key and HMAC key
-        /// </summary>
-        /// <param name="set">Algorithm set to use</param>
-        /// <returns>(Symmetric key, HMAC key)</returns>
-        private static (byte[], byte[]) GenerateKeySet(Set set)
-        {
-            byte[] symmetricKey = new byte[Symmetric.KeySize(set.Symmetric)];
-            byte[] hmacKey = new byte[Hash.HMacKeySize(set.Hash)];
-
-            RandomNumberGenerator.Fill(symmetricKey);
-            RandomNumberGenerator.Fill(hmacKey);
-
-            return (symmetricKey, hmacKey);
-        }
-
-        /// <summary>
-        /// Close the TCP client
-        /// </summary>
-        public void Close()
-        {
-            ActuallyClient.Close();
-            ActuallyClient.Dispose();
-        }
-
-        /// <summary>
         /// Connect to a preconfigured server
         /// <param name="serverEP"/>Server IP end point</param>
         /// <param name="retry">Maximum retry to connect</param>

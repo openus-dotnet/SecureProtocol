@@ -1,4 +1,5 @@
-﻿using Openus.Net.SecSess.Secure.Algorithm;
+﻿using Openus.Net.SecSess.Key.Session;
+using Openus.Net.SecSess.Secure.Algorithm;
 using Openus.Net.SecSess.Secure.Wrapper;
 using System.Net;
 using System.Net.Sockets;
@@ -15,16 +16,19 @@ namespace Openus.Net.SecSess.Transport
         /// Get remote IP end point
         /// </summary>
         public abstract IPEndPoint RemoteEP { get; }
+        /// <summary>
+        /// Keyset wrapped for reuse in UDP, etc., but key cannot be see user
+        /// </summary>
+        public KeySet SessionKeySet { get => new KeySet(SymmetricKey, HMacKey, AlgorithmSet); }
 
         /// <summary>
         /// The symmetric key used to communicate with this server
         /// </summary>
-        public byte[] SymmetricKey { get; private set; }
+        internal byte[] SymmetricKey { get; private set; }
         /// <summary>
         /// The HMAC key used to communicate with this server
         /// </summary>
-        public byte[] HMacKey { get; private set; }
-
+        internal byte[] HMacKey { get; private set; }
         /// <summary>
         /// Symmetric algorithm supporter
         /// </summary>

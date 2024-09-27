@@ -2,10 +2,16 @@
 using Openus.Net.SecSess.Secure.Algorithm;
 using Openus.Net.SecSess.Transport.Tcp;
 using System.Net;
+using System.Text.Json;
 
 internal class Program
 {
-    private const int Retry = 100;
+    private const int Retry = 1000;
+    private static List<double> Rsa = [];
+    private static List<double> Aes = [];
+
+    private static int Repeat = 100;
+    private static int Packet = 15;
 
     private static void Main(string[] args)
     {
@@ -26,24 +32,36 @@ internal class Program
             Symmetric = SymmetricType.AES,
             Hash = HashType.SHA256,
         };
+        //Set set = new Set()
+        //{
+        //    Asymmetric = AsymmetricType.None,
+        //    Symmetric = SymmetricType.None,
+        //    Hash = HashType.SHA256,
+        //};
 
 
         for (int re = 0; re < Retry; re++)
         {
+            bool checker = false;
             Thread s = new Thread(() =>
             {
                 if (args.Length == 0 || args.Length > 0 && args[0] == "s")
                 {
-                    Server server = Server.Create(IPEndPoint.Parse(args.Length == 2 ? args[1] : "127.0.0.1:12345"), privkey, set);
+                    Server server = Server.Create(IPEndPoint.Parse(args.Length == 2 ? args[1] : "127.0.0.1:12345"),
+                        set.Asymmetric == AsymmetricType.RSA ? privkey : null, set);
                     server.Start();
+                    
+                    checker = true;
 
                     Server.Client sclient = server.AcceptClient()!;
+                    byte[] buffer;
 
-                    for (int i = 0; i < 100; i++)
+                    for (int i = 0; i < Repeat; i++)
                     {
-                        byte[] buffer = sclient.Read();
-
+                        buffer = sclient.Read();
                         sclient.Write(buffer);
+
+                        sclient.FlushStream();
                     }
 
                     server.Stop();
@@ -53,25 +71,28 @@ internal class Program
             {
                 if (args.Length == 0 || args.Length > 0 && args[0] == "c")
                 {
+                    while (checker == false) ;
+
                     DateTime time1 = DateTime.Now;
 
-                    Client client = Client.Create(pubkey, set);
+                    Client client = Client.Create(set.Asymmetric == AsymmetricType.RSA ? pubkey : null, set);
                     client.Connect(IPEndPoint.Parse(args.Length == 2 ? args[1] : "127.0.0.1:12345"));
 
                     TimeSpan span1 = DateTime.Now - time1;
 
-                    byte[] buffer = new byte[1024];
+                    byte[] buffer = new byte[1 << Packet];
                     new Random().NextBytes(buffer);
 
                     byte[] check = (byte[])buffer.Clone();
 
                     DateTime time2 = DateTime.Now;
 
-                    for (int i = 0; i < 100; i++)
+                    for (int i = 0; i < Repeat; i++)
                     {
                         client.Write(buffer);
-
                         buffer = client.Read();
+
+                        client.FlushStream();
                     }
 
                     TimeSpan span2 = DateTime.Now - time2;
@@ -82,10 +103,16 @@ internal class Program
                             throw new Exception("buffer is corrupted");
                     }
 
-                    if ((re - 9) % 10 == 0)
+                    int term = 50;
+
+                    if ((re - term + 1) % term == 0)
                     {
-                        Console.WriteLine($"{re + 1}. Con. Total: {span1.TotalSeconds}s");
-                        Console.WriteLine($"{re + 1}. Com. Total: {span2.TotalSeconds}s");
+                        Rsa.Add(span1.TotalMilliseconds);
+                        Aes.Add(span2.TotalMilliseconds);
+
+                        Console.WriteLine($"{re + 1}. RSA. Total: {Rsa.Average()}ms");
+                        Console.WriteLine($"{re + 1}. AES. Total: {Aes.Average()}ms");
+                        Console.WriteLine();
                     }
 
                     client.Close();
@@ -98,5 +125,7 @@ internal class Program
             s.Join();
             c.Join();
         }
+
+        Console.WriteLine(JsonSerializer.Serialize(new { Repeat, Packet, RSA = Rsa.Average(), AES = Aes.Average() }));
     }
 }

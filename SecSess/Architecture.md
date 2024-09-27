@@ -13,15 +13,15 @@
 |-|--------|----|
 |01|Client side|**Generate** `AES_KEY` and `HMAC_KEY` → **Get** `🔑`|
 |02|Client side|`RSA(S_PUBLIC_KEY, 🔑)` → **Encrypt to** `🔐`|
-|03|Client ↣ Server|**Send** `🔐`|
+|03|Client to Server|**Send** `🔐`|
 |04|Server side|`RSA(S_PRIVATE_KEY, 🔐)` → **Decrypt to** `🔑`|
 |05|Server side|`🔑` → **Get** `AES_KEY` and `HMAC_KEY`|
-|06|Server side|`HMAC(HMAC_KEY, 🔑)` → **Hash to** `📜ˢ`|
-|07|Server side|`SecSess-AES(AES_KEY, 📜ˢ)` → **Encrypt to** `🔏ˢ`|
-|08|Server ↣ Client|**Send** `🔏ˢ`|
-|09|Client side|`SecSess-AES(AES_KEY, 🔏ˢ)` → **Decrypt to** `📜ˢ`|
-|10|Client side|`HMAC(HMAC_KEY, 🔑)` → **Hash to** `📜ᶜ`|
-|11|Client side|**Compare** `📜ˢ` is `📜ᶜ`|
+|06|Server side|`HMAC(HMAC_KEY, 🔑)` → **Hash to** `📜ⓢ`|
+|07|Server side|`SecSess-AES(AES_KEY, 📜ⓢ)` → **Encrypt to** `🔏ⓢ`|
+|08|Server to Client|**Send** `🔏ⓢ`|
+|09|Client side|`SecSess-AES(AES_KEY, 🔏ⓢ)` → **Decrypt to** `📜ⓢ`|
+|10|Client side|`HMAC(HMAC_KEY, 🔑)` → **Hash to** `📜ⓒ`|
+|11|Client side|**Compare** `📜ⓢ` and `📜ⓒ`|
 
 > - `🔑`: `AES_KEY + HMAC_KEY`
 >   - ≓ Keys for SecSess-AES

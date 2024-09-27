@@ -4,6 +4,7 @@ using Openus.Net.SecSess.Transport.Option;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Authentication;
+using System.Security.Cryptography;
 
 namespace Openus.Net.SecSess.Transport.Tcp
 {
@@ -216,24 +217,27 @@ namespace Openus.Net.SecSess.Transport.Tcp
                     Buffer.BlockCopy(iv, 0, concat, 0, iv.Length);
                     Buffer.BlockCopy(enc1, 0, concat, iv.Length, enc1.Length);
 
-                    byte[] hmacs = new byte[Hash.HashDataSize(AlgorithmSet.Hash)];
-
-                    int s4 = 0;
-                    while (s4 < hmacs.Length)
-                        s4 += ActuallyClient.GetStream().Read(hmacs, s4, hmacs.Length - s4);
-
-                    byte[] compare = Hash.HMacData(AlgorithmSet.Hash, HMacKey, concat);
-
-                    if (compare.SequenceEqual(hmacs) == false)
+                    if (HMacKey.Length != 0)
                     {
-                        switch (type)
+                        byte[] hmacs = new byte[Hash.HashDataSize(AlgorithmSet.Hash)];
+
+                        int s4 = 0;
+                        while (s4 < hmacs.Length)
+                            s4 += ActuallyClient.GetStream().Read(hmacs, s4, hmacs.Length - s4);
+
+                        byte[] compare = Hash.HMacData(AlgorithmSet.Hash, HMacKey, concat);
+
+                        if (compare.SequenceEqual(hmacs) == false)
                         {
-                            case HandlingType.Ecexption:
-                                throw new AuthenticationException("HMAC authentication is failed.");
-                            case HandlingType.EmptyReturn:
-                                return Array.Empty<byte>();
-                            default:
-                                throw new InvalidDataException("Invalid handling type.");
+                            switch (type)
+                            {
+                                case HandlingType.Ecexption:
+                                    throw new AuthenticationException("HMAC authentication is failed.");
+                                case HandlingType.EmptyReturn:
+                                    return Array.Empty<byte>();
+                                default:
+                                    throw new InvalidDataException("Invalid handling type.");
+                            }
                         }
                     }
 
@@ -303,6 +307,31 @@ namespace Openus.Net.SecSess.Transport.Tcp
         public async Task FlushStreamAsync()
         {
             await Task.Run(() => FlushStream());
+        }
+
+        /// <summary>
+        /// Generate symmetric session key and HMAC key
+        /// </summary>
+        /// <param name="set">Algorithm set to use</param>
+        /// <returns>(Symmetric key, HMAC key)</returns>
+        protected static (byte[], byte[]) GenerateKeySet(Set set)
+        {
+            byte[] symmetricKey = new byte[Symmetric.KeySize(set.Symmetric)];
+            byte[] hmacKey = new byte[Hash.HMacKeySize(set.Hash)];
+
+            RandomNumberGenerator.Fill(symmetricKey);
+            RandomNumberGenerator.Fill(hmacKey);
+
+            return (symmetricKey, hmacKey);
+        }
+
+        /// <summary>
+        /// Close the TCP client
+        /// </summary>
+        public void Close()
+        {
+            ActuallyClient.Close();
+            ActuallyClient.Dispose();
         }
     }
 }
