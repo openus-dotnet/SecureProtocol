@@ -3,6 +3,7 @@ using Openus.Net.SecSess.Secure.Algorithm;
 using Openus.Net.SecSess.Secure.Wrapper;
 using System.Net.Sockets;
 using System.Net;
+using Openus.Net.SecSess.Transport.Option;
 
 namespace Openus.Net.SecSess.Transport.Tcp
 {
@@ -100,21 +101,36 @@ namespace Openus.Net.SecSess.Transport.Tcp
         /// <summary>
         /// Accept a pending connection request
         /// </summary>
-        public Client AcceptClient()
+        /// <param name="type">How to handle when error</param>
+        public Client? AcceptClient(HandlingType type = HandlingType.Ecexption)
         {
             TcpClient client = _listener.AcceptTcpClient();
 
             while (client.Connected == false || client.GetStream().CanRead == false) ;
 
-            if (_asymmetric.AsymmetricAlgorithm != null && _set.Symmetric != SymmetricType.None)
+            if (_set.Symmetric != SymmetricType.None)
             {
-                byte[] buffer = new byte[256];
+                byte[] buffer = new byte[Asymmetric.BlockSize(_set.Asymmetric)];
 
                 int s = 0;
                 while (s < buffer.Length)
                     s += client.GetStream().Read(buffer, s, buffer.Length - s);
 
-                byte[] concat = _asymmetric.Decrypt(buffer);
+                byte[]? concat = _asymmetric.Decrypt(buffer);
+
+                if (concat == null) 
+                {
+                    switch (type)
+                    {
+                        case HandlingType.Ecexption:
+                            throw new InvalidDataException("Error in asymmetric decrypt.");
+                        case HandlingType.EmptyReturn: 
+                            return null;
+                        default:
+                            throw new InvalidOperationException("Invalid Handling type.");
+                    }
+                }
+
                 byte[] symmetricKey = concat[0..Symmetric.KeySize(_set.Symmetric)];
                 byte[] hmacKey = concat[Symmetric.KeySize(_set.Symmetric)..(Symmetric.KeySize(_set.Symmetric) + Hash.HMacKeySize(_set.Hash))];
 
@@ -123,11 +139,11 @@ namespace Openus.Net.SecSess.Transport.Tcp
 
                 while (client.GetStream().CanWrite == false) ;
 
-                result.Write(Hash.HashData(_set.Hash, concat));
+                result.Write(Hash.HashData(_set.Hash, concat[0..(Symmetric.KeySize(_set.Symmetric) + Hash.HMacKeySize(_set.Hash))]));
 
                 return result;
             }
-            else if (_asymmetric.AsymmetricAlgorithm == null && _set.Symmetric == SymmetricType.None)
+            else if (_set.Symmetric == SymmetricType.None)
             {
                 Client result = new Client(client, Array.Empty<byte>(), Array.Empty<byte>(), _set);
                 _clients.Add(result);
@@ -144,9 +160,10 @@ namespace Openus.Net.SecSess.Transport.Tcp
         /// <summary>
         /// Accept a pending connection request
         /// </summary>
-        public async Task<Client> AcceptClientAsync()
+        /// <param name="type">How to handle when error</param>
+        public async Task<Client?> AcceptClientAsync(HandlingType type = HandlingType.Ecexption)
         {
-            return await Task.Run(AcceptClient);
+            return await Task.Run(() => AcceptClient(type));
         }
     }
 }

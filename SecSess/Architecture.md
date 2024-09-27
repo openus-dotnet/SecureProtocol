@@ -131,7 +131,7 @@ Set set = new Set()
 Server server = Server.Create(IPEndPoint.Parse($"127.0.0.1:12345"), privkey, set);
 server.Start();
 
-Server.Client accept = server.AcceptClient();
+Server.Client accept = server.AcceptClient()!;
 
 for (int i = 0; i < 100; i++)
 {

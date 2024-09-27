@@ -1,3 +1,1 @@
 # To do list
-
-- Provide Write/Read option that exception throwing, mute and return signal, or others...

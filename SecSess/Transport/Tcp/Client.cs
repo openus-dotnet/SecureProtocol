@@ -111,14 +111,20 @@ namespace Openus.Net.SecSess.Transport.Tcp
 
             while (CanUseStream() == false) ;
 
-            if (_asymmetric.AsymmetricAlgorithm != null && SymmetricWrapper.Algorithm != SymmetricType.None)
+            if (SymmetricWrapper.Algorithm != SymmetricType.None)
             {
                 byte[] buffer = new byte[SymmetricKey.Length + HMacKey.Length];
 
                 Buffer.BlockCopy(SymmetricKey, 0, buffer, 0, SymmetricKey.Length);
                 Buffer.BlockCopy(HMacKey, 0, buffer, SymmetricKey.Length, HMacKey.Length);
 
-                byte[] enc = _asymmetric.Encrypt(buffer);
+                byte[]? enc = _asymmetric.Encrypt(buffer);
+
+                if (enc == null)
+                {
+                    throw new InvalidDataException("Error in asymmetric encrypt.");
+                }
+
                 ActuallyClient.GetStream().Write(enc, 0, enc.Length);
 
                 byte[] response = Read();
@@ -129,7 +135,7 @@ namespace Openus.Net.SecSess.Transport.Tcp
                     throw new AuthenticationException("Failed to create a secure session.");
                 }
             }
-            else if (_asymmetric.AsymmetricAlgorithm == null && SymmetricWrapper.Algorithm == SymmetricType.None)
+            else if (SymmetricWrapper.Algorithm == SymmetricType.None)
             {
 
             }

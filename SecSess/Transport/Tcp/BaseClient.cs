@@ -1,6 +1,6 @@
 ﻿using Openus.Net.SecSess.Secure.Algorithm;
 using Openus.Net.SecSess.Secure.Wrapper;
-using Openus.Net.SecSess.Transport.Tcp.Option;
+using Openus.Net.SecSess.Transport.Option;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Authentication;
@@ -88,7 +88,13 @@ namespace Openus.Net.SecSess.Transport.Tcp
                 Buffer.BlockCopy(lenBit, 0, msg, nonceBit.Length, lenBit.Length);
                 Buffer.BlockCopy(data, 0, msg, nonceBit.Length + lenBit.Length, data.Length);
 
-                byte[] enc = SymmetricWrapper.Encrypt(msg, iv);
+                byte[]? enc = SymmetricWrapper.Encrypt(msg, iv);
+
+                if (enc == null)
+                {
+                    throw new InvalidDataException("Error in encrypt data.");
+                }
+
                 byte[] packet = new byte[iv.Length + enc.Length];
 
                 Buffer.BlockCopy(iv, 0, packet, 0, iv.Length);
@@ -124,8 +130,9 @@ namespace Openus.Net.SecSess.Transport.Tcp
         /// <summary>
         /// Read packet with secure session
         /// </summary>
+        /// <param name="type">How to handle when problem</param>
         /// <returns>Data that read from server</returns>
-        public byte[] Read()
+        public byte[] Read(HandlingType type = HandlingType.Ecexption)
         {
             if (SymmetricWrapper.Algorithm != SymmetricType.None)
             {
@@ -141,13 +148,34 @@ namespace Openus.Net.SecSess.Transport.Tcp
                 while (s2 < enc1.Length)
                     s2 += ActuallyClient.GetStream().Read(enc1, s2, enc1.Length - s2);
 
-                byte[] msg1 = SymmetricWrapper.Decrypt(enc1, iv);
+                byte[]? msg1 = SymmetricWrapper.Decrypt(enc1, iv);
+
+                if (msg1 == null)
+                {
+                    switch (type)
+                    {
+                        case HandlingType.Ecexption:
+                            throw new InvalidDataException("Error in decrypt data.");
+                        case HandlingType.EmptyReturn: 
+                            return Array.Empty<byte>();
+                        default:
+                            throw new InvalidDataException("Invalid handling type.");
+                    }
+                }
 
                 int readNonce = BitConverter.ToInt32(msg1[0..4]);
 
                 if (readNonce <= _recvNonce)
                 {
-                    throw new AuthenticationException("_recvNonce is incorrected.");
+                    switch (type)
+                    {
+                        case HandlingType.Ecexption:
+                            throw new AuthenticationException("_recvNonce is incorrected.");
+                        case HandlingType.EmptyReturn:
+                            return Array.Empty<byte>();
+                        default: 
+                            throw new InvalidDataException("Invalid handling type.");
+                    }
                 }
 
                 _recvNonce = readNonce;
@@ -163,7 +191,21 @@ namespace Openus.Net.SecSess.Transport.Tcp
                     while (s3 < enc2.Length)
                         s3 += ActuallyClient.GetStream().Read(enc2, s3, enc2.Length - s3);
 
-                    byte[] msg2 = SymmetricWrapper.Decrypt(enc2, enc1);
+                    byte[]? msg2 = SymmetricWrapper.Decrypt(enc2, enc1);
+                    
+                    if (msg2 == null)
+                    {
+                        switch (type)
+                        {
+                            case HandlingType.Ecexption:
+                                throw new InvalidDataException("Error in decrypt data.");
+                            case HandlingType.EmptyReturn:
+                                return Array.Empty<byte>();
+                            default: 
+                                throw new InvalidDataException("Invalid handling type.");
+                        }
+                    }
+
                     byte[] data = new byte[len];
 
                     Buffer.BlockCopy(msg1, 8, data, 0, msg1.Length - 8);
@@ -187,7 +229,15 @@ namespace Openus.Net.SecSess.Transport.Tcp
 
                         if (compare.SequenceEqual(hmacs) == false)
                         {
-                            throw new AuthenticationException("HMAC authentication is failed.");
+                            switch (type)
+                            {
+                                case HandlingType.Ecexption:
+                                    throw new AuthenticationException("HMAC authentication is failed.");
+                                case HandlingType.EmptyReturn:
+                                    return Array.Empty<byte>();
+                                default:
+                                    throw new InvalidDataException("Invalid handling type.");
+                            }
                         }
                     }
 
@@ -210,7 +260,15 @@ namespace Openus.Net.SecSess.Transport.Tcp
 
                     if (compare.SequenceEqual(hmacs) == false)
                     {
-                        throw new AuthenticationException("HMAC authentication is failed.");
+                        switch (type)
+                        {
+                            case HandlingType.Ecexption:
+                                throw new AuthenticationException("HMAC authentication is failed.");
+                            case HandlingType.EmptyReturn:
+                                return Array.Empty<byte>();
+                            default:
+                                throw new InvalidDataException("Invalid handling type.");
+                        }
                     }
 
                     return msg1[8..(len + 8)];

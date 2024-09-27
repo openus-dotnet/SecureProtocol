@@ -11,7 +11,7 @@ namespace Openus.Net.SecSess.Secure.Wrapper
         /// <summary>
         /// Symmetric algorithm that actually works
         /// </summary>
-        private SymmetricAlgorithm? _algorithm;
+        private SymmetricAlgorithm? _symmetric;
 
         /// <summary>
         /// Symmetric algorithm to use
@@ -30,24 +30,24 @@ namespace Openus.Net.SecSess.Secure.Wrapper
             switch (algorithm)
             {
                 case SymmetricType.None:
-                    _algorithm = null;
+                    _symmetric = null;
                     break;
                 case SymmetricType.DES:
-                    _algorithm = DES.Create();
+                    _symmetric = DES.Create();
                     break;
                 case SymmetricType.TripleDES:
-                    _algorithm = TripleDES.Create();
+                    _symmetric = TripleDES.Create();
                     break;
                 case SymmetricType.AES:
-                    _algorithm = Aes.Create();
+                    _symmetric = Aes.Create();
                     break;
                 default:
                     throw new InvalidOperationException("Use invalid symmetric algorithm.");
             }
 
-            if (_algorithm != null)
+            if (_symmetric != null)
             {
-                _algorithm.Key = key;
+                _symmetric.Key = key;
             }
         }
 
@@ -57,14 +57,17 @@ namespace Openus.Net.SecSess.Secure.Wrapper
         /// <param name="data">Data to be encrypted</param>
         /// <param name="iv">Initial vector</param>
         /// <returns>Encrypted data</returns>
-        public byte[] Encrypt(byte[] data, byte[] iv)
+        public byte[]? Encrypt(byte[] data, byte[] iv)
         {
-            if (_algorithm == null)
+            if (_symmetric == null)
             {
                 return data;
             }
 
-            return _algorithm.EncryptCbc(data, iv, paddingMode: PaddingMode.Zeros);
+            byte[] dest = new byte[data.Length + (data.Length % BlockSize(Algorithm))];
+            bool result = _symmetric.TryEncryptCbc(data, iv, dest, out int o, PaddingMode.Zeros);
+
+            return result == true ? dest : null;
         }
 
         /// <summary>
@@ -73,14 +76,17 @@ namespace Openus.Net.SecSess.Secure.Wrapper
         /// <param name="data">Data to be decrypted</param>
         /// <param name="iv">Initial vector</param>
         /// <returns>Decrypted data</returns>
-        public byte[] Decrypt(byte[] data, byte[] iv)
+        public byte[]? Decrypt(byte[] data, byte[] iv)
         {
-            if (_algorithm == null)
+            if (_symmetric == null)
             {
                 return data;
             }
 
-            return _algorithm.DecryptCbc(data, iv, paddingMode: PaddingMode.Zeros);
+            byte[] dest = new byte[data.Length];
+            bool result = _symmetric.TryDecryptCbc(data, iv, dest, out int o, PaddingMode.Zeros);
+
+            return result == true ? dest : null;
         }
 
         /// <summary>

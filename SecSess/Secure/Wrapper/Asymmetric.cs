@@ -12,7 +12,7 @@ namespace Openus.Net.SecSess.Secure.Wrapper
         /// <summary>
         /// Asymmetric algorithm that actually works
         /// </summary>
-        public AsymmetricAlgorithm? AsymmetricAlgorithm { get; private set; }
+        private AsymmetricAlgorithm? _asymmetric;
 
         /// <summary>
         /// Asymmetric algorithm to use
@@ -36,10 +36,10 @@ namespace Openus.Net.SecSess.Secure.Wrapper
             switch (algorithm)
             {
                 case AsymmetricType.None:
-                    AsymmetricAlgorithm = null;
+                    _asymmetric = null;
                     break;
                 case AsymmetricType.RSA:
-                    AsymmetricAlgorithm = RSA.Create(param!.InnerRSA);
+                    _asymmetric = RSA.Create(param!.InnerRSA);
                     break;
                 default:
                     throw new InvalidOperationException("Use invalid symmetric algorithm.");
@@ -51,12 +51,16 @@ namespace Openus.Net.SecSess.Secure.Wrapper
         /// </summary>
         /// <param name="data">Will encrypt data</param>
         /// <returns>Encrypted data</returns>
-        public byte[] Encrypt(byte[] data)
+        public byte[]? Encrypt(byte[] data)
         {
             switch (Algorithm)
             {
                 case AsymmetricType.RSA:
-                    return (AsymmetricAlgorithm as RSA)!.Encrypt(data, RSAEncryptionPadding.Pkcs1);
+                    byte[] result = new byte[BlockSize(Algorithm)];
+                    bool b = (_asymmetric as RSA)!.TryEncrypt(data, result, RSAEncryptionPadding.Pkcs1, out int o);
+
+                    return b == true ? result : null;
+
                 default:
                     throw new InvalidOperationException("Use invalid symmetric algorithm.");
             }
@@ -67,14 +71,33 @@ namespace Openus.Net.SecSess.Secure.Wrapper
         /// </summary>
         /// <param name="data">Will decrypt data</param>
         /// <returns>Decrypted data</returns>
-        public byte[] Decrypt(byte[] data)
+        public byte[]? Decrypt(byte[] data)
         {
             switch (Algorithm)
             {
                 case AsymmetricType.RSA:
-                    return (AsymmetricAlgorithm as RSA)!.Decrypt(data, RSAEncryptionPadding.Pkcs1);
+                    byte[] result = new byte[BlockSize(Algorithm)];
+                    bool b = (_asymmetric as RSA)!.TryDecrypt(data, result, RSAEncryptionPadding.Pkcs1, out int o);
+
+                    return b == true ? result : null;
+
                 default:
                     throw new InvalidOperationException("Use invalid symmetric algorithm.");
+            }
+        }
+
+        /// <summary>
+        /// Get block size to use algorithm
+        /// </summary>
+        /// <param name="algorithm">Algorithm to use</param>
+        /// <returns></returns>
+        public static int BlockSize(AsymmetricType algorithm)
+        {
+            switch (algorithm)
+            {
+                case AsymmetricType.RSA: return 256;
+                case AsymmetricType.None: return -1;
+                default: throw new InvalidOperationException("Invalid asymmetric algorithm.");
             }
         }
     }

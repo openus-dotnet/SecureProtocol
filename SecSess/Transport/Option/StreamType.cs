@@ -1,4 +1,4 @@
-﻿namespace Openus.Net.SecSess.Transport.Tcp.Option
+﻿namespace Openus.Net.SecSess.Transport.Option
 {
     /// <summary>
     /// The type of client state to judge

@@ -37,7 +37,7 @@ internal class Program
                     Server server = Server.Create(IPEndPoint.Parse(args.Length == 2 ? args[1] : "127.0.0.1:12345"), privkey, set);
                     server.Start();
 
-                    Server.Client sclient = server.AcceptClient();
+                    Server.Client sclient = server.AcceptClient()!;
 
                     for (int i = 0; i < 100; i++)
                     {
