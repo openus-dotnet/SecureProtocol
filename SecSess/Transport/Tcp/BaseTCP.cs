@@ -10,46 +10,15 @@ namespace Openus.Net.SecSess.Transport.Tcp
     /// <summary>
     /// The abstract base class for TCP client
     /// </summary>
-    public abstract class BaseClient
+    public abstract class BaseTCP : BaseTransport
     {
-        /// <summary>
-        /// Get local IP end point
-        /// </summary>
-        public IPEndPoint LocalEP { get => (ActuallyClient.Client.LocalEndPoint as IPEndPoint)!; }
-        /// <summary>
-        /// Get remote IP end point
-        /// </summary>
-        public IPEndPoint RemoteEP { get => (ActuallyClient.Client.RemoteEndPoint as IPEndPoint)!; }
-
-        /// <summary>
-        /// The symmetric key used to communicate with this server
-        /// </summary>
-        public byte[] SymmetricKey { get; private set; }
-        /// <summary>
-        /// The HMAC key used to communicate with this server
-        /// </summary>
-        public byte[] HMacKey { get; private set; }
+        public override IPEndPoint LocalEP { get => (ActuallyClient.Client.LocalEndPoint as IPEndPoint)!; }
+        public override IPEndPoint RemoteEP { get => (ActuallyClient.Client.RemoteEndPoint as IPEndPoint)!; }
 
         /// <summary>
         /// A TCP client that actually works
         /// </summary>
-        public TcpClient ActuallyClient { get; private set; }
-        /// <summary>
-        /// Symmetric algorithm supporter
-        /// </summary>
-        internal Symmetric SymmetricWrapper { get; private set; }
-        /// <summary>
-        /// Algorithm set to use
-        /// </summary>
-        internal Set AlgorithmSet { get; private set; }
-        /// <summary>
-        /// Nonce for preventing retransmission attacks
-        /// </summary>
-        protected int _recvNonce;
-        /// <summary>
-        /// Nonce for preventing retransmission attacks
-        /// </summary>
-        protected int _sendNonce;
+        protected TcpClient ActuallyClient { get; private set; }
 
         /// <summary>
         /// Base client constructor
@@ -58,13 +27,10 @@ namespace Openus.Net.SecSess.Transport.Tcp
         /// <param name="set">Algorithm set to use</param>
         /// <param name="symmetricKey">Symmetric key to use</param>
         /// <param name="hmacKey">HMAC key to use</param>
-        internal BaseClient(TcpClient client, Set set, byte[] symmetricKey, byte[] hmacKey)
+        internal BaseTCP(TcpClient client, Set set, byte[] symmetricKey, byte[] hmacKey)
+            : base(set, symmetricKey, hmacKey)
         {
             ActuallyClient = client;
-            SymmetricWrapper = new Symmetric(symmetricKey, set.Symmetric);
-            AlgorithmSet = set;
-            SymmetricKey = symmetricKey;
-            HMacKey = hmacKey;
         }
 
         /// <summary>
@@ -298,11 +264,11 @@ namespace Openus.Net.SecSess.Transport.Tcp
         /// </summary>
         /// <param name="type">The type of client state to judge</param>
         /// <returns></returns>
-        public bool CanUseStream(StreamType type = StreamType.All)
+        public bool CanUseStream(StreamState type = StreamState.All)
         {
-            return (type.HasFlag(StreamType.Connect) == true ? ActuallyClient.Connected : true)
-                && (type.HasFlag(StreamType.Read) == true ? ActuallyClient.GetStream().CanRead : true)
-                && (type.HasFlag(StreamType.Write) == true ? ActuallyClient.GetStream().CanWrite : true);
+            return (type.HasFlag(StreamState.Connected) == true ? ActuallyClient.Connected : true)
+                && (type.HasFlag(StreamState.CanRead) == true ? ActuallyClient.GetStream().CanRead : true)
+                && (type.HasFlag(StreamState.CanWrite) == true ? ActuallyClient.GetStream().CanWrite : true);
         }
 
         /// <summary>

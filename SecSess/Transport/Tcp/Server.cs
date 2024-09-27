@@ -15,7 +15,7 @@ namespace Openus.Net.SecSess.Transport.Tcp
         /// <summary>
         /// Clients accepted by the server side
         /// </summary>
-        public class Client : BaseClient
+        public class Client : BaseTCP
         {
             /// <summary>
             /// Create a server side client

@@ -11,7 +11,7 @@ namespace Openus.Net.SecSess.Transport.Tcp
     /// <summary>
     /// TCP client with secure sessions
     /// </summary>
-    public class Client : BaseClient
+    public class Client : BaseTCP
     {
         /// <summary>
         /// Asymmetric algorithm set without private key for client

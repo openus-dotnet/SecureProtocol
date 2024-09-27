@@ -3,12 +3,12 @@
     /// <summary>
     /// The type of client state to judge
     /// </summary>
-    public enum StreamType
+    public enum StreamState
     {
         None = 0,
-        Read = 1,
-        Write = 2,
-        Connect = 4,
+        CanRead = 1,
+        CanWrite = 2,
+        Connected = 4,
         All = 7,
     }
 }
