@@ -1,11 +1,11 @@
 ﻿using Openus.Net.SecSess.Secure.Algorithm;
 using Openus.Net.SecSess.Secure.Wrapper;
-using Openus.Net.SecSess.Transport.Tcp;
+using Openus.Net.SecSess.Transport.Tcp.Option;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Authentication;
 
-namespace Openus.Net.SecSess.Abstract.Tcp
+namespace Openus.Net.SecSess.Transport.Tcp
 {
     /// <summary>
     /// The abstract base class for TCP client
@@ -45,7 +45,11 @@ namespace Openus.Net.SecSess.Abstract.Tcp
         /// <summary>
         /// Nonce for preventing retransmission attacks
         /// </summary>
-        protected int _nonce;
+        protected int _recvNonce;
+        /// <summary>
+        /// Nonce for preventing retransmission attacks
+        /// </summary>
+        protected int _sendNonce;
 
         /// <summary>
         /// Base client constructor
@@ -71,12 +75,12 @@ namespace Openus.Net.SecSess.Abstract.Tcp
         {
             if (SymmetricWrapper.Algorithm != SymmetricType.None)
             {
-                _nonce += new Random(DateTime.Now.Microsecond).Next(1, 10);
+                _sendNonce += new Random(DateTime.Now.Microsecond).Next(1, 10);
 
                 byte[] iv = new byte[Symmetric.BlockSize(SymmetricWrapper.Algorithm)];
                 new Random().NextBytes(iv);
 
-                byte[] nonceBit = BitConverter.GetBytes(_nonce);
+                byte[] nonceBit = BitConverter.GetBytes(_sendNonce);
                 byte[] lenBit = BitConverter.GetBytes(data.Length);
                 byte[] msg = new byte[nonceBit.Length + lenBit.Length + data.Length];
 
@@ -141,12 +145,12 @@ namespace Openus.Net.SecSess.Abstract.Tcp
 
                 int readNonce = BitConverter.ToInt32(msg1[0..4]);
 
-                if (readNonce <= _nonce)
+                if (readNonce <= _recvNonce)
                 {
-                    throw new AuthenticationException("_nonce is incorrected.");
+                    throw new AuthenticationException("_recvNonce is incorrected.");
                 }
 
-                _nonce = readNonce;
+                _recvNonce = readNonce;
 
                 int len = BitConverter.ToInt32(msg1[4..8]);
                 int blockCount = (8 + len) / enc1.Length + ((8 + len) % enc1.Length == 0 ? 0 : 1);

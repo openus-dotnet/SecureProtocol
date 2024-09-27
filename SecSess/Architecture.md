@@ -98,7 +98,7 @@
 /// You must have RSA key pair before communication.
 /// Don't worry. We provide RSA key pair generator!
 
-using SecSess.Key;
+using Openus.Net.SecSess.Key.Asymmetric;
 
 KeyPair pair = KeyPair.GenerateRSA();
 
@@ -112,9 +112,10 @@ pair.PrivateKey.Save("key.priv");
 ```cs
 /// This is the Server side.
 
-using SecSess.Key;
-using SecSess.Secure.Algorithm;
-using SecSess.Tcp;
+using Openus.Net.SecSess.Key.Asymmetric;
+using Openus.Net.SecSess.Secure.Algorithm;
+using Openus.Net.SecSess.Transport.Tcp;
+using System.Net;
 
 /// Load Private key
 PrivateKey privkey = PrivateKey.Load(Asymmetric.RSA, "key.priv");
@@ -148,9 +149,10 @@ server.Stop();
 ```cs
 /// This is the Client side.
 
-using SecSess.Key;
-using SecSess.Secure.Algorithm;
-using SecSess.Tcp;
+using Openus.Net.SecSess.Key.Asymmetric;
+using Openus.Net.SecSess.Secure.Algorithm;
+using Openus.Net.SecSess.Transport.Tcp;
+using System.Net;
 
 /// Load Public key
 PublicKey pubkey = PublicKey.Load(Asymmetric.RSA, "key.pub");

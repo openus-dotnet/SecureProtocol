@@ -1,10 +1,8 @@
-﻿using Openus.Net.SecSess.Abstract.Tcp;
-using Openus.Net.SecSess.Key.Asymmetric;
+﻿using Openus.Net.SecSess.Key.Asymmetric;
 using Openus.Net.SecSess.Secure.Algorithm;
 using Openus.Net.SecSess.Secure.Wrapper;
 using System.Net.Sockets;
 using System.Net;
-using Openus.Net.SecSess.Abstract.Key;
 
 namespace Openus.Net.SecSess.Transport.Tcp
 {
