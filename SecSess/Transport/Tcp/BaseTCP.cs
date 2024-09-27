@@ -1,6 +1,7 @@
 ﻿using Openus.Net.SecSess.Secure.Algorithm;
 using Openus.Net.SecSess.Secure.Wrapper;
 using Openus.Net.SecSess.Transport.Option;
+using Openus.Net.SecSess.Util;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Authentication;
@@ -59,7 +60,7 @@ namespace Openus.Net.SecSess.Transport.Tcp
 
                 if (enc == null)
                 {
-                    throw new InvalidDataException("Error in encrypt data.");
+                    throw new SecSessException(ExceptionCode.EncryptError);
                 }
 
                 byte[] packet = new byte[iv.Length + enc.Length];
@@ -122,11 +123,11 @@ namespace Openus.Net.SecSess.Transport.Tcp
                     switch (type)
                     {
                         case HandlingType.Ecexption:
-                            throw new InvalidDataException("Error in decrypt data.");
+                            throw new SecSessException(ExceptionCode.DecryptError);
                         case HandlingType.EmptyReturn: 
                             return Array.Empty<byte>();
                         default:
-                            throw new InvalidDataException("Invalid handling type.");
+                            throw new SecSessException(ExceptionCode.InvalidHandlingType);
                     }
                 }
 
@@ -137,11 +138,11 @@ namespace Openus.Net.SecSess.Transport.Tcp
                     switch (type)
                     {
                         case HandlingType.Ecexption:
-                            throw new AuthenticationException("_recvNonce is incorrected.");
+                            throw new SecSessException(ExceptionCode.InvalidNonce);
                         case HandlingType.EmptyReturn:
                             return Array.Empty<byte>();
-                        default: 
-                            throw new InvalidDataException("Invalid handling type.");
+                        default:
+                            throw new SecSessException(ExceptionCode.InvalidHandlingType);
                     }
                 }
 
@@ -165,11 +166,11 @@ namespace Openus.Net.SecSess.Transport.Tcp
                         switch (type)
                         {
                             case HandlingType.Ecexption:
-                                throw new InvalidDataException("Error in decrypt data.");
+                                throw new SecSessException(ExceptionCode.DecryptError);
                             case HandlingType.EmptyReturn:
                                 return Array.Empty<byte>();
-                            default: 
-                                throw new InvalidDataException("Invalid handling type.");
+                            default:
+                                throw new SecSessException(ExceptionCode.InvalidHandlingType);
                         }
                     }
 
@@ -199,11 +200,11 @@ namespace Openus.Net.SecSess.Transport.Tcp
                             switch (type)
                             {
                                 case HandlingType.Ecexption:
-                                    throw new AuthenticationException("HMAC authentication is failed.");
+                                    throw new SecSessException(ExceptionCode.InvalidHMac);
                                 case HandlingType.EmptyReturn:
                                     return Array.Empty<byte>();
                                 default:
-                                    throw new InvalidDataException("Invalid handling type.");
+                                    throw new SecSessException(ExceptionCode.InvalidHandlingType);
                             }
                         }
                     }
@@ -232,11 +233,11 @@ namespace Openus.Net.SecSess.Transport.Tcp
                             switch (type)
                             {
                                 case HandlingType.Ecexption:
-                                    throw new AuthenticationException("HMAC authentication is failed.");
+                                    throw new SecSessException(ExceptionCode.InvalidHMac);
                                 case HandlingType.EmptyReturn:
                                     return Array.Empty<byte>();
                                 default:
-                                    throw new InvalidDataException("Invalid handling type.");
+                                    throw new SecSessException(ExceptionCode.InvalidHandlingType);
                             }
                         }
                     }

@@ -21,6 +21,8 @@ internal class Program
 
             keys.PublicKey.Save("test.pub");
             keys.PrivateKey.Save("test.priv");
+
+            return;
         }
 
         PublicKey pubkey = PublicKey.Load(AsymmetricType.RSA, "test.pub");

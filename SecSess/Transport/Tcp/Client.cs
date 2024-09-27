@@ -1,10 +1,10 @@
 ﻿using Openus.Net.SecSess.Key.Asymmetric;
 using Openus.Net.SecSess.Secure.Algorithm;
 using Openus.Net.SecSess.Secure.Wrapper;
+using Openus.Net.SecSess.Util;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Authentication;
-using System.Security.Cryptography;
 
 namespace Openus.Net.SecSess.Transport.Tcp
 {
@@ -97,7 +97,7 @@ namespace Openus.Net.SecSess.Transport.Tcp
 
                 if (enc == null)
                 {
-                    throw new InvalidDataException("Error in asymmetric encrypt.");
+                    throw new SecSessException(ExceptionCode.EncryptError);
                 }
 
                 ActuallyClient.GetStream().Write(enc, 0, enc.Length);
@@ -107,7 +107,7 @@ namespace Openus.Net.SecSess.Transport.Tcp
 
                 if (compare.SequenceEqual(response) == false)
                 {
-                    throw new AuthenticationException("Failed to create a secure session.");
+                    throw new SecSessException(ExceptionCode.InvalidHMac);
                 }
             }
             else if (SymmetricWrapper.Algorithm == SymmetricType.None)
@@ -116,7 +116,7 @@ namespace Openus.Net.SecSess.Transport.Tcp
             }
             else
             {
-                throw new InvalidOperationException("Invalid combination between asymmetric to symmetric algorithm.");
+                throw new SecSessException(ExceptionCode.InvalidHandlingType);
             }
         }
         /// <summary>

@@ -1,4 +1,5 @@
 ﻿using Openus.Net.SecSess.Secure.Algorithm;
+using Openus.Net.SecSess.Util;
 using System.Security.Cryptography;
 
 namespace Openus.Net.SecSess.Secure.Wrapper
@@ -31,18 +32,22 @@ namespace Openus.Net.SecSess.Secure.Wrapper
             {
                 case SymmetricType.None:
                     _symmetric = null;
+
                     break;
                 case SymmetricType.DES:
                     _symmetric = DES.Create();
+
                     break;
                 case SymmetricType.TripleDES:
                     _symmetric = TripleDES.Create();
+
                     break;
                 case SymmetricType.AES:
                     _symmetric = Aes.Create();
+
                     break;
                 default:
-                    throw new InvalidOperationException("Use invalid symmetric algorithm.");
+                    throw new SecSessException(ExceptionCode.InvalidSymmetric);
             }
 
             if (_symmetric != null)
@@ -108,7 +113,7 @@ namespace Openus.Net.SecSess.Secure.Wrapper
                 case SymmetricType.AES:
                     return 32;
                 default:
-                    throw new InvalidOperationException("Use invalid symmetric algorithm.");
+                    throw new SecSessException(ExceptionCode.InvalidSymmetric);
             }
         }
 
@@ -130,7 +135,7 @@ namespace Openus.Net.SecSess.Secure.Wrapper
                 case SymmetricType.AES:
                     return 16;
                 default:
-                    throw new InvalidOperationException("Use invalid symmetric algorithm.");
+                    throw new SecSessException(ExceptionCode.InvalidSymmetric);
             }
         }
     }

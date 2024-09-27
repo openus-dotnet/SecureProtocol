@@ -1,5 +1,6 @@
 ﻿using Openus.Net.SecSess.Key.Asymmetric.Interface;
 using Openus.Net.SecSess.Secure.Algorithm;
+using Openus.Net.SecSess.Util;
 using System.Security.Cryptography;
 
 namespace Openus.Net.SecSess.Key.Asymmetric
@@ -22,9 +23,10 @@ namespace Openus.Net.SecSess.Key.Asymmetric
             {
                 case AsymmetricType.RSA:
                     InnerRSA = (RSAParameters)parameters;
+
                     break;
                 default:
-                    throw new ArgumentException("This algorithm can not use.");
+                    throw new SecSessException(ExceptionCode.InvalidAsymmetric);
             }
         }
 
@@ -41,14 +43,15 @@ namespace Openus.Net.SecSess.Key.Asymmetric
                 case AsymmetricType.RSA:
                     RSA rsa = RSA.Create(InnerRSA);
                     result = rsa.ExportRSAPrivateKey();
+
                     break;
                 default:
-                    throw new ArgumentException("Invalid algorithm to save");
+                    throw new SecSessException(ExceptionCode.InvalidAsymmetric);
             }
 
-            using (BinaryWriter sw = new BinaryWriter(new FileStream(path, FileMode.OpenOrCreate)))
+            using (StreamWriter sw = new StreamWriter(path))
             {
-                sw.Write(result);
+                sw.Write(Convert.ToBase64String(result));
             }
         }
 
@@ -62,9 +65,9 @@ namespace Openus.Net.SecSess.Key.Asymmetric
         {
             byte[] result;
 
-            using (BinaryReader r = new BinaryReader(new FileStream(path, FileMode.Open, FileAccess.Read)))
+            using (StreamReader sr = new StreamReader(path))
             {
-                result = r.ReadBytes((int)r.BaseStream.Length);
+                result = Convert.FromBase64String(sr.ReadToEnd());
             }
 
             switch (algorithm)
@@ -72,9 +75,10 @@ namespace Openus.Net.SecSess.Key.Asymmetric
                 case AsymmetricType.RSA:
                     RSA rsa = RSA.Create();
                     rsa.ImportRSAPrivateKey(result, out int o1);
+
                     return new PrivateKey(algorithm, rsa.ExportParameters(true));
                 default:
-                    throw new ArgumentException("Invalid algorithm to save");
+                    throw new SecSessException(ExceptionCode.InvalidAsymmetric);
             }
         }
     }

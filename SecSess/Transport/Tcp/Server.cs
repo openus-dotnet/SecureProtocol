@@ -4,6 +4,7 @@ using Openus.Net.SecSess.Secure.Wrapper;
 using System.Net.Sockets;
 using System.Net;
 using Openus.Net.SecSess.Transport.Option;
+using Openus.Net.SecSess.Util;
 
 namespace Openus.Net.SecSess.Transport.Tcp
 {
@@ -123,11 +124,11 @@ namespace Openus.Net.SecSess.Transport.Tcp
                     switch (type)
                     {
                         case HandlingType.Ecexption:
-                            throw new InvalidDataException("Error in asymmetric decrypt.");
+                            throw new SecSessException(ExceptionCode.DecryptError);
                         case HandlingType.EmptyReturn: 
                             return null;
                         default:
-                            throw new InvalidOperationException("Invalid Handling type.");
+                            throw new SecSessException(ExceptionCode.InvalidHandlingType);
                     }
                 }
 
@@ -152,7 +153,7 @@ namespace Openus.Net.SecSess.Transport.Tcp
             }
             else
             {
-                throw new InvalidOperationException("Invalid combination between asymmetric to symmetric algorithm.");
+                throw new SecSessException(ExceptionCode.InvalidCombination);
             }
         }
 
