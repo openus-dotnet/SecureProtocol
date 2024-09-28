@@ -19,7 +19,7 @@ namespace Openus.Net.SecSess.Transport
         /// <summary>
         /// Keyset wrapped for reuse in UDP, etc., but key cannot be see user
         /// </summary>
-        public KeySet SessionKeySet { get => new KeySet(SymmetricKey, HMacKey, AlgorithmSet); }
+        public KeySet SessionKeySet { get => new KeySet(SymmetricKey, HmacKey, AlgorithmSet); }
 
         /// <summary>
         /// The symmetric key used to communicate with this server
@@ -28,7 +28,7 @@ namespace Openus.Net.SecSess.Transport
         /// <summary>
         /// The HMAC key used to communicate with this server
         /// </summary>
-        internal byte[] HMacKey { get; private set; }
+        internal byte[] HmacKey { get; private set; }
         /// <summary>
         /// Symmetric algorithm supporter
         /// </summary>
@@ -57,7 +57,7 @@ namespace Openus.Net.SecSess.Transport
             SymmetricWrapper = new Symmetric(symmetricKey, set.Symmetric);
             AlgorithmSet = set;
             SymmetricKey = symmetricKey;
-            HMacKey = hmacKey;
+            HmacKey = hmacKey;
         }
     }
 }

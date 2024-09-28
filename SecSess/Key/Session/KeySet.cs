@@ -11,11 +11,11 @@ namespace Openus.Net.SecSess.Key.Session
         /// <summary>
         /// Symmetric key for session
         /// </summary>
-        internal byte[] SymmetricKey { get; set; }
+        internal byte[] SymmetricKey { get; private set; }
         /// <summary>
         /// HMAC key for session
         /// </summary>
-        internal byte[] HMacKey { get; set; }
+        internal byte[] HmacKey { get; private set; }
 
         /// <summary>
         /// Make instance
@@ -26,13 +26,13 @@ namespace Openus.Net.SecSess.Key.Session
         internal KeySet(byte[] symmetric, byte[] hmac, Set set)
         {
             if (symmetric.Length != Symmetric.KeySize(set.Symmetric) 
-                || hmac.Length != Hash.HMacKeySize(set.Hash))
+                || hmac.Length != Hash.HmacKeySize(set.Hash))
             {
                 throw new ArgumentOutOfRangeException("Use invalid size key.");
             }
 
             SymmetricKey = symmetric;
-            HMacKey = hmac;
+            HmacKey = hmac;
         }
     }
 }

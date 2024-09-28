@@ -4,7 +4,6 @@ using Openus.Net.SecSess.Transport.Option;
 using Openus.Net.SecSess.Util;
 using System.Net;
 using System.Net.Sockets;
-using System.Security.Authentication;
 using System.Security.Cryptography;
 
 namespace Openus.Net.SecSess.Transport.Tcp
@@ -68,14 +67,14 @@ namespace Openus.Net.SecSess.Transport.Tcp
                 Buffer.BlockCopy(iv, 0, packet, 0, iv.Length);
                 Buffer.BlockCopy(enc, 0, packet, iv.Length, enc.Length);
 
-                if (HMacKey.Length == 0)
+                if (HmacKey.Length == 0)
                 {
                     ActuallyClient.GetStream().Write(packet, 0, packet.Length);
                 }
                 else
                 {
                     byte[] hmacs = new byte[packet.Length + Hash.HashDataSize(AlgorithmSet.Hash)];
-                    byte[] hmac = Hash.HMacData(AlgorithmSet.Hash, HMacKey, packet);
+                    byte[] hmac = Hash.HmacData(AlgorithmSet.Hash, HmacKey, packet);
 
                     Buffer.BlockCopy(packet, 0, hmacs, 0, packet.Length);
                     Buffer.BlockCopy(hmac, 0, hmacs, packet.Length, hmac.Length);
@@ -179,7 +178,7 @@ namespace Openus.Net.SecSess.Transport.Tcp
                     Buffer.BlockCopy(msg1, 8, data, 0, msg1.Length - 8);
                     Buffer.BlockCopy(msg2, 0, data, msg1.Length - 8, len - (msg1.Length - 8));
 
-                    if (HMacKey.Length != 0)
+                    if (HmacKey.Length != 0)
                     {
                         byte[] concat = new byte[iv.Length + enc1.Length + enc2.Length];
 
@@ -193,14 +192,14 @@ namespace Openus.Net.SecSess.Transport.Tcp
                         while (s4 < hmacs.Length)
                             s4 += ActuallyClient.GetStream().Read(hmacs, s4, hmacs.Length - s4);
 
-                        byte[] compare = Hash.HMacData(AlgorithmSet.Hash, HMacKey, concat);
+                        byte[] compare = Hash.HmacData(AlgorithmSet.Hash, HmacKey, concat);
 
                         if (compare.SequenceEqual(hmacs) == false)
                         {
                             switch (type)
                             {
                                 case HandlingType.Ecexption:
-                                    throw new SecSessException(ExceptionCode.InvalidHMac);
+                                    throw new SecSessException(ExceptionCode.InvalidHmac);
                                 case HandlingType.EmptyReturn:
                                     return Array.Empty<byte>();
                                 default:
@@ -218,7 +217,7 @@ namespace Openus.Net.SecSess.Transport.Tcp
                     Buffer.BlockCopy(iv, 0, concat, 0, iv.Length);
                     Buffer.BlockCopy(enc1, 0, concat, iv.Length, enc1.Length);
 
-                    if (HMacKey.Length != 0)
+                    if (HmacKey.Length != 0)
                     {
                         byte[] hmacs = new byte[Hash.HashDataSize(AlgorithmSet.Hash)];
 
@@ -226,14 +225,14 @@ namespace Openus.Net.SecSess.Transport.Tcp
                         while (s4 < hmacs.Length)
                             s4 += ActuallyClient.GetStream().Read(hmacs, s4, hmacs.Length - s4);
 
-                        byte[] compare = Hash.HMacData(AlgorithmSet.Hash, HMacKey, concat);
+                        byte[] compare = Hash.HmacData(AlgorithmSet.Hash, HmacKey, concat);
 
                         if (compare.SequenceEqual(hmacs) == false)
                         {
                             switch (type)
                             {
                                 case HandlingType.Ecexption:
-                                    throw new SecSessException(ExceptionCode.InvalidHMac);
+                                    throw new SecSessException(ExceptionCode.InvalidHmac);
                                 case HandlingType.EmptyReturn:
                                     return Array.Empty<byte>();
                                 default:
@@ -318,7 +317,7 @@ namespace Openus.Net.SecSess.Transport.Tcp
         protected static (byte[], byte[]) GenerateKeySet(Set set)
         {
             byte[] symmetricKey = new byte[Symmetric.KeySize(set.Symmetric)];
-            byte[] hmacKey = new byte[Hash.HMacKeySize(set.Hash)];
+            byte[] hmacKey = new byte[Hash.HmacKeySize(set.Hash)];
 
             RandomNumberGenerator.Fill(symmetricKey);
             RandomNumberGenerator.Fill(hmacKey);

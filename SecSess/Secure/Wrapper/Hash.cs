@@ -36,7 +36,7 @@ namespace Openus.Net.SecSess.Secure.Wrapper
         /// <param name="key">Key for HMAC</param>
         /// <param name="data">Data to hash</param>
         /// <returns></returns>
-        public static byte[] HMacData(HashType algorithm, byte[] key, byte[] data)
+        public static byte[] HmacData(HashType algorithm, byte[] key, byte[] data)
         {
             switch (algorithm)
             {
@@ -76,7 +76,7 @@ namespace Openus.Net.SecSess.Secure.Wrapper
         /// </summary>
         /// <param name="algorithm">Hash algorithm to use</param>
         /// <returns></returns>
-        public static int HMacKeySize(HashType algorithm)
+        public static int HmacKeySize(HashType algorithm)
         {
             switch (algorithm)
             {

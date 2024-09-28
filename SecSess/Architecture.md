@@ -24,18 +24,19 @@
 |11|Client side|**Compare** `📜ⓢ` and `📜ⓒ`|
 
 > - `🔑`: `AES_KEY + HMAC_KEY`
->   - ≓ Keys for SecSess-AES
+>   - ≓ Session Key for SecSess-AES
 > - `🔐`: `RSA(S_PUBLIC_KEY, 🔑)`
->   - ≓ Encrypted keys for SecSess-AES, and this can decrypt only Server
+>   - ≓ RSA Encrypted session keys for SecSess-AES, and this can decrypt only Server
 > - `📜`: `HMAC(HMAC_KEY, 🔑)`
->   - ≓ Authentication hash message in SecSess-AES
+>   - ≓ Hashed message for initail authentication
 > - `🔏`: `SecSess-AES(AES_KEY, 📜)`
->   - ≓ Encrypted authentication hash message in SecSess-AES
+>   - ≓ AES Encrypted hashed message for initail authentication
 
 ## 2nd. SecSess-AES(TCP-AES-CBC) Packet Sent Structure
 
-- Define `IV + AES(AES_KEY, NONCE + MSG_LENGTH + MSG)` is `α` so, the `α` mean encrypted packet.
-- Write AES packet is only follow the structure that `α + HMAC(HMAC_KEY, α)`
+- Define `IV + AES(AES_KEY, NONCE + MSG_LENGTH + MSG)` to `α`. 
+  - So, the `α` mean encrypted message part.
+- Write SecSess-AES packet is only follow the structure that `α + HMAC(HMAC_KEY, α)`
 
 ### More Structure Information
 
@@ -43,14 +44,14 @@
   - AES block size is 128 bits.
   - HMAC hashed data size is 256 bits.
 
-<table border="1px solid black">
+<table>
     <tr>
         <td>
             <p align="center">IV<br>128 bits</p>
         </td>
         <td>
             <p align="center">AES Encrypted Message<br>128n bits</p>
-            <table border="1px solid black">
+            <table>
                 <tr align="center">
                     <td>
                         <p align="center">Nonce<br>32 bits</p>
@@ -66,7 +67,7 @@
         </td>
         <td>
             <p align="center">HMAC Hash<br>256 bits</p>
-            <table border="1px solid black">
+            <table>
                 <tr>
                     <td>
                         <p align="center">IV<br>128 bits</p>
@@ -86,9 +87,11 @@
 - Data ***Integrity*** and ***Authentication*** through **HMAC**.
 - In now, has plan that provide simple ***Availability*** like support blacklist system.
 
-> - AES_KEY, HMAC_KEY generate and exchange in the before time(in RSA) during the SecSess.
-> - IV is randomly generated for each communication.
-> - Used the last read NONCE, Write increased NONCE by 1 to 10 in each write, and when Reading, if the NONCE did not increase based on last read NONCE, it is judged as an incorrect packet.
+> - `AES_KEY`, `HMAC_KEY` generate and exchange in the before time(in RSA) during the SecSess.
+> - `IV` is randomly generated for each communication.
+> - Use the `NONCE` increased by 1 to 10 from last used, using in each write.
+>   - When read, if the `NONCE` did not increase based on last read `NONCE`, it is judged as an incorrect packet.
+>   - So, the write `NONCE` and the read `NONCE` are separated (v0.4~)
 
 ## 3rd. Usage Example
 
@@ -190,5 +193,5 @@ for (int i = 0; i < buffer.Length; i++)
 client.Close();
 ```
 
-- This example is like repeated 100 times Ping-Pong, through SecSess-RSA & AES.
+- This example is like repeated 100 times Ping-Pong, through SecSess RSA-AES.
 - And last, the program check that message is corrupted.

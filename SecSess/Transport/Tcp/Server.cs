@@ -133,14 +133,14 @@ namespace Openus.Net.SecSess.Transport.Tcp
                 }
 
                 byte[] symmetricKey = concat[0..Symmetric.KeySize(_set.Symmetric)];
-                byte[] hmacKey = concat[Symmetric.KeySize(_set.Symmetric)..(Symmetric.KeySize(_set.Symmetric) + Hash.HMacKeySize(_set.Hash))];
+                byte[] hmacKey = concat[Symmetric.KeySize(_set.Symmetric)..(Symmetric.KeySize(_set.Symmetric) + Hash.HmacKeySize(_set.Hash))];
 
                 Client result = new Client(client, symmetricKey, hmacKey, _set);
                 _clients.Add(result);
 
                 while (client.GetStream().CanWrite == false) ;
 
-                result.Write(Hash.HashData(_set.Hash, concat[0..(Symmetric.KeySize(_set.Symmetric) + Hash.HMacKeySize(_set.Hash))]));
+                result.Write(Hash.HashData(_set.Hash, concat[0..(Symmetric.KeySize(_set.Symmetric) + Hash.HmacKeySize(_set.Hash))]));
 
                 return result;
             }

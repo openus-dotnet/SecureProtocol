@@ -13,6 +13,6 @@
         DecryptError,
         InvalidHandlingType,
         InvalidNonce,
-        InvalidHMac,
+        InvalidHmac,
     }
 }

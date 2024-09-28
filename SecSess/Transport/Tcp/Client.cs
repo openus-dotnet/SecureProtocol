@@ -88,10 +88,10 @@ namespace Openus.Net.SecSess.Transport.Tcp
 
             if (SymmetricWrapper.Algorithm != SymmetricType.None)
             {
-                byte[] buffer = new byte[SymmetricKey.Length + HMacKey.Length];
+                byte[] buffer = new byte[SymmetricKey.Length + HmacKey.Length];
 
                 Buffer.BlockCopy(SymmetricKey, 0, buffer, 0, SymmetricKey.Length);
-                Buffer.BlockCopy(HMacKey, 0, buffer, SymmetricKey.Length, HMacKey.Length);
+                Buffer.BlockCopy(HmacKey, 0, buffer, SymmetricKey.Length, HmacKey.Length);
 
                 byte[]? enc = _asymmetric.Encrypt(buffer);
 
@@ -107,7 +107,7 @@ namespace Openus.Net.SecSess.Transport.Tcp
 
                 if (compare.SequenceEqual(response) == false)
                 {
-                    throw new SecSessException(ExceptionCode.InvalidHMac);
+                    throw new SecSessException(ExceptionCode.InvalidHmac);
                 }
             }
             else if (SymmetricWrapper.Algorithm == SymmetricType.None)
