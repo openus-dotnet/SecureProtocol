@@ -34,9 +34,9 @@ namespace Openus.Net.SecSess.Transport.Udp
         /// <summary>
         /// Write packet with secure session
         /// </summary>
-        /// <param name="ep">Remote end point</param>
+        /// <param name="remoteEP">Remote end point</param>
         /// <param name="data">Data that write</param>
-        public void Write(IPEndPoint ep, byte[] data)
+        public void Write(IPEndPoint remoteEP, byte[] data)
         {
             if (SymmetricWrapper.Algorithm != SymmetricType.None)
             {
@@ -67,7 +67,7 @@ namespace Openus.Net.SecSess.Transport.Udp
 
                 if (HmacKey.Length == 0)
                 {
-                    ActuallyClient.Send(packet, packet.Length, ep);
+                    ActuallyClient.Send(packet, packet.Length, remoteEP);
                 }
                 else
                 {
@@ -77,7 +77,7 @@ namespace Openus.Net.SecSess.Transport.Udp
                     Buffer.BlockCopy(packet, 0, hmacs, 0, packet.Length);
                     Buffer.BlockCopy(hmac, 0, hmacs, packet.Length, hmac.Length);
 
-                    ActuallyClient.Send(hmacs, hmacs.Length, ep);
+                    ActuallyClient.Send(hmacs, hmacs.Length, remoteEP);
                 }
             }
             else
@@ -88,22 +88,21 @@ namespace Openus.Net.SecSess.Transport.Udp
                 Buffer.BlockCopy(lenBit, 0, msg, 0, lenBit.Length);
                 Buffer.BlockCopy(data, 0, msg, lenBit.Length, data.Length);
 
-                ActuallyClient.Send(msg, msg.Length, ep);
+                ActuallyClient.Send(msg, msg.Length, remoteEP);
             }
         }
 
         /// <summary>
         /// Read packet with secure session
         /// </summary>
+        /// <param name="remoteEP">Remote end point</param>
         /// <param name="type">How to handle when problem</param>
         /// <returns>Data that read</returns>
-        public (IPEndPoint, byte[]) Read(HandlingType type = HandlingType.Ecexption)
+        public byte[] Read(ref IPEndPoint remoteEP, HandlingType type = HandlingType.Ecexption)
         {
-            IPEndPoint? ep = null;
-
             if (SymmetricWrapper.Algorithm != SymmetricType.None)
             {
-                byte[] all = ActuallyClient.Receive(ref ep);
+                byte[] all = ActuallyClient.Receive(ref remoteEP);
 
                 byte[] iv = new byte[Symmetric.BlockSize(AlgorithmSet.Symmetric)];
                 byte[] enc1 = new byte[Symmetric.BlockSize(AlgorithmSet.Symmetric)];
@@ -119,8 +118,8 @@ namespace Openus.Net.SecSess.Transport.Udp
                     {
                         case HandlingType.Ecexption:
                             throw new SecSessException(ExceptionCode.DecryptError);
-                        case HandlingType.EmptyReturn: 
-                            return (ep, Array.Empty<byte>());
+                        case HandlingType.EmptyReturn:
+                            return Array.Empty<byte>();
                         default:
                             throw new SecSessException(ExceptionCode.InvalidHandlingType);
                     }
@@ -135,7 +134,7 @@ namespace Openus.Net.SecSess.Transport.Udp
                         case HandlingType.Ecexption:
                             throw new SecSessException(ExceptionCode.InvalidNonce);
                         case HandlingType.EmptyReturn:
-                            return (ep, Array.Empty<byte>());
+                            return Array.Empty<byte>();
                         default:
                             throw new SecSessException(ExceptionCode.InvalidHandlingType);
                     }
@@ -161,7 +160,7 @@ namespace Openus.Net.SecSess.Transport.Udp
                             case HandlingType.Ecexption:
                                 throw new SecSessException(ExceptionCode.DecryptError);
                             case HandlingType.EmptyReturn:
-                                return (ep, Array.Empty<byte>());
+                                return Array.Empty<byte>();
                             default:
                                 throw new SecSessException(ExceptionCode.InvalidHandlingType);
                         }
@@ -193,14 +192,14 @@ namespace Openus.Net.SecSess.Transport.Udp
                                 case HandlingType.Ecexption:
                                     throw new SecSessException(ExceptionCode.InvalidHmac);
                                 case HandlingType.EmptyReturn:
-                                    return (ep, Array.Empty<byte>());
+                                    return Array.Empty<byte>();
                                 default:
                                     throw new SecSessException(ExceptionCode.InvalidHandlingType);
                             }
                         }
                     }
 
-                    return (ep, data);
+                    return data;
                 }
                 else
                 {
@@ -224,19 +223,19 @@ namespace Openus.Net.SecSess.Transport.Udp
                                 case HandlingType.Ecexption:
                                     throw new SecSessException(ExceptionCode.InvalidHmac);
                                 case HandlingType.EmptyReturn:
-                                    return (ep, Array.Empty<byte>());
+                                    return Array.Empty<byte>();
                                 default:
                                     throw new SecSessException(ExceptionCode.InvalidHandlingType);
                             }
                         }
                     }
 
-                    return (ep, msg1[8..(len + 8)]);
+                    return msg1[8..(len + 8)];
                 }
             }
             else
             {
-                byte[] all = ActuallyClient.Receive(ref ep);
+                byte[] all = ActuallyClient.Receive(ref remoteEP);
 
                 byte[] lenBit = new byte[4];
 
@@ -247,7 +246,7 @@ namespace Openus.Net.SecSess.Transport.Udp
 
                 Buffer.BlockCopy(all, lenBit.Length, msg, 0, msg.Length);
 
-                return (ep, msg);
+                return msg;
             }
         }
 
@@ -264,11 +263,12 @@ namespace Openus.Net.SecSess.Transport.Udp
         /// <summary>
         /// Read packet with secure session
         /// </summary>
+        /// <param name="remoteEP">Remote end point</param>
         /// <param name="type">How to handle when problem</param>
         /// <returns>Data that read</returns>
-        public async Task<(IPEndPoint, byte[])> ReadAsync(HandlingType type = HandlingType.Ecexption)
+        public async Task<byte[]> ReadAsync(IPEndPoint remoteEP, HandlingType type = HandlingType.Ecexption)
         {
-            return await Task.Run(() => Read(type));
+            return await Task.Run(() => Read(ref remoteEP, type));
         }
 
         public override void Close()
