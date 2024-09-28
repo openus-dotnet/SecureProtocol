@@ -16,6 +16,10 @@ namespace Openus.Net.SecSess.Key.Session
         /// HMAC key for session
         /// </summary>
         internal byte[] HmacKey { get; private set; }
+        /// <summary>
+        /// Algorithm set to use
+        /// </summary>
+        internal Set AlgorithmSet { get; private set; }
 
         /// <summary>
         /// Make instance
@@ -33,6 +37,7 @@ namespace Openus.Net.SecSess.Key.Session
 
             SymmetricKey = symmetric;
             HmacKey = hmac;
+            AlgorithmSet = set;
         }
     }
 }

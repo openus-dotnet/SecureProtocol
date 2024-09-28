@@ -15,8 +15,8 @@ The project **SecSess**[*sək ses*]'s goal is to build a **Simple**, **Secure**,
 |TCP|General Unsecure|**O**|
 |TCP|Hybrid Crypto-system|**O**|
 |TCP|Secure TCP Service Model|**X**|
-|UDP|General Unsecure|**X**|
-|UDP|Hybrid Crypto-system|**X**|
+|UDP|General Unsecure|**O**|
+|UDP|Hybrid Crypto-system|**O**|
 
 - **O**: Completed works
 - **?**: Need more check

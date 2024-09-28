@@ -131,10 +131,10 @@ Set set = new Set()
     Hash = Hash.SHA256,
 };
 
-Server server = Server.Create(IPEndPoint.Parse($"127.0.0.1:12345"), privkey, set);
+TcpServer server = TcpServer.Create(IPEndPoint.Parse($"127.0.0.1:12345"), privkey, set);
 server.Start();
 
-Server.Client accept = server.AcceptClient()!;
+TcpServer.Client accept = server.AcceptClient()!;
 
 for (int i = 0; i < 100; i++)
 {
@@ -168,7 +168,7 @@ Set set = new Set()
     Hash = Hash.SHA256,
 };
 
-Client client = Client.Create(pubkey, set);
+TcpClient client = TcpClient.Create(pubkey, set);
 client.Connect(IPEndPoint.Parse($"127.0.0.1:12345"));
 
 byte[] buffer = new byte[1024];
@@ -184,11 +184,10 @@ for (int i = 0; i < 100; i++)
     client.FlushStream();
 }
 
-for (int i = 0; i < buffer.Length; i++)
-{
-    if (buffer[i] != check[i])
-        throw new Exception("buffer is corrupted");
-}
+
+if (buffer.SequenceEqual(check) == false)
+    throw new Exception("buffer is corrupted");
+
 
 client.Close();
 ```

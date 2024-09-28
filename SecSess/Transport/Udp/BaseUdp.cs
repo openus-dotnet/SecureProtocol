@@ -4,32 +4,28 @@ using Openus.Net.SecSess.Transport.Option;
 using Openus.Net.SecSess.Util;
 using System.Net;
 
-namespace Openus.Net.SecSess.Transport.Tcp
+namespace Openus.Net.SecSess.Transport.Udp
 {
     /// <summary>
-    /// The abstract base class for TCP client
+    /// The abstract base class for UDP client
     /// </summary>
-    public abstract class BaseTcp : BaseTransport
+    public abstract class BaseUdp : BaseTransport
     {
-        /// <summary>
-        /// Get remote IP end point
-        /// </summary>
-        public IPEndPoint RemoteEP { get => (ActuallyClient.Client.RemoteEndPoint as IPEndPoint)!; }
         public override IPEndPoint LocalEP { get => (ActuallyClient.Client.LocalEndPoint as IPEndPoint)!; }
 
         /// <summary>
-        /// A TCP client that actually works
+        /// A UDP client that actually works
         /// </summary>
-        protected System.Net.Sockets.TcpClient ActuallyClient { get; private set; }
+        protected System.Net.Sockets.UdpClient ActuallyClient { get; private set; }
 
         /// <summary>
         /// Base client constructor
         /// </summary>
-        /// <param name="client">TCP client that actually works</param>
+        /// <param name="client">UDP client that actually works</param>
         /// <param name="set">Algorithm set to use</param>
         /// <param name="symmetricKey">Symmetric key to use</param>
         /// <param name="hmacKey">HMAC key to use</param>
-        internal BaseTcp(System.Net.Sockets.TcpClient client, Set set, byte[] symmetricKey, byte[] hmacKey)
+        internal BaseUdp(System.Net.Sockets.UdpClient client, Set set, byte[] symmetricKey, byte[] hmacKey)
             : base(set, symmetricKey, hmacKey)
         {
             ActuallyClient = client;
@@ -38,8 +34,9 @@ namespace Openus.Net.SecSess.Transport.Tcp
         /// <summary>
         /// Write packet with secure session
         /// </summary>
-        /// <param name="data">Data that write to server</param>
-        public void Write(byte[] data)
+        /// <param name="ep">Remote end point</param>
+        /// <param name="data">Data that write</param>
+        public void Write(IPEndPoint ep, byte[] data)
         {
             if (SymmetricWrapper.Algorithm != SymmetricType.None)
             {
@@ -70,7 +67,7 @@ namespace Openus.Net.SecSess.Transport.Tcp
 
                 if (HmacKey.Length == 0)
                 {
-                    ActuallyClient.GetStream().Write(packet, 0, packet.Length);
+                    ActuallyClient.Send(packet, packet.Length, ep);
                 }
                 else
                 {
@@ -80,7 +77,7 @@ namespace Openus.Net.SecSess.Transport.Tcp
                     Buffer.BlockCopy(packet, 0, hmacs, 0, packet.Length);
                     Buffer.BlockCopy(hmac, 0, hmacs, packet.Length, hmac.Length);
 
-                    ActuallyClient.GetStream().Write(hmacs, 0, hmacs.Length);
+                    ActuallyClient.Send(hmacs, hmacs.Length, ep);
                 }
             }
             else
@@ -91,7 +88,7 @@ namespace Openus.Net.SecSess.Transport.Tcp
                 Buffer.BlockCopy(lenBit, 0, msg, 0, lenBit.Length);
                 Buffer.BlockCopy(data, 0, msg, lenBit.Length, data.Length);
 
-                ActuallyClient.GetStream().Write(msg, 0, msg.Length);
+                ActuallyClient.Send(msg, msg.Length, ep);
             }
         }
 
@@ -99,22 +96,20 @@ namespace Openus.Net.SecSess.Transport.Tcp
         /// Read packet with secure session
         /// </summary>
         /// <param name="type">How to handle when problem</param>
-        /// <returns>Data that read from server</returns>
-        public byte[] Read(HandlingType type = HandlingType.Ecexption)
+        /// <returns>Data that read</returns>
+        public (IPEndPoint, byte[]) Read(HandlingType type = HandlingType.Ecexption)
         {
+            IPEndPoint? ep = null;
+
             if (SymmetricWrapper.Algorithm != SymmetricType.None)
             {
-                byte[] iv = new byte[Symmetric.BlockSize(SymmetricWrapper.Algorithm)];
+                byte[] all = ActuallyClient.Receive(ref ep);
 
-                int s1 = 0;
-                while (s1 < iv.Length)
-                    s1 += ActuallyClient.GetStream().Read(iv, s1, iv.Length - s1);
+                byte[] iv = new byte[Symmetric.BlockSize(AlgorithmSet.Symmetric)];
+                byte[] enc1 = new byte[Symmetric.BlockSize(AlgorithmSet.Symmetric)];
 
-                byte[] enc1 = new byte[iv.Length];
-
-                int s2 = 0;
-                while (s2 < enc1.Length)
-                    s2 += ActuallyClient.GetStream().Read(enc1, s2, enc1.Length - s2);
+                Buffer.BlockCopy(all, 0, iv, 0, iv.Length);
+                Buffer.BlockCopy(all, iv.Length, enc1, 0, enc1.Length);
 
                 byte[]? msg1 = SymmetricWrapper.Decrypt(enc1, iv);
 
@@ -125,7 +120,7 @@ namespace Openus.Net.SecSess.Transport.Tcp
                         case HandlingType.Ecexption:
                             throw new SecSessException(ExceptionCode.DecryptError);
                         case HandlingType.EmptyReturn: 
-                            return Array.Empty<byte>();
+                            return (ep, Array.Empty<byte>());
                         default:
                             throw new SecSessException(ExceptionCode.InvalidHandlingType);
                     }
@@ -140,7 +135,7 @@ namespace Openus.Net.SecSess.Transport.Tcp
                         case HandlingType.Ecexption:
                             throw new SecSessException(ExceptionCode.InvalidNonce);
                         case HandlingType.EmptyReturn:
-                            return Array.Empty<byte>();
+                            return (ep, Array.Empty<byte>());
                         default:
                             throw new SecSessException(ExceptionCode.InvalidHandlingType);
                     }
@@ -155,9 +150,7 @@ namespace Openus.Net.SecSess.Transport.Tcp
 
                 if (enc2.Length != 0)
                 {
-                    int s3 = 0;
-                    while (s3 < enc2.Length)
-                        s3 += ActuallyClient.GetStream().Read(enc2, s3, enc2.Length - s3);
+                    Buffer.BlockCopy(all, iv.Length + enc1.Length, enc2, 0, enc2.Length);
 
                     byte[]? msg2 = SymmetricWrapper.Decrypt(enc2, enc1);
                     
@@ -168,7 +161,7 @@ namespace Openus.Net.SecSess.Transport.Tcp
                             case HandlingType.Ecexption:
                                 throw new SecSessException(ExceptionCode.DecryptError);
                             case HandlingType.EmptyReturn:
-                                return Array.Empty<byte>();
+                                return (ep, Array.Empty<byte>());
                             default:
                                 throw new SecSessException(ExceptionCode.InvalidHandlingType);
                         }
@@ -189,9 +182,7 @@ namespace Openus.Net.SecSess.Transport.Tcp
 
                         byte[] hmacs = new byte[Hash.HashDataSize(AlgorithmSet.Hash)];
 
-                        int s4 = 0;
-                        while (s4 < hmacs.Length)
-                            s4 += ActuallyClient.GetStream().Read(hmacs, s4, hmacs.Length - s4);
+                        Buffer.BlockCopy(all, iv.Length + enc1.Length + enc2.Length, hmacs, 0, hmacs.Length);
 
                         byte[] compare = Hash.HmacData(AlgorithmSet.Hash, HmacKey, concat);
 
@@ -202,14 +193,14 @@ namespace Openus.Net.SecSess.Transport.Tcp
                                 case HandlingType.Ecexption:
                                     throw new SecSessException(ExceptionCode.InvalidHmac);
                                 case HandlingType.EmptyReturn:
-                                    return Array.Empty<byte>();
+                                    return (ep, Array.Empty<byte>());
                                 default:
                                     throw new SecSessException(ExceptionCode.InvalidHandlingType);
                             }
                         }
                     }
 
-                    return data;
+                    return (ep, data);
                 }
                 else
                 {
@@ -222,9 +213,7 @@ namespace Openus.Net.SecSess.Transport.Tcp
                     {
                         byte[] hmacs = new byte[Hash.HashDataSize(AlgorithmSet.Hash)];
 
-                        int s4 = 0;
-                        while (s4 < hmacs.Length)
-                            s4 += ActuallyClient.GetStream().Read(hmacs, s4, hmacs.Length - s4);
+                        Buffer.BlockCopy(all, iv.Length + enc1.Length, hmacs, 0, hmacs.Length);
 
                         byte[] compare = Hash.HmacData(AlgorithmSet.Hash, HmacKey, concat);
 
@@ -235,80 +224,51 @@ namespace Openus.Net.SecSess.Transport.Tcp
                                 case HandlingType.Ecexption:
                                     throw new SecSessException(ExceptionCode.InvalidHmac);
                                 case HandlingType.EmptyReturn:
-                                    return Array.Empty<byte>();
+                                    return (ep, Array.Empty<byte>());
                                 default:
                                     throw new SecSessException(ExceptionCode.InvalidHandlingType);
                             }
                         }
                     }
 
-                    return msg1[8..(len + 8)];
+                    return (ep, msg1[8..(len + 8)]);
                 }
             }
             else
             {
+                byte[] all = ActuallyClient.Receive(ref ep);
+
                 byte[] lenBit = new byte[4];
 
-                int s1 = 0;
-                while (s1 < lenBit.Length)
-                    s1 += ActuallyClient.GetStream().Read(lenBit, s1, lenBit.Length - s1);
+                Buffer.BlockCopy(all, 0, lenBit, 0, lenBit.Length);
 
                 int len = BitConverter.ToInt32(lenBit);
                 byte[] msg = new byte[len];
 
-                int s2 = 0;
-                while (s2 < msg.Length)
-                    s2 += ActuallyClient.GetStream().Read(msg, s2, msg.Length - s2);
+                Buffer.BlockCopy(all, lenBit.Length, msg, 0, msg.Length);
 
-                return msg;
+                return (ep, msg);
             }
-        }
-
-        /// <summary>
-        /// Determine if tcp client state is available
-        /// </summary>
-        /// <param name="type">The type of client state to judge</param>
-        /// <returns></returns>
-        public bool CanUseStream(StreamState type = StreamState.All)
-        {
-            return (type.HasFlag(StreamState.Connected) == true ? ActuallyClient.Connected : true)
-                && (type.HasFlag(StreamState.CanRead) == true ? ActuallyClient.GetStream().CanRead : true)
-                && (type.HasFlag(StreamState.CanWrite) == true ? ActuallyClient.GetStream().CanWrite : true);
-        }
-
-        /// <summary>
-        /// Flushes data from stream
-        /// </summary>
-        public void FlushStream()
-        {
-            ActuallyClient.GetStream().Flush();
         }
 
         /// <summary>
         /// Write packet with secure session
         /// </summary>
-        /// <param name="data">Data that write to server</param>
-        public async Task WriteAsync(byte[] data)
+        /// <param name="ep">Remote end point</param>
+        /// <param name="data">Data that write</param>
+        public async Task WriteAsync(IPEndPoint ep, byte[] data)
         {
-            await Task.Run(() => Write(data));
+            await Task.Run(() => Write(ep, data));
         }
 
         /// <summary>
         /// Read packet with secure session
         /// </summary>
         /// <param name="type">How to handle when problem</param>
-        /// <returns>Data that read from server</returns>
-        public async Task<byte[]> ReadAsync(HandlingType type = HandlingType.Ecexption)
+        /// <returns>Data that read</returns>
+        public async Task<(IPEndPoint, byte[])> ReadAsync(HandlingType type = HandlingType.Ecexption)
         {
             return await Task.Run(() => Read(type));
-        }
-
-        /// <summary>
-        /// Flushes data from stream
-        /// </summary>
-        public async Task FlushStreamAsync()
-        {
-            await Task.Run(() => FlushStream());
         }
 
         public override void Close()

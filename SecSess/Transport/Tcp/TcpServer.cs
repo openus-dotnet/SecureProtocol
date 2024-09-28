@@ -11,12 +11,12 @@ namespace Openus.Net.SecSess.Transport.Tcp
     /// <summary>
     /// TCP server with secure sessions
     /// </summary>
-    public class Server
+    public class TcpServer
     {
         /// <summary>
         /// Clients accepted by the server side
         /// </summary>
-        public class Client : BaseTCP
+        public class Client : BaseTcp
         {
             /// <summary>
             /// Create a server side client
@@ -25,7 +25,7 @@ namespace Openus.Net.SecSess.Transport.Tcp
             /// <param name="symmetricKey">The AES key used to communicate with this client</param>
             /// <param name="hmacKey">The HMAC key used to communicate with this client</param>
             /// <param name="set">Algorithm set to use</param>
-            internal Client(TcpClient client, byte[] symmetricKey, byte[] hmacKey, Set set)
+            internal Client(System.Net.Sockets.TcpClient client, byte[] symmetricKey, byte[] hmacKey, Set set)
                 : base(client, set, symmetricKey, hmacKey) { }
         }
 
@@ -52,7 +52,7 @@ namespace Openus.Net.SecSess.Transport.Tcp
         /// <param name="listener">A TCP listener that actually works</param>
         /// <param name="parameters">Asymmetric key base with private key for server</param>
         /// <param name="set">Algorithm set to use</param>
-        private Server(TcpListener listener, BaseAsymmetricKey? parameters, Set set)
+        private TcpServer(TcpListener listener, BaseAsymmetricKey? parameters, Set set)
         {
             _listener = listener;
             _clients = new List<Client>();
@@ -65,9 +65,9 @@ namespace Openus.Net.SecSess.Transport.Tcp
         /// </summary>
         /// <param name="endPoint"></param>
         /// <returns>Server created (already not Start())</returns>
-        public static Server Craete(IPEndPoint endPoint)
+        public static TcpServer Craete(IPEndPoint endPoint)
         {
-            return new Server(new TcpListener(endPoint), null, Set.NoneSet);
+            return new TcpServer(new TcpListener(endPoint), null, Set.NoneSet);
         }
 
         /// <summary>
@@ -77,9 +77,9 @@ namespace Openus.Net.SecSess.Transport.Tcp
         /// <param name="key">Private key for server</param>
         /// <param name="set">Algorithm set to use</param>
         /// <returns>Server created (already not Start())</returns>
-        public static Server Create(IPEndPoint endPoint, PrivateKey? key, Set set)
+        public static TcpServer Create(IPEndPoint endPoint, PrivateKey? key, Set set)
         {
-            return new Server(new TcpListener(endPoint), key, set);
+            return new TcpServer(new TcpListener(endPoint), key, set);
         }
 
         /// <summary>
@@ -105,7 +105,7 @@ namespace Openus.Net.SecSess.Transport.Tcp
         /// <param name="type">How to handle when error</param>
         public Client? AcceptClient(HandlingType type = HandlingType.Ecexption)
         {
-            TcpClient client = _listener.AcceptTcpClient();
+            System.Net.Sockets.TcpClient client = _listener.AcceptTcpClient();
 
             while (client.Connected == false || client.GetStream().CanRead == false) ;
 

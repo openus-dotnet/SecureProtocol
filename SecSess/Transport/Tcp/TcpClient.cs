@@ -4,14 +4,13 @@ using Openus.Net.SecSess.Secure.Wrapper;
 using Openus.Net.SecSess.Util;
 using System.Net;
 using System.Net.Sockets;
-using System.Security.Authentication;
 
 namespace Openus.Net.SecSess.Transport.Tcp
 {
     /// <summary>
     /// TCP client with secure sessions
     /// </summary>
-    public class Client : BaseTCP
+    public class TcpClient : BaseTcp
     {
         /// <summary>
         /// Asymmetric algorithm set without private key for client
@@ -25,8 +24,8 @@ namespace Openus.Net.SecSess.Transport.Tcp
         /// <param name="set">Algorithm set to use</param>
         /// <param name="hmacKey">HMAC key to use</param>
         /// <param name="symmetricKey">Symmetric key to use</param>
-        private Client(BaseAsymmetricKey? parameter, Set set, byte[] symmetricKey, byte[] hmacKey)
-            : base(new TcpClient(), set, symmetricKey, hmacKey)
+        private TcpClient(BaseAsymmetricKey? parameter, Set set, byte[] symmetricKey, byte[] hmacKey)
+            : base(new System.Net.Sockets.TcpClient(), set, symmetricKey, hmacKey)
         {
             _asymmetric = new Asymmetric(parameter, set.Asymmetric);
         }
@@ -35,11 +34,11 @@ namespace Openus.Net.SecSess.Transport.Tcp
         /// Create a client without secure session
         /// </summary>
         /// <returns>Client created (already not Connect())</returns>
-        public static Client Craete()
+        public static TcpClient Craete()
         {
             var keys = GenerateKeySet(Set.NoneSet);
 
-            return new Client(null, Set.NoneSet, keys.Item1, keys.Item2);
+            return new TcpClient(null, Set.NoneSet, keys.Item1, keys.Item2);
         }
         /// <summary>
         /// Create a client where secure sessions are provided
@@ -47,11 +46,11 @@ namespace Openus.Net.SecSess.Transport.Tcp
         /// <param name="key">Public key for server</param>
         /// <param name="set">Algorithm set to use</param>
         /// <returns>Client created (already not Connect())</returns>
-        public static Client Create(PublicKey? key, Set set)
+        public static TcpClient Create(PublicKey? key, Set set)
         {
             var keys = GenerateKeySet(set);
 
-            return new Client(key, set, keys.Item1, keys.Item2);
+            return new TcpClient(key, set, keys.Item1, keys.Item2);
         }
 
         /// <summary>

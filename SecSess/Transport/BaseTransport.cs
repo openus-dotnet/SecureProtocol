@@ -2,20 +2,20 @@
 using Openus.Net.SecSess.Secure.Algorithm;
 using Openus.Net.SecSess.Secure.Wrapper;
 using System.Net;
-using System.Net.Sockets;
+using System.Security.Cryptography;
 
 namespace Openus.Net.SecSess.Transport
 {
+    /// <summary>
+    /// Abstract base transport type
+    /// </summary>
     public abstract class BaseTransport
     {
         /// <summary>
         /// Get local IP end point
         /// </summary>
         public abstract IPEndPoint LocalEP { get; }
-        /// <summary>
-        /// Get remote IP end point
-        /// </summary>
-        public abstract IPEndPoint RemoteEP { get; }
+
         /// <summary>
         /// Keyset wrapped for reuse in UDP, etc., but key cannot be see user
         /// </summary>
@@ -59,5 +59,26 @@ namespace Openus.Net.SecSess.Transport
             SymmetricKey = symmetricKey;
             HmacKey = hmacKey;
         }
+
+        /// <summary>
+        /// Generate symmetric session key and HMAC key
+        /// </summary>
+        /// <param name="set">Algorithm set to use</param>
+        /// <returns>(Symmetric key, HMAC key)</returns>
+        protected static (byte[], byte[]) GenerateKeySet(Set set)
+        {
+            byte[] symmetricKey = new byte[Symmetric.KeySize(set.Symmetric)];
+            byte[] hmacKey = new byte[Hash.HmacKeySize(set.Hash)];
+
+            RandomNumberGenerator.Fill(symmetricKey);
+            RandomNumberGenerator.Fill(hmacKey);
+
+            return (symmetricKey, hmacKey);
+        }
+
+        /// <summary>
+        /// Close the client
+        /// </summary>
+        public abstract void Close();
     }
 }
