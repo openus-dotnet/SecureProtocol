@@ -10,8 +10,8 @@ internal class Program
     private static List<double> Rsa = [];
     private static List<double> Aes = [];
 
-    private static int Repeat = 10;
-    private static int Packet = 1;
+    private static int Repeat = 1000;
+    private static int Packet = 10;
 
     private static void Main(string[] args)
     {
@@ -121,32 +121,17 @@ internal class Program
 
                 UdpClient udp = UdpClient.Craete(new IPEndPoint(IPAddress.Parse(args[1]), 12346), keySet);
 
-                int valid = 0;
-                int invalid = 0;
-
-                IPEndPoint remote = new IPEndPoint(IPAddress.Parse(args[2]), 12347);
-
-                var task = Task.Run(() =>
+                var task = Task.Run(async () =>
                 {
                     for (int i = 0; i < Repeat; i++)
                     {
-                        try
-                        {
-                            if (udp.Read(ref remote).SequenceEqual(buffer) == true)
-                                valid++;
-                            else
-                                invalid++;
-                        }
-                        catch
-                        {
-                            invalid++;
-                        }
+                        udp.Write(new IPEndPoint(IPAddress.Parse(args[2]), 12347), buffer);
                     }
+
+                    await Task.Delay(5000);
                 });
 
                 Task.WaitAny([task], 5000);
-
-                Console.WriteLine($"UDP: Total: {Repeat}, Valid: {valid}, Invalid: {invalid}, Loss: {Repeat - valid - invalid}");
 
                 udp.Close();
             }
@@ -169,17 +154,32 @@ internal class Program
 
                 UdpClient udp = UdpClient.Craete(new IPEndPoint(IPAddress.Parse(args[1]), 12347), keySet);
 
-                var task = Task.Run(async () =>
+                int valid = 0;
+                int invalid = 0;
+
+                IPEndPoint remote = new IPEndPoint(IPAddress.Parse(args[2]), 12346);
+
+                var task = Task.Run(() =>
                 {
                     for (int i = 0; i < Repeat; i++)
                     {
-                        udp.Write(new IPEndPoint(IPAddress.Parse(args[2]), 12346), buffer);
+                        try
+                        {
+                            if (udp.Read(ref remote).SequenceEqual(buffer) == true)
+                                valid++;
+                            else
+                                invalid++;
+                        }
+                        catch
+                        {
+                            invalid++;
+                        }
                     }
-
-                    await Task.Delay(5000);
                 });
 
                 Task.WaitAny([task], 5000);
+
+                Console.WriteLine($"UDP: Total: {Repeat}, Valid: {valid}, Invalid: {invalid}, Loss: {Repeat - valid - invalid}");
 
                 udp.Close();
             }

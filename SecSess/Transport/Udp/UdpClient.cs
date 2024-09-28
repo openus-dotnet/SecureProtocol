@@ -29,5 +29,15 @@ namespace Openus.Net.SecSess.Transport.Udp
         {
             return new UdpClient(endPoint, set.AlgorithmSet, set.SymmetricKey, set.HmacKey);
         }
+        /// <summary>
+        /// Create a client without secure session
+        /// </summary>
+        /// <returns>Client created (already not Connect())</returns>
+        public static UdpClient Craete(IPEndPoint endPoint)
+        {
+            var keys = GenerateKeySet(Set.NoneSet);
+
+            return new UdpClient(endPoint, Set.NoneSet, keys.Item1, keys.Item2);
+        }
     }
 }
