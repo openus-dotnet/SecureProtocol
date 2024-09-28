@@ -49,8 +49,8 @@
                 case ExceptionCode.EncryptError: return "Occur error in data encryption";
                 case ExceptionCode.DecryptError: return "Occur error in data decryption";
                 case ExceptionCode.InvalidHandlingType: return "Invalid handling type";
-                case ExceptionCode.InvalidNonce: return "Invalid received nonce";
-                case ExceptionCode.InvalidHMac: return "IHMAC authentication is failed";
+                case ExceptionCode.InvalidNonce: return "Received nonce is corrupted";
+                case ExceptionCode.InvalidHMac: return "HMAC authentication is failed";
                 default: return "Unknown exception";
             }
         }
