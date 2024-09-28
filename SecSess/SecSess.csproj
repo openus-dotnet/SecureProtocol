@@ -5,6 +5,24 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>Openus.Net.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+    <Authors>elecbug</Authors>
+    <Company />
+    <Copyright>Openus .NET</Copyright>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/openus-dotnet/SecSess</RepositoryUrl>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="../LICENSE.txt">
+      <Pack>True</Pack>
+      <PackagePath>/</PackagePath>
+    </None>
+    <None Include="../README.md">
+      <Pack>True</Pack>
+      <PackagePath>/</PackagePath>
+    </None>
+  </ItemGroup>
 
 </Project>
