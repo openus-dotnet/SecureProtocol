@@ -45,6 +45,7 @@ internal class Program
         for (int re = 0; re < Retry; re++)
         {
             bool checker = false;
+
             Thread s = new Thread(() =>
             {
                 if (args.Length == 0 || args.Length > 0 && args[0] == "s")
@@ -65,6 +66,8 @@ internal class Program
 
                         sclient.FlushStream();
                     }
+
+                    while (checker == true) ;
 
                     server.Stop();
                 }
@@ -99,11 +102,12 @@ internal class Program
 
                     TimeSpan span2 = DateTime.Now - time2;
 
-                    for (int i = 0; i < buffer.Length; i++)
-                    {
-                        if (buffer[i] != check[i])
-                            throw new Exception("buffer is corrupted");
-                    }
+                    checker = false;
+
+                    client.Close();
+
+                    if (buffer.SequenceEqual(check) == false)
+                        throw new Exception("buffer is corrupted");
 
                     int term = 50;
 
@@ -112,12 +116,11 @@ internal class Program
                         Rsa.Add(span1.TotalMilliseconds);
                         Aes.Add(span2.TotalMilliseconds);
 
-                        Console.WriteLine($"{re + 1}. RSA. Total: {Rsa.Average()}ms");
-                        Console.WriteLine($"{re + 1}. AES. Total: {Aes.Average()}ms");
+                        Console.WriteLine($"{re + 1, 4}. Generate Session.    Total: {Rsa.Average()}ms");
+                        Console.WriteLine($"{re + 1, 4}. Communicate Session. Total: {Aes.Average()}ms");
                         Console.WriteLine();
                     }
 
-                    client.Close();
                 }
             });
 

@@ -91,7 +91,7 @@ namespace Openus.Net.SecSess.Transport.Tcp
         }
 
         /// <summary>
-        /// Stop TCP listener
+        /// Stop the TCP listener
         /// </summary>
         public void Stop()
         {
