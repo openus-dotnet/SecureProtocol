@@ -6,15 +6,15 @@
     <Nullable>enable</Nullable>
     <RootNamespace>Openus.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
-	<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
-	<Company>Openus.NET</Company>
+    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+    <Company>Openus.NET</Company>
     <Copyright>Openus.NET</Copyright>
     <Authors>elecbug</Authors>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/openus-dotnet/SecureProtocol</RepositoryUrl>
-	<PackageId>Openus.SecureProtocol</PackageId>
-	<Version>8.0.0</Version>
-	<Description>Build a Simple, Secure, and Fast Transport Layer Module with C#</Description>
+    <PackageId>Openus.SecureProtocol</PackageId>
+    <Version>8.0.0</Version>
+    <Description>Build a Simple, Secure, and Fast Transport Layer Module with C#</Description>
   </PropertyGroup>
 
   <ItemGroup>
