@@ -1,8 +1,8 @@
-﻿using Openus.SecSess.Key.Asymmetric;
-using Openus.SecSess.Key.Session;
-using Openus.SecSess.Secure.Algorithm;
-using Openus.SecSess.Transport.Tcp;
-using Openus.SecSess.Transport.Udp;
+﻿using Openus.SecureProtocol.Key.Asymmetric;
+using Openus.SecureProtocol.Key.Session;
+using Openus.SecureProtocol.Secure.Algorithm;
+using Openus.SecureProtocol.Transport.Tcp;
+using Openus.SecureProtocol.Transport.Udp;
 using System.Net;
 
 internal class Program
