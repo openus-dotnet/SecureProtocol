@@ -1,8 +1,8 @@
-# SecSess
+# Secure Protocol
 
 ## Information
 
-The project **SecSess**[*sək ses*]'s goal is to build a **Simple**, **Secure**, and **Fast** Transport Layer Module with C#.
+The project **Secure Protocol**'s goal is to build a **Simple**, **Secure**, and **Fast** Transport Layer Module with C#.
 
 ## Tech Stack
 
@@ -10,7 +10,7 @@ The project **SecSess**[*sək ses*]'s goal is to build a **Simple**, **Secure**,
 |---------------|---------|--------------|
 |TCP|General Unsecure|**O**|
 |TCP|Hybrid Crypto-system|**O**|
-|TCP|Secure TCP Service Model|**X**|
+|TCP|Secure Service Model|**X**|
 |UDP|General Unsecure|**O**|
 |UDP|Hybrid Crypto-system|**O**|
 

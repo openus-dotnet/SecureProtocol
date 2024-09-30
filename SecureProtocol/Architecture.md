@@ -1,11 +1,11 @@
-﻿# SecSess Architecture
+﻿# Secure Protocol Architecture
 
 - Assume algorithm set is follow that.
   - Symmetric key algorithm is using AES.
   - Asymmetric key algorithm is using RSA.
   - Hash and HMAC algorithm is using SHA256.
 
-## 1st. AES & HMAC Key Exchange from SecSess-RSA
+## 1st. AES & HMAC Key Exchange from RSA/TCP
 
 - Assume that the RSA public key on the server is already guaranteed by other means.
 
@@ -17,22 +17,22 @@
 |04|Server side|`RSA(S_PRIVATE_KEY, 🔐)` → **Decrypt to** `🔑`|
 |05|Server side|`🔑` → **Get** `AES_KEY` and `HMAC_KEY`|
 |06|Server side|`HMAC(HMAC_KEY, 🔑)` → **Hash to** `📜ⓢ`|
-|07|Server side|`SecSess-AES(AES_KEY, 📜ⓢ)` → **Encrypt to** `🔏ⓢ`|
+|07|Server side|`SP-AES(AES_KEY, 📜ⓢ)` → **Encrypt to** `🔏ⓢ`|
 |08|Server to Client|**Send** `🔏ⓢ`|
-|09|Client side|`SecSess-AES(AES_KEY, 🔏ⓢ)` → **Decrypt to** `📜ⓢ`|
+|09|Client side|`SP-AES(AES_KEY, 🔏ⓢ)` → **Decrypt to** `📜ⓢ`|
 |10|Client side|`HMAC(HMAC_KEY, 🔑)` → **Hash to** `📜ⓒ`|
 |11|Client side|**Compare** `📜ⓢ` and `📜ⓒ`|
 
 > - `🔑`: `AES_KEY + HMAC_KEY`
->   - ≓ Session Key for SecSess-AES
+>   - ≓ Session Key for SP-AES
 > - `🔐`: `RSA(S_PUBLIC_KEY, 🔑)`
->   - ≓ RSA Encrypted session keys for SecSess-AES, and this can decrypt only Server
+>   - ≓ RSA Encrypted session keys for SP-AES, and this can decrypt only Server
 > - `📜`: `HMAC(HMAC_KEY, 🔑)`
 >   - ≓ Hashed message for initail authentication
-> - `🔏`: `SecSess-AES(AES_KEY, 📜)`
+> - `🔏`: `SP-AES(AES_KEY, 📜)`
 >   - ≓ AES Encrypted hashed message for initail authentication
 
-## 2nd. SecSess-AES(TCP-AES-CBC) Packet Sent Structure
+## 2nd. SP-AES(TCP-AES-CBC) Packet Sent Structure
 
 - Define `IV + AES(AES_KEY, NONCE + MSG_LENGTH + MSG)` to `α`. 
   - So, the `α` mean encrypted message part.
@@ -87,7 +87,7 @@
 - Data ***Integrity*** and ***Authentication*** through **HMAC**.
 - In now, has plan that provide simple ***Availability*** like support blacklist system.
 
-> - `AES_KEY`, `HMAC_KEY` generate and exchange in the before time(in RSA) during the SecSess.
+> - `AES_KEY`, `HMAC_KEY` generate and exchange in the before time(in RSA) during the secure session.
 > - `IV` is randomly generated for each communication.
 > - Use the `NONCE` increased by 1 to 10 from last used, using in each write.
 >   - When read, if the `NONCE` did not increase based on last read `NONCE`, it is judged as an incorrect packet.
@@ -101,7 +101,7 @@
 /// You must have RSA key pair before communication.
 /// Don't worry. We provide RSA key pair generator!
 
-using Openus.Net.SecSess.Key.Asymmetric;
+using Openus.SecureProtocol.Key.Asymmetric;
 
 KeyPair pair = KeyPair.GenerateRSA();
 
@@ -115,9 +115,9 @@ pair.PrivateKey.Save("key.priv");
 ```cs
 /// This is the Server side.
 
-using Openus.Net.SecSess.Key.Asymmetric;
-using Openus.Net.SecSess.Secure.Algorithm;
-using Openus.Net.SecSess.Transport.Tcp;
+using Openus.SecureProtocol.Key.Asymmetric;
+using Openus.SecureProtocol.Secure.Algorithm;
+using Openus.SecureProtocol.Transport.Tcp;
 using System.Net;
 
 /// Load Private key
@@ -152,9 +152,9 @@ server.Stop();
 ```cs
 /// This is the Client side.
 
-using Openus.Net.SecSess.Key.Asymmetric;
-using Openus.Net.SecSess.Secure.Algorithm;
-using Openus.Net.SecSess.Transport.Tcp;
+using Openus.SecureProtocol.Key.Asymmetric;
+using Openus.SecureProtocol.Secure.Algorithm;
+using Openus.SecureProtocol.Transport.Tcp;
 using System.Net;
 
 /// Load Public key
