@@ -1,9 +1,9 @@
-﻿namespace Openus.Net.SecSess.Util
+﻿namespace Openus.SecSess.Util
 {
     /// <summary>
     /// Exception code enumable
     /// </summary>
-    public enum ExceptionCode
+    internal enum ExceptionCode
     {
         None,
         InvalidAsymmetric,

@@ -1,7 +1,7 @@
-﻿using Openus.Net.SecSess.Secure.Algorithm;
+﻿using Openus.SecSess.Secure.Algorithm;
 using System.Security.Cryptography;
 
-namespace Openus.Net.SecSess.Key.Asymmetric
+namespace Openus.SecSess.Key.Asymmetric
 {
     /// <summary>
     /// Abstract key base types for defining public/private key types

@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace Openus.Net.SecSess.Util
+namespace Openus.SecSess.Util
 {
     /// <summary>
     /// A collection of extension methods required

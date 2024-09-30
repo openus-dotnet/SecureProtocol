@@ -1,4 +1,4 @@
-﻿namespace Openus.Net.SecSess.Secure.Algorithm
+﻿namespace Openus.SecSess.Secure.Algorithm
 {
     /// <summary>
     /// Algorithm set to use

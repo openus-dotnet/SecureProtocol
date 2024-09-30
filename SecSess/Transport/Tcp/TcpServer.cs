@@ -1,12 +1,12 @@
-﻿using Openus.Net.SecSess.Key.Asymmetric;
-using Openus.Net.SecSess.Secure.Algorithm;
-using Openus.Net.SecSess.Secure.Wrapper;
-using System.Net.Sockets;
+﻿using System.Net.Sockets;
 using System.Net;
-using Openus.Net.SecSess.Transport.Option;
-using Openus.Net.SecSess.Util;
+using Openus.SecSess.Key.Asymmetric;
+using Openus.SecSess.Util;
+using Openus.SecSess.Secure.Wrapper;
+using Openus.SecSess.Secure.Algorithm;
+using Openus.SecSess.Transport.Option;
 
-namespace Openus.Net.SecSess.Transport.Tcp
+namespace Openus.SecSess.Transport.Tcp
 {
     /// <summary>
     /// TCP server with secure sessions
@@ -119,13 +119,13 @@ namespace Openus.Net.SecSess.Transport.Tcp
 
                 byte[]? concat = _asymmetric.Decrypt(buffer);
 
-                if (concat == null) 
+                if (concat == null)
                 {
                     switch (type)
                     {
                         case HandlingType.Ecexption:
                             throw new SecSessException(ExceptionCode.DecryptError);
-                        case HandlingType.EmptyReturn: 
+                        case HandlingType.EmptyReturn:
                             return null;
                         default:
                             throw new SecSessException(ExceptionCode.InvalidHandlingType);

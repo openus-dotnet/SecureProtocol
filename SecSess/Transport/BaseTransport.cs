@@ -1,10 +1,10 @@
-﻿using Openus.Net.SecSess.Key.Session;
-using Openus.Net.SecSess.Secure.Algorithm;
-using Openus.Net.SecSess.Secure.Wrapper;
+﻿using Openus.SecSess.Key.Session;
+using Openus.SecSess.Secure.Algorithm;
+using Openus.SecSess.Secure.Wrapper;
 using System.Net;
 using System.Security.Cryptography;
 
-namespace Openus.Net.SecSess.Transport
+namespace Openus.SecSess.Transport
 {
     /// <summary>
     /// Abstract base transport type

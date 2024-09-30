@@ -1,16 +1,19 @@
-﻿using Openus.Net.SecSess.Secure.Algorithm;
-using Openus.Net.SecSess.Secure.Wrapper;
-using Openus.Net.SecSess.Transport.Option;
-using Openus.Net.SecSess.Util;
+﻿using Openus.SecSess.Secure.Algorithm;
+using Openus.SecSess.Secure.Wrapper;
+using Openus.SecSess.Transport.Option;
+using Openus.SecSess.Util;
 using System.Net;
 
-namespace Openus.Net.SecSess.Transport.Udp
+namespace Openus.SecSess.Transport.Udp
 {
     /// <summary>
     /// The abstract base class for UDP client
     /// </summary>
     public abstract class BaseUdp : BaseTransport
     {
+        /// <summary>
+        /// Get local IP end point
+        /// </summary>
         public override IPEndPoint LocalEP { get => (ActuallyClient.Client.LocalEndPoint as IPEndPoint)!; }
 
         /// <summary>
@@ -152,7 +155,7 @@ namespace Openus.Net.SecSess.Transport.Udp
                     Buffer.BlockCopy(all, iv.Length + enc1.Length, enc2, 0, enc2.Length);
 
                     byte[]? msg2 = SymmetricWrapper.Decrypt(enc2, enc1);
-                    
+
                     if (msg2 == null)
                     {
                         switch (type)
@@ -271,6 +274,9 @@ namespace Openus.Net.SecSess.Transport.Udp
             return await Task.Run(() => Read(ref remoteEP, type));
         }
 
+        /// <summary>
+        /// Close the connection
+        /// </summary>
         public override void Close()
         {
             ActuallyClient.Close();

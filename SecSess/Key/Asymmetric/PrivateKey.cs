@@ -1,9 +1,9 @@
-﻿using Openus.Net.SecSess.Key.Asymmetric.Interface;
-using Openus.Net.SecSess.Secure.Algorithm;
-using Openus.Net.SecSess.Util;
+﻿using Openus.SecSess.Util;
+using Openus.SecSess.Key.Asymmetric.Interface;
+using Openus.SecSess.Secure.Algorithm;
 using System.Security.Cryptography;
 
-namespace Openus.Net.SecSess.Key.Asymmetric
+namespace Openus.SecSess.Key.Asymmetric
 {
     /// <summary>
     /// Private key warpper type

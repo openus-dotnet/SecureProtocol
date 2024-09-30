@@ -1,11 +1,11 @@
-﻿using Openus.Net.SecSess.Key.Asymmetric;
-using Openus.Net.SecSess.Secure.Algorithm;
-using Openus.Net.SecSess.Secure.Wrapper;
-using Openus.Net.SecSess.Util;
+﻿using Openus.SecSess.Key.Asymmetric;
+using Openus.SecSess.Secure.Algorithm;
+using Openus.SecSess.Secure.Wrapper;
+using Openus.SecSess.Util;
 using System.Net;
 using System.Net.Sockets;
 
-namespace Openus.Net.SecSess.Transport.Tcp
+namespace Openus.SecSess.Transport.Tcp
 {
     /// <summary>
     /// TCP client with secure sessions
@@ -55,9 +55,9 @@ namespace Openus.Net.SecSess.Transport.Tcp
 
         /// <summary>
         /// Connect to a preconfigured server
-        /// <param name="serverEP"/>Server IP end point</param>
-        /// <param name="retry">Maximum retry to connect</param>
         /// </summary>
+        /// <param name="serverEP">Server IP end point</param>
+        /// <param name="retry">Maximum retry to connect</param>
         public void Connect(IPEndPoint serverEP, int retry = 0)
         {
             ArgumentOutOfRangeException.ThrowIfNegative(retry);
@@ -120,9 +120,9 @@ namespace Openus.Net.SecSess.Transport.Tcp
         }
         /// <summary>
         /// Connect to a preconfigured server
-        /// <param name="serverEP"/>Server IP end point</param>
-        /// <param name="retry">Maximum retry to connect</param>
         /// </summary>
+        /// <param name="serverEP">Server IP end point</param>
+        /// <param name="retry">Maximum retry to connect</param>
         public async Task ConnectAsync(IPEndPoint serverEP, int retry = 0)
         {
             await Task.Run(() => Connect(serverEP, retry));

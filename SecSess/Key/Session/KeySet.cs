@@ -1,7 +1,7 @@
-﻿using Openus.Net.SecSess.Secure.Algorithm;
-using Openus.Net.SecSess.Secure.Wrapper;
+﻿using Openus.SecSess.Secure.Algorithm;
+using Openus.SecSess.Secure.Wrapper;
 
-namespace Openus.Net.SecSess.Key.Session
+namespace Openus.SecSess.Key.Session
 {
     /// <summary>
     /// Symmetric session key set(symmetric key, HMAC key) wrapping class
@@ -29,7 +29,7 @@ namespace Openus.Net.SecSess.Key.Session
         /// <param name="set">Algorithm set to use</param>
         internal KeySet(byte[] symmetric, byte[] hmac, Set set)
         {
-            if (symmetric.Length != Symmetric.KeySize(set.Symmetric) 
+            if (symmetric.Length != Symmetric.KeySize(set.Symmetric)
                 || hmac.Length != Hash.HmacKeySize(set.Hash))
             {
                 throw new ArgumentOutOfRangeException("Use invalid size key.");

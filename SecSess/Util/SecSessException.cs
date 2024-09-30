@@ -1,4 +1,4 @@
-﻿namespace Openus.Net.SecSess.Util
+﻿namespace Openus.SecSess.Util
 {
     /// <summary>
     /// SecSess module custom exceptions
@@ -9,7 +9,14 @@
         /// Generate exception with code
         /// </summary>
         /// <param name="code">Exception code</param>
-        public SecSessException(ExceptionCode code, params string[] values) : base(GetMessage(code) + GetInfo(values)) { }
+        /// <param name="values">Other information value</param>
+        internal SecSessException(ExceptionCode code, params string[] values) : base(GetMessage(code) + GetInfo(values)) { }
+
+        /// <summary>
+        /// Only message SecSess exception
+        /// </summary>
+        /// <param name="message">Message to except</param>
+        public SecSessException(string message) : base(message) { }
 
         /// <summary>
         /// Get more informations for exception
@@ -18,11 +25,11 @@
         /// <returns></returns>
         private static string GetInfo(string[] values)
         {
-            if (values != null && values.Length == 0) 
+            if (values != null && values.Length == 0)
             {
                 string result = "(";
 
-                foreach (string value in values) 
+                foreach (string value in values)
                 {
                     result += value + ", ";
                 }

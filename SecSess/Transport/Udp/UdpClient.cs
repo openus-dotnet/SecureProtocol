@@ -1,8 +1,8 @@
-﻿using Openus.Net.SecSess.Key.Session;
-using Openus.Net.SecSess.Secure.Algorithm;
+﻿using Openus.SecSess.Key.Session;
+using Openus.SecSess.Secure.Algorithm;
 using System.Net;
 
-namespace Openus.Net.SecSess.Transport.Udp
+namespace Openus.SecSess.Transport.Udp
 {
     /// <summary>
     /// UDP client with secure sessions

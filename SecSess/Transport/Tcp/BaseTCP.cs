@@ -1,10 +1,10 @@
-﻿using Openus.Net.SecSess.Secure.Algorithm;
-using Openus.Net.SecSess.Secure.Wrapper;
-using Openus.Net.SecSess.Transport.Option;
-using Openus.Net.SecSess.Util;
+﻿using Openus.SecSess.Secure.Algorithm;
+using Openus.SecSess.Secure.Wrapper;
+using Openus.SecSess.Transport.Option;
+using Openus.SecSess.Util;
 using System.Net;
 
-namespace Openus.Net.SecSess.Transport.Tcp
+namespace Openus.SecSess.Transport.Tcp
 {
     /// <summary>
     /// The abstract base class for TCP client
@@ -15,6 +15,9 @@ namespace Openus.Net.SecSess.Transport.Tcp
         /// Get remote IP end point
         /// </summary>
         public IPEndPoint RemoteEP { get => (ActuallyClient.Client.RemoteEndPoint as IPEndPoint)!; }
+        /// <summary>
+        /// Get local IP end point
+        /// </summary>
         public override IPEndPoint LocalEP { get => (ActuallyClient.Client.LocalEndPoint as IPEndPoint)!; }
 
         /// <summary>
@@ -124,7 +127,7 @@ namespace Openus.Net.SecSess.Transport.Tcp
                     {
                         case HandlingType.Ecexption:
                             throw new SecSessException(ExceptionCode.DecryptError);
-                        case HandlingType.EmptyReturn: 
+                        case HandlingType.EmptyReturn:
                             return Array.Empty<byte>();
                         default:
                             throw new SecSessException(ExceptionCode.InvalidHandlingType);
@@ -160,7 +163,7 @@ namespace Openus.Net.SecSess.Transport.Tcp
                         s3 += ActuallyClient.GetStream().Read(enc2, s3, enc2.Length - s3);
 
                     byte[]? msg2 = SymmetricWrapper.Decrypt(enc2, enc1);
-                    
+
                     if (msg2 == null)
                     {
                         switch (type)
@@ -311,6 +314,9 @@ namespace Openus.Net.SecSess.Transport.Tcp
             await Task.Run(() => FlushStream());
         }
 
+        /// <summary>
+        /// Close the connection
+        /// </summary>
         public override void Close()
         {
             ActuallyClient.Close();

@@ -1,7 +1,7 @@
-﻿using Openus.Net.SecSess.Secure.Algorithm;
+﻿using Openus.SecSess.Secure.Algorithm;
 using System.Security.Cryptography;
 
-namespace Openus.Net.SecSess.Secure.Wrapper
+namespace Openus.SecSess.Secure.Wrapper
 {
     /// <summary>
     /// Hash support wrapper
