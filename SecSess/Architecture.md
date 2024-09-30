@@ -184,10 +184,8 @@ for (int i = 0; i < 100; i++)
     client.FlushStream();
 }
 
-
 if (buffer.SequenceEqual(check) == false)
     throw new Exception("buffer is corrupted");
-
 
 client.Close();
 ```
