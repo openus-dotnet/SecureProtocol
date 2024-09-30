@@ -17,7 +17,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\SecSess\SecureProtocol.csproj" />
     <ProjectReference Include="..\SecureProtocol\SecureProtocol.csproj" />
   </ItemGroup>
 
