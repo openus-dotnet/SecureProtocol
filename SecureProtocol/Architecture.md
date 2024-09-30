@@ -32,11 +32,11 @@
 > - `🔏`: `SP-AES(AES_KEY, 📜)`
 >   - ≓ AES Encrypted hashed message for initail authentication
 
-## 2nd. SP-AES(TCP-AES-CBC) Packet Sent Structure
+## 2nd. SP(*Secure Protocol*)-AES(AES-CBC) Packet Commuicate Structure
 
 - Define `IV + AES(AES_KEY, NONCE + MSG_LENGTH + MSG)` to `α`. 
   - So, the `α` mean encrypted message part.
-- Write SecSess-AES packet is only follow the structure that `α + HMAC(HMAC_KEY, α)`
+- Write SP-AES packet is only follow the structure that `α + HMAC(HMAC_KEY, α)`
 
 ### More Structure Information
 
