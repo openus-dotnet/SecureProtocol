@@ -9,10 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tester", "Tester\Tester.csp
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{E9C596A5-F954-4F0C-8455-6CA3041A8D43}"
 	ProjectSection(SolutionItems) = preProject
-		.github\workflows\action.yml = .github\workflows\action.yml
 		README.md = README.md
 		TODO.md = TODO.md
-		version = version
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Benchmarker", "Benchmarker\Benchmarker.csproj", "{E6519C11-5E42-4291-866B-097E38628F62}"

@@ -4,10 +4,6 @@
 
 The project **SecSess**[*sək ses*]'s goal is to build a **Simple**, **Secure**, and **Fast** Transport Layer Module with C#.
 
-- Version: [Check hear](./version)
-- Detail: [Check hear](./SecSess/Architecture.md)
-- To Do: [Check hear](./TODO.md)
-
 ## Tech Stack
 
 |Transport Layer|Tech Type|Implementation|
