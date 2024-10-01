@@ -2,6 +2,7 @@
 using Openus.SecureProtocol.Secure.Wrapper;
 using Openus.SecureProtocol.Transport.Option;
 using Openus.SecureProtocol.Util;
+using System.Diagnostics;
 using System.Net;
 using System.Security.Cryptography;
 
@@ -45,9 +46,12 @@ namespace Openus.SecureProtocol.Transport.Tcp
         /// <param name="data">Data that write to server</param>
         public void Write(byte[] data)
         {
+            Debug.WriteLine("TCP WT BFR: ");
+            Debug.WriteLine("DATA: " + data.GetByteArrayString());
+
             if (SymmetricWrapper.Algorithm != SymmetricType.None)
             {
-                _sendNonce += new Random(DateTime.Now.Microsecond).Next(1, 10);
+                _sendNonce += (uint)new Random(DateTime.Now.Microsecond).Next(1, 5);
 
                 byte[] iv = new byte[Symmetric.BlockSize(SymmetricWrapper.Algorithm)];
                 RandomNumberGenerator.Fill(iv);
@@ -59,6 +63,10 @@ namespace Openus.SecureProtocol.Transport.Tcp
                 Buffer.BlockCopy(nonceBit, 0, msg, 0, nonceBit.Length);
                 Buffer.BlockCopy(lenBit, 0, msg, nonceBit.Length, lenBit.Length);
                 Buffer.BlockCopy(data, 0, msg, nonceBit.Length + lenBit.Length, data.Length);
+
+                Debug.WriteLine("NONCE: " + nonceBit.GetByteArrayString());
+                Debug.WriteLine("LEN: " + lenBit.GetByteArrayString());
+                Debug.WriteLine("RAW: " + msg.GetByteArrayString());
 
                 byte[]? enc = SymmetricWrapper.Encrypt(msg, iv);
 
@@ -74,6 +82,10 @@ namespace Openus.SecureProtocol.Transport.Tcp
 
                 if (HmacKey.Length == 0)
                 {
+                    Debug.WriteLine("TCP WT AFT: ");
+                    Debug.WriteLine("IV: " + iv.GetByteArrayString());
+                    Debug.WriteLine("ENC: "+ enc.GetByteArrayString());
+
                     ActuallyClient.GetStream().Write(packet, 0, packet.Length);
                 }
                 else
@@ -83,6 +95,11 @@ namespace Openus.SecureProtocol.Transport.Tcp
 
                     Buffer.BlockCopy(packet, 0, hmacs, 0, packet.Length);
                     Buffer.BlockCopy(hmac, 0, hmacs, packet.Length, hmac.Length);
+
+                    Debug.WriteLine("TCP WT AFT: ");
+                    Debug.WriteLine("IV: " + iv.GetByteArrayString());
+                    Debug.WriteLine("ENC: " + enc.GetByteArrayString());
+                    Debug.WriteLine("HMAC: " + hmac.GetByteArrayString());
 
                     ActuallyClient.GetStream().Write(hmacs, 0, hmacs.Length);
                 }
@@ -95,6 +112,11 @@ namespace Openus.SecureProtocol.Transport.Tcp
                 Buffer.BlockCopy(lenBit, 0, msg, 0, lenBit.Length);
                 Buffer.BlockCopy(data, 0, msg, lenBit.Length, data.Length);
 
+                Debug.WriteLine("TCP WT AFT: ");
+                Debug.WriteLine("DATA: " + data.GetByteArrayString());
+                Debug.WriteLine("LEN: " + lenBit.GetByteArrayString());
+                Debug.WriteLine("RAW: " + msg.GetByteArrayString());
+
                 ActuallyClient.GetStream().Write(msg, 0, msg.Length);
             }
         }
@@ -106,6 +128,8 @@ namespace Openus.SecureProtocol.Transport.Tcp
         /// <returns>Data that read from server</returns>
         public byte[] Read(HandlingType type = HandlingType.Ecexption)
         {
+            Debug.WriteLine("TCP RD BFR: ");
+
             if (SymmetricWrapper.Algorithm != SymmetricType.None)
             {
                 byte[] iv = new byte[Symmetric.BlockSize(SymmetricWrapper.Algorithm)];
@@ -113,6 +137,8 @@ namespace Openus.SecureProtocol.Transport.Tcp
                 int s1 = 0;
                 while (s1 < iv.Length)
                     s1 += ActuallyClient.GetStream().Read(iv, s1, iv.Length - s1);
+
+                Debug.WriteLine("IV: " + iv.GetByteArrayString());
 
                 byte[] enc1 = new byte[iv.Length];
 
@@ -135,7 +161,7 @@ namespace Openus.SecureProtocol.Transport.Tcp
                     }
                 }
 
-                int readNonce = BitConverter.ToInt32(msg1[0..4]);
+                uint readNonce = BitConverter.ToUInt32(msg1[0..4]);
 
                 if (readNonce <= _recvNonce)
                 {
@@ -178,6 +204,8 @@ namespace Openus.SecureProtocol.Transport.Tcp
                         }
                     }
 
+                    Debug.WriteLine("ENC: " + enc1.Concat(enc2).ToArray().GetByteArrayString());
+
                     byte[] data = new byte[len];
 
                     Buffer.BlockCopy(msg1, 8, data, 0, msg1.Length - 8);
@@ -197,6 +225,8 @@ namespace Openus.SecureProtocol.Transport.Tcp
                         while (s4 < hmacs.Length)
                             s4 += ActuallyClient.GetStream().Read(hmacs, s4, hmacs.Length - s4);
 
+                        Debug.WriteLine("HMAC: " + hmacs.GetByteArrayString());
+
                         byte[] compare = Hash.HmacData(AlgorithmSet.Hash, HmacKey, concat);
 
                         if (compare.SequenceEqual(hmacs) == false)
@@ -213,14 +243,22 @@ namespace Openus.SecureProtocol.Transport.Tcp
                         }
                     }
 
+                    Debug.WriteLine("TCP RD AFT: ");
+                    Debug.WriteLine("NONCE: " + msg1[0..4].GetByteArrayString());
+                    Debug.WriteLine("LEN: " + msg1[4..8].GetByteArrayString());
+                    Debug.WriteLine("DATA: " + data.GetByteArrayString());
+                    Debug.WriteLine("RAW: " + msg1.Concat(msg2).ToArray().GetByteArrayString());
+
                     return data;
                 }
-                else
+                else // if (enc2.Length == 0)
                 {
                     byte[] concat = new byte[iv.Length + enc1.Length];
 
                     Buffer.BlockCopy(iv, 0, concat, 0, iv.Length);
                     Buffer.BlockCopy(enc1, 0, concat, iv.Length, enc1.Length);
+
+                    Debug.WriteLine("ENC: " + enc1.GetByteArrayString());
 
                     if (HmacKey.Length != 0)
                     {
@@ -230,6 +268,8 @@ namespace Openus.SecureProtocol.Transport.Tcp
                         while (s4 < hmacs.Length)
                             s4 += ActuallyClient.GetStream().Read(hmacs, s4, hmacs.Length - s4);
 
+                        Debug.WriteLine("HMAC: " + hmacs.GetByteArrayString());
+
                         byte[] compare = Hash.HmacData(AlgorithmSet.Hash, HmacKey, concat);
 
                         if (compare.SequenceEqual(hmacs) == false)
@@ -245,6 +285,12 @@ namespace Openus.SecureProtocol.Transport.Tcp
                             }
                         }
                     }
+
+                    Debug.WriteLine("TCP RD AFT: ");
+                    Debug.WriteLine("NONCE: " + msg1[0..4].GetByteArrayString());
+                    Debug.WriteLine("LEN: " + msg1[4..8].GetByteArrayString());
+                    Debug.WriteLine("DATA: " + msg1[8..(len + 8)].GetByteArrayString());
+                    Debug.WriteLine("RAW: " + msg1.GetByteArrayString());
 
                     return msg1[8..(len + 8)];
                 }
@@ -263,6 +309,11 @@ namespace Openus.SecureProtocol.Transport.Tcp
                 int s2 = 0;
                 while (s2 < msg.Length)
                     s2 += ActuallyClient.GetStream().Read(msg, s2, msg.Length - s2);
+
+                Debug.WriteLine("TCP RD AFT: ");
+                Debug.WriteLine("DATA: " + msg.GetByteArrayString());
+                Debug.WriteLine("LEN: " + lenBit.GetByteArrayString());
+                Debug.WriteLine("RAW: " + lenBit.Concat(msg).ToArray().GetByteArrayString());
 
                 return msg;
             }

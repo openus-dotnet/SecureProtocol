@@ -91,7 +91,7 @@
 
 > - `AES_KEY`, `HMAC_KEY` generate and exchange in the before time(in RSA) during the secure session.
 > - `IV` is randomly generated for each communication.
-> - Use the `NONCE` increased by 1 to 10 from last used, using in each write.
+> - Use the `NONCE` increased by 1 ~ 5 from last used, using in each write.
 >   - When read, if the `NONCE` did not increase based on last read `NONCE`, it is judged as an incorrect packet.
 >   - So, the write `NONCE` and the read `NONCE` are separated (v0.4~)
 

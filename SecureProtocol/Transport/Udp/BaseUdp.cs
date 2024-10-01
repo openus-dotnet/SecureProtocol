@@ -2,6 +2,7 @@
 using Openus.SecureProtocol.Secure.Wrapper;
 using Openus.SecureProtocol.Transport.Option;
 using Openus.SecureProtocol.Util;
+using System.Diagnostics;
 using System.Net;
 using System.Security.Cryptography;
 
@@ -42,9 +43,12 @@ namespace Openus.SecureProtocol.Transport.Udp
         /// <param name="data">Data that write</param>
         public void Write(IPEndPoint remoteEP, byte[] data)
         {
+            Debug.WriteLine("UDP WT BFR: ");
+            Debug.WriteLine("RAW: " + data.GetByteArrayString());
+
             if (SymmetricWrapper.Algorithm != SymmetricType.None)
             {
-                _sendNonce += new Random(DateTime.Now.Microsecond).Next(1, 10);
+                _sendNonce += (uint)new Random(DateTime.Now.Microsecond).Next(1, 5);
 
                 byte[] iv = new byte[Symmetric.BlockSize(SymmetricWrapper.Algorithm)];
                 RandomNumberGenerator.Fill(iv);
@@ -56,6 +60,10 @@ namespace Openus.SecureProtocol.Transport.Udp
                 Buffer.BlockCopy(nonceBit, 0, msg, 0, nonceBit.Length);
                 Buffer.BlockCopy(lenBit, 0, msg, nonceBit.Length, lenBit.Length);
                 Buffer.BlockCopy(data, 0, msg, nonceBit.Length + lenBit.Length, data.Length);
+
+                Debug.WriteLine("NONCE: " + nonceBit.GetByteArrayString());
+                Debug.WriteLine("LEN: " + lenBit.GetByteArrayString());
+                Debug.WriteLine("RAW: " + msg.GetByteArrayString());
 
                 byte[]? enc = SymmetricWrapper.Encrypt(msg, iv);
 
@@ -71,6 +79,10 @@ namespace Openus.SecureProtocol.Transport.Udp
 
                 if (HmacKey.Length == 0)
                 {
+                    Debug.WriteLine("UDP WT AFT: ");
+                    Debug.WriteLine("IV: " + iv.GetByteArrayString());
+                    Debug.WriteLine("ENC: " + enc.GetByteArrayString());
+
                     ActuallyClient.Send(packet, packet.Length, remoteEP);
                 }
                 else
@@ -80,6 +92,11 @@ namespace Openus.SecureProtocol.Transport.Udp
 
                     Buffer.BlockCopy(packet, 0, hmacs, 0, packet.Length);
                     Buffer.BlockCopy(hmac, 0, hmacs, packet.Length, hmac.Length);
+
+                    Debug.WriteLine("UDP WT AFT: ");
+                    Debug.WriteLine("IV: " + iv.GetByteArrayString());
+                    Debug.WriteLine("ENC: " + enc.GetByteArrayString());
+                    Debug.WriteLine("HMAC: " + hmac.GetByteArrayString());
 
                     ActuallyClient.Send(hmacs, hmacs.Length, remoteEP);
                 }
@@ -91,6 +108,11 @@ namespace Openus.SecureProtocol.Transport.Udp
 
                 Buffer.BlockCopy(lenBit, 0, msg, 0, lenBit.Length);
                 Buffer.BlockCopy(data, 0, msg, lenBit.Length, data.Length);
+
+                Debug.WriteLine("TCP WT AFT: ");
+                Debug.WriteLine("DATA: " + data.GetByteArrayString());
+                Debug.WriteLine("LEN: " + lenBit.GetByteArrayString());
+                Debug.WriteLine("RAW: " + msg.GetByteArrayString());
 
                 ActuallyClient.Send(msg, msg.Length, remoteEP);
             }
@@ -104,12 +126,16 @@ namespace Openus.SecureProtocol.Transport.Udp
         /// <returns>Data that read</returns>
         public byte[] Read(ref IPEndPoint remoteEP, HandlingType type = HandlingType.Ecexption)
         {
+            Debug.WriteLine("UDP RD BFR: ");
+
             if (SymmetricWrapper.Algorithm != SymmetricType.None)
             {
                 byte[] all = ActuallyClient.Receive(ref remoteEP);
 
                 byte[] iv = new byte[Symmetric.BlockSize(AlgorithmSet.Symmetric)];
                 byte[] enc1 = new byte[Symmetric.BlockSize(AlgorithmSet.Symmetric)];
+
+                Debug.WriteLine("IV: " + iv.GetByteArrayString());
 
                 Buffer.BlockCopy(all, 0, iv, 0, iv.Length);
                 Buffer.BlockCopy(all, iv.Length, enc1, 0, enc1.Length);
@@ -129,7 +155,7 @@ namespace Openus.SecureProtocol.Transport.Udp
                     }
                 }
 
-                int readNonce = BitConverter.ToInt32(msg1[0..4]);
+                uint readNonce = BitConverter.ToUInt32(msg1[0..4]);
 
                 if (readNonce <= _recvNonce)
                 {
@@ -154,6 +180,8 @@ namespace Openus.SecureProtocol.Transport.Udp
                 if (enc2.Length != 0)
                 {
                     Buffer.BlockCopy(all, iv.Length + enc1.Length, enc2, 0, enc2.Length);
+
+                    Debug.WriteLine("ENC: " + enc1.Concat(enc2).ToArray().GetByteArrayString());
 
                     byte[]? msg2 = SymmetricWrapper.Decrypt(enc2, enc1);
 
@@ -187,6 +215,8 @@ namespace Openus.SecureProtocol.Transport.Udp
 
                         Buffer.BlockCopy(all, iv.Length + enc1.Length + enc2.Length, hmacs, 0, hmacs.Length);
 
+                        Debug.WriteLine("HMAC: " + hmacs.GetByteArrayString());
+
                         byte[] compare = Hash.HmacData(AlgorithmSet.Hash, HmacKey, concat);
 
                         if (compare.SequenceEqual(hmacs) == false)
@@ -202,6 +232,12 @@ namespace Openus.SecureProtocol.Transport.Udp
                             }
                         }
                     }
+
+                    Debug.WriteLine("UDP RD AFT: ");
+                    Debug.WriteLine("NONCE: " + msg1[0..4].GetByteArrayString());
+                    Debug.WriteLine("LEN: " + msg1[4..8].GetByteArrayString());
+                    Debug.WriteLine("DATA: " + data.GetByteArrayString());
+                    Debug.WriteLine("RAW: " + msg1.Concat(msg2).ToArray().GetByteArrayString());
 
                     return data;
                 }
@@ -212,11 +248,15 @@ namespace Openus.SecureProtocol.Transport.Udp
                     Buffer.BlockCopy(iv, 0, concat, 0, iv.Length);
                     Buffer.BlockCopy(enc1, 0, concat, iv.Length, enc1.Length);
 
+                    Debug.WriteLine("ENC: " + enc1.GetByteArrayString());
+
                     if (HmacKey.Length != 0)
                     {
                         byte[] hmacs = new byte[Hash.HashDataSize(AlgorithmSet.Hash)];
 
                         Buffer.BlockCopy(all, iv.Length + enc1.Length, hmacs, 0, hmacs.Length);
+
+                        Debug.WriteLine("HMAC: " + hmacs.GetByteArrayString());
 
                         byte[] compare = Hash.HmacData(AlgorithmSet.Hash, HmacKey, concat);
 
@@ -233,6 +273,12 @@ namespace Openus.SecureProtocol.Transport.Udp
                             }
                         }
                     }
+
+                    Debug.WriteLine("UDP RD AFT: ");
+                    Debug.WriteLine("NONCE: " + msg1[0..4].GetByteArrayString());
+                    Debug.WriteLine("LEN: " + msg1[4..8].GetByteArrayString());
+                    Debug.WriteLine("DATA: " + msg1[8..(len + 8)].GetByteArrayString());
+                    Debug.WriteLine("RAW: " + msg1.GetByteArrayString());
 
                     return msg1[8..(len + 8)];
                 }
@@ -249,6 +295,11 @@ namespace Openus.SecureProtocol.Transport.Udp
                 byte[] msg = new byte[len];
 
                 Buffer.BlockCopy(all, lenBit.Length, msg, 0, msg.Length);
+
+                Debug.WriteLine("UDP RD AFT: ");
+                Debug.WriteLine("DATA: " + msg.GetByteArrayString());
+                Debug.WriteLine("LEN: " + lenBit.GetByteArrayString());
+                Debug.WriteLine("RAW: " + all.GetByteArrayString());
 
                 return msg;
             }

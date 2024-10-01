@@ -126,19 +126,6 @@ namespace Openus.SecureProtocol.Transport.Tcp
 
                 return ticket;
             }
-
-            /// <summary>
-            /// Get ticket packet size without IV
-            /// </summary>
-            /// <param name="set">Algorithm set to use</param>
-            /// <returns></returns>
-            public static int GetPacketSize(Set set)
-            {
-                int normal = 4 + Symmetric.KeySize(set.Symmetric) + Hash.HmacKeySize(set.Hash) + Symmetric.BlockSize(set.Symmetric);
-
-                return (normal / Symmetric.KeySize(set.Symmetric) + (normal % Symmetric.KeySize(set.Symmetric) == 0 ? 0 : 1)) 
-                    * Symmetric.KeySize(set.Symmetric);
-            }
         }
 
         /// <summary>
@@ -237,7 +224,7 @@ namespace Openus.SecureProtocol.Transport.Tcp
 
             if (_set.Symmetric != SymmetricType.None)
             {
-                byte[] buffer = new byte[Asymmetric.BlockSize(_set.Asymmetric)];
+                byte[] buffer = new byte[_set.GetMinimumConnectPacketSize()];
 
                 int s = 0;
                 while (s < buffer.Length)
@@ -245,9 +232,12 @@ namespace Openus.SecureProtocol.Transport.Tcp
 
                 byte[]? concatAsym = _asymmetric.Decrypt(buffer);
 
-                int ticketSize = Ticket.GetPacketSize(_set);
-                byte[]? concatSym = _ticketSymmetric.Decrypt(buffer[Symmetric.BlockSize(_set.Symmetric)
-                    ..(ticketSize + Symmetric.BlockSize(_set.Symmetric))], buffer[0..Symmetric.BlockSize(_set.Symmetric)]);
+                int ticketSize = Set.GetOnlyTicketPacketSize(_set);
+                byte[]? concatSym = _ticketSymmetric.Decrypt(buffer
+                [
+                    Symmetric.BlockSize(_set.Symmetric)..(ticketSize + Symmetric.BlockSize(_set.Symmetric))], 
+                    buffer[0..Symmetric.BlockSize(_set.Symmetric)
+                ]);
 
                 if (concatAsym == null && concatSym == null)
                 {

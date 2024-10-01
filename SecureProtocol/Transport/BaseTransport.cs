@@ -40,11 +40,11 @@ namespace Openus.SecureProtocol.Transport
         /// <summary>
         /// Nonce for preventing retransmission attacks
         /// </summary>
-        protected int _recvNonce;
+        protected uint _recvNonce;
         /// <summary>
         /// Nonce for preventing retransmission attacks
         /// </summary>
-        protected int _sendNonce;
+        protected uint _sendNonce;
 
         /// <summary>
         /// Base transport constructor

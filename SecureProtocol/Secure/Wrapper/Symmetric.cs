@@ -1,5 +1,6 @@
 ﻿using Openus.SecureProtocol.Secure.Algorithm;
 using Openus.SecureProtocol.Util;
+using System.Diagnostics;
 using System.Security.Cryptography;
 
 namespace Openus.SecureProtocol.Secure.Wrapper

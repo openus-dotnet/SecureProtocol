@@ -7,14 +7,19 @@ namespace Openus.SecureProtocol.Util
     /// </summary>
     internal static class Extension
     {
-        public static byte[] GetBytes(this string data)
+        internal static byte[] GetBytes(this string data)
         {
             return Encoding.UTF8.GetBytes(data);
         }
 
-        public static string GetString(this byte[] data)
+        internal static string GetString(this byte[] data)
         {
             return Encoding.UTF8.GetString(data);
+        }
+
+        internal static string GetByteArrayString(this byte[] data) 
+        {
+            return "[ " + string.Join(", ", data) + " ]";
         }
     }
 }

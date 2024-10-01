@@ -34,7 +34,7 @@ internal class Program
         {
             Asymmetric = AsymmetricType.RSA,
             Symmetric = SymmetricType.AES,
-            Hash = HashType.SHA256,
+            Hash = HashType.SHA512,
         };
         //Set set = new Set()
         //{
@@ -45,7 +45,7 @@ internal class Program
 
         List<Thread> threads = new List<Thread>();
 
-        Thread tcps = new Thread(() =>
+        Thread tcps = new Thread(async () =>
         {
             if (args.Length > 0 && args[0].Contains("tcps"))
             {
@@ -63,6 +63,8 @@ internal class Program
 
                     sclient.FlushStream();
                 }
+
+                await Task.Delay(5000);
 
                 server.Stop();
             }
@@ -190,7 +192,7 @@ internal class Program
         });
 
 
-        Thread tcprs = new Thread(() =>
+        Thread tcprs = new Thread(async () =>
         {
             if (args.Length > 0 && args[0].Contains("tcprs"))
             {
@@ -215,6 +217,8 @@ internal class Program
                 TcpServer.Client sclient4 = server.AcceptClient()!;
 
                 sclient4.Write(sclient4.Read());
+
+                await Task.Delay(5000);
 
                 server.Stop();
             }

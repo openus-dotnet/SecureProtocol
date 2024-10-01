@@ -119,6 +119,10 @@ namespace Openus.SecureProtocol.Transport.Tcp
                     throw new SecProtoException(ExceptionCode.EncryptError);
                 }
 
+                byte[] initailPacket = new byte[AlgorithmSet.GetMinimumConnectPacketSize()];
+
+                Buffer.BlockCopy(enc, 0, initailPacket, 0, enc.Length);
+
                 ActuallyClient.GetStream().Write(enc, 0, enc.Length);
 
                 byte[] response = Read();
@@ -131,7 +135,7 @@ namespace Openus.SecureProtocol.Transport.Tcp
 
                 byte[] ticketPacket = Read();
 
-                TicketPacket = new byte[Asymmetric.BlockSize(AlgorithmSet.Asymmetric)];
+                TicketPacket = new byte[AlgorithmSet.GetMinimumConnectPacketSize()];
 
                 Buffer.BlockCopy(ticketPacket, 0, TicketPacket, 0, ticketPacket.Length);
             }
@@ -205,7 +209,7 @@ namespace Openus.SecureProtocol.Transport.Tcp
 
                 byte[] ticketPacket = Read();
 
-                TicketPacket = new byte[Asymmetric.BlockSize(AlgorithmSet.Asymmetric)];
+                TicketPacket = new byte[AlgorithmSet.GetMinimumConnectPacketSize()];
 
                 Buffer.BlockCopy(ticketPacket, 0, TicketPacket, 0, ticketPacket.Length);
             }
