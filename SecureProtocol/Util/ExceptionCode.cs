@@ -14,5 +14,7 @@
         InvalidHandlingType,
         InvalidNonce,
         InvalidHmac,
+        InvalidConnection,
+        InvalidTicket,
     }
 }

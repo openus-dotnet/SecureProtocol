@@ -1,4 +1,5 @@
 ﻿using Openus.SecureProtocol.Key.Asymmetric;
+using Openus.SecureProtocol.Key.Session;
 using Openus.SecureProtocol.Secure.Algorithm;
 using Openus.SecureProtocol.Secure.Wrapper;
 using Openus.SecureProtocol.Util;
@@ -16,6 +17,11 @@ namespace Openus.SecureProtocol.Transport.Tcp
         /// Asymmetric algorithm set without private key for client
         /// </summary>
         private Asymmetric _asymmetric;
+
+        /// <summary>
+        /// Session ticket for fast re-connection to server
+        /// </summary>
+        public byte[]? TicketPacket { get; private set; }
 
         /// <summary>
         /// Create client
@@ -52,13 +58,27 @@ namespace Openus.SecureProtocol.Transport.Tcp
 
             return new TcpClient(key, set, keys.Item1, keys.Item2);
         }
+        /// <summary>
+        /// Create a client with secure session using session key set
+        /// </summary>
+        /// <param name="key">Public key for server</param>
+        /// <param name="keySet">Secure session key set</param>
+        /// <param name="ticket">Ticket for re-connect session</param>
+        /// <returns>Client created</returns>
+        public static TcpClient Create(PublicKey? key, KeySet keySet, byte[] ticket)
+        {
+            return new TcpClient(key, keySet.AlgorithmSet, keySet.SymmetricKey, keySet.HmacKey)
+            { 
+                TicketPacket = ticket,
+            };
+        }
 
         /// <summary>
-        /// Connect to a preconfigured server
+        /// Connect to a preconfigured server using asymmetric algorithm
         /// </summary>
         /// <param name="serverEP">Server IP end point</param>
         /// <param name="retry">Maximum retry to connect</param>
-        public void Connect(IPEndPoint serverEP, int retry = 0)
+        public void InitialConnect(IPEndPoint serverEP, int retry = 0)
         {
             ArgumentOutOfRangeException.ThrowIfNegative(retry);
 
@@ -96,7 +116,7 @@ namespace Openus.SecureProtocol.Transport.Tcp
 
                 if (enc == null)
                 {
-                    throw new SecSessException(ExceptionCode.EncryptError);
+                    throw new SecProtoException(ExceptionCode.EncryptError);
                 }
 
                 ActuallyClient.GetStream().Write(enc, 0, enc.Length);
@@ -106,8 +126,14 @@ namespace Openus.SecureProtocol.Transport.Tcp
 
                 if (compare.SequenceEqual(response) == false)
                 {
-                    throw new SecSessException(ExceptionCode.InvalidHmac);
+                    throw new SecProtoException(ExceptionCode.InvalidHmac);
                 }
+
+                byte[] ticketPacket = Read();
+
+                TicketPacket = new byte[Asymmetric.BlockSize(AlgorithmSet.Asymmetric)];
+
+                Buffer.BlockCopy(ticketPacket, 0, TicketPacket, 0, ticketPacket.Length);
             }
             else if (SymmetricWrapper.Algorithm == SymmetricType.None)
             {
@@ -115,17 +141,92 @@ namespace Openus.SecureProtocol.Transport.Tcp
             }
             else
             {
-                throw new SecSessException(ExceptionCode.InvalidHandlingType);
+                throw new SecProtoException(ExceptionCode.InvalidHandlingType);
             }
         }
         /// <summary>
-        /// Connect to a preconfigured server
+        /// Connect to a preconfigured server using asymmetric algorithm
         /// </summary>
         /// <param name="serverEP">Server IP end point</param>
         /// <param name="retry">Maximum retry to connect</param>
-        public async Task ConnectAsync(IPEndPoint serverEP, int retry = 0)
+        public async Task InitialConnectAsync(IPEndPoint serverEP, int retry = 0)
         {
-            await Task.Run(() => Connect(serverEP, retry));
+            await Task.Run(() => InitialConnect(serverEP, retry));
+        }
+
+        /// <summary>
+        /// Connect to server using before session key set
+        /// </summary>
+        /// <param name="serverEP">Server IP end point</param>
+        /// <param name="retry">Maximum retry to connect</param>
+        public void ReConnect(IPEndPoint serverEP, int retry = 0)
+        {
+            ArgumentOutOfRangeException.ThrowIfNegative(retry);
+
+            if (retry == 0)
+            {
+                ActuallyClient.Connect(serverEP);
+            }
+            else
+            {
+                for (int i = 0; i <= retry; i++)
+                {
+                    try
+                    {
+                        ActuallyClient.Connect(serverEP);
+
+                        break;
+                    }
+                    catch (SocketException)
+                    {
+                        continue;
+                    }
+                }
+            }
+
+            while (CanUseStream() == false) ;
+
+            if (SymmetricWrapper.Algorithm != SymmetricType.None)
+            {
+                if (TicketPacket == null)
+                {
+                    throw new SecProtoException(ExceptionCode.InvalidConnection);
+                }
+
+                ActuallyClient.GetStream().Write(TicketPacket);
+
+                byte[] response = Read();
+                byte[] compare = Hash.HashData(AlgorithmSet.Hash, TicketPacket);
+
+                if (compare.SequenceEqual(response) == false)
+                {
+                    throw new SecProtoException(ExceptionCode.InvalidHmac);
+                }
+
+                byte[] ticketPacket = Read();
+
+                TicketPacket = new byte[Asymmetric.BlockSize(AlgorithmSet.Asymmetric)];
+
+                Buffer.BlockCopy(ticketPacket, 0, TicketPacket, 0, ticketPacket.Length);
+            }
+            else if (SymmetricWrapper.Algorithm == SymmetricType.None)
+            {
+
+            }
+            else
+            {
+                throw new SecProtoException(ExceptionCode.InvalidHandlingType);
+            }
+        }
+
+        /// <summary>
+        /// Connect to server using before session key set
+        /// </summary>
+        /// <param name="serverEP">Server IP end point</param>
+        /// <param name="retry">Maximum retry to connect</param>
+        public async Task ReConnectAsync(IPEndPoint serverEP, int retry = 0)
+        {
+            await Task.Run(() => { ReConnect(serverEP, retry); });
         }
     }
 }

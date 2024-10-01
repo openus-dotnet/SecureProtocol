@@ -23,9 +23,9 @@ namespace Openus.SecureProtocol.Transport.Udp
         /// Create a client with secure session
         /// </summary>
         /// <param name="endPoint">UDP client end point</param>
-        /// <param name="set">SecSess key sey</param>
+        /// <param name="set">Secure session key set</param>
         /// <returns>Client created</returns>
-        public static UdpClient Craete(IPEndPoint endPoint, KeySet set)
+        public static UdpClient Create(IPEndPoint endPoint, KeySet set)
         {
             return new UdpClient(endPoint, set.AlgorithmSet, set.SymmetricKey, set.HmacKey);
         }

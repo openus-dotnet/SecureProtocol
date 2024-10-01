@@ -3,7 +3,9 @@ using Openus.SecureProtocol.Key.Session;
 using Openus.SecureProtocol.Secure.Algorithm;
 using Openus.SecureProtocol.Transport.Tcp;
 using Openus.SecureProtocol.Transport.Udp;
+using System;
 using System.Net;
+using System.Text;
 
 internal class Program
 {
@@ -41,6 +43,8 @@ internal class Program
         //    Hash = HashType.SHA256,
         //};
 
+        List<Thread> threads = new List<Thread>();
+
         Thread tcps = new Thread(() =>
         {
             if (args.Length > 0 && args[0].Contains("tcps"))
@@ -70,7 +74,7 @@ internal class Program
                 DateTime time1 = DateTime.Now;
 
                 TcpClient client = TcpClient.Create(set.Asymmetric == AsymmetricType.RSA ? pubkey : null, set);
-                client.Connect(new IPEndPoint(IPAddress.Parse(args[2]), 12345));
+                client.InitialConnect(new IPEndPoint(IPAddress.Parse(args[2]), 12345));
 
                 TimeSpan span1 = DateTime.Now - time1;
 
@@ -119,7 +123,7 @@ internal class Program
 
                 server.Stop();
 
-                UdpClient udp = UdpClient.Craete(new IPEndPoint(IPAddress.Parse(args[1]), 12346), keySet);
+                UdpClient udp = UdpClient.Create(new IPEndPoint(IPAddress.Parse(args[1]), 12346), keySet);
 
                 var task = Task.Run(async () =>
                 {
@@ -141,7 +145,7 @@ internal class Program
             if (args.Length > 0 && args[0].Contains("udpc"))
             {
                 TcpClient client = TcpClient.Create(set.Asymmetric == AsymmetricType.RSA ? pubkey : null, set);
-                client.Connect(new IPEndPoint(IPAddress.Parse(args[2]), 12345));
+                client.InitialConnect(new IPEndPoint(IPAddress.Parse(args[2]), 12345));
 
                 KeySet keySet = client.SessionKeySet;
 
@@ -152,7 +156,7 @@ internal class Program
 
                 client.Close();
 
-                UdpClient udp = UdpClient.Craete(new IPEndPoint(IPAddress.Parse(args[1]), 12347), keySet);
+                UdpClient udp = UdpClient.Create(new IPEndPoint(IPAddress.Parse(args[1]), 12347), keySet);
 
                 int valid = 0;
                 int invalid = 0;
@@ -185,14 +189,93 @@ internal class Program
             }
         });
 
-        tcps.Start();
-        tcpc.Start();
-        udps.Start();
-        udpc.Start();
 
-        tcps.Join();
-        tcpc.Join();
-        udps.Join();
-        udpc.Join();
+        Thread tcprs = new Thread(() =>
+        {
+            if (args.Length > 0 && args[0].Contains("tcprs"))
+            {
+                TcpServer server = TcpServer.Create(new IPEndPoint(IPAddress.Parse(args[1]), 12345),
+                    set.Asymmetric == AsymmetricType.RSA ? privkey : null, set);
+                server.Start();
+
+                TcpServer.Client sclient1 = server.AcceptClient()!;
+                TcpServer.Client sclient2 = server.AcceptClient()!;
+
+                sclient2.Write(sclient2.Read());
+
+                try
+                {
+                    TcpServer.Client sclient3 = server.AcceptClient()!;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex);
+                }
+
+                TcpServer.Client sclient4 = server.AcceptClient()!;
+
+                sclient4.Write(sclient4.Read());
+
+                server.Stop();
+            }
+        });
+        Thread tcprc = new Thread(() =>
+        {
+            if (args.Length > 0 && args[0].Contains("tcprc"))
+            {
+                TcpClient client = TcpClient.Create(set.Asymmetric == AsymmetricType.RSA ? pubkey : null, set);
+                client.InitialConnect(new IPEndPoint(IPAddress.Parse(args[2]), 12345));
+
+                KeySet keyset = client.SessionKeySet;
+                byte[] ticket = client.TicketPacket!;
+
+                client.Close();
+
+                client = TcpClient.Create(set.Asymmetric == AsymmetricType.RSA ? pubkey : null, keyset, ticket);
+                client.ReConnect(new IPEndPoint(IPAddress.Parse(args[2]), 12345));
+
+                byte[] reticket = client.TicketPacket!;
+
+                byte[] buffer = Encoding.UTF8.GetBytes("Hello, world!");
+
+                client.Write(buffer);
+
+                if (client.Read().SequenceEqual(buffer) == false)
+                    throw new Exception("buffer is corrupted");
+
+                client.Close();
+
+                client = TcpClient.Create(set.Asymmetric == AsymmetricType.RSA ? pubkey : null, keyset, ticket);
+                Task.WaitAny([Task.Run(() => client.ReConnect(new IPEndPoint(IPAddress.Parse(args[2]), 12345)))], 5000);
+
+                client = TcpClient.Create(set.Asymmetric == AsymmetricType.RSA ? pubkey : null, keyset, reticket);
+                client.ReConnect(new IPEndPoint(IPAddress.Parse(args[2]), 12345));
+
+                client.Write(buffer);
+
+                if (client.Read().SequenceEqual(buffer) == false)
+                    throw new Exception("buffer is corrupted");
+
+                Console.WriteLine("Sucess");
+
+                client.Close();
+            }
+        });
+
+        threads.Add(tcps);
+        threads.Add(tcpc);
+        threads.Add(tcprs);
+        threads.Add(tcprc);
+        threads.Add(udps);
+        threads.Add(udpc);
+
+        foreach (var thread in threads)
+        {
+            thread.Start();
+        }
+        foreach (var thread in threads)
+        {
+            thread.Join();
+        }
     }
 }

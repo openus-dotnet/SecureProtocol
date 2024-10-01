@@ -3,6 +3,7 @@ using Openus.SecureProtocol.Secure.Wrapper;
 using Openus.SecureProtocol.Transport.Option;
 using Openus.SecureProtocol.Util;
 using System.Net;
+using System.Security.Cryptography;
 
 namespace Openus.SecureProtocol.Transport.Tcp
 {
@@ -49,7 +50,7 @@ namespace Openus.SecureProtocol.Transport.Tcp
                 _sendNonce += new Random(DateTime.Now.Microsecond).Next(1, 10);
 
                 byte[] iv = new byte[Symmetric.BlockSize(SymmetricWrapper.Algorithm)];
-                new Random().NextBytes(iv);
+                RandomNumberGenerator.Fill(iv);
 
                 byte[] nonceBit = BitConverter.GetBytes(_sendNonce);
                 byte[] lenBit = BitConverter.GetBytes(data.Length);
@@ -63,7 +64,7 @@ namespace Openus.SecureProtocol.Transport.Tcp
 
                 if (enc == null)
                 {
-                    throw new SecSessException(ExceptionCode.EncryptError);
+                    throw new SecProtoException(ExceptionCode.EncryptError);
                 }
 
                 byte[] packet = new byte[iv.Length + enc.Length];
@@ -126,11 +127,11 @@ namespace Openus.SecureProtocol.Transport.Tcp
                     switch (type)
                     {
                         case HandlingType.Ecexption:
-                            throw new SecSessException(ExceptionCode.DecryptError);
+                            throw new SecProtoException(ExceptionCode.DecryptError);
                         case HandlingType.EmptyReturn:
                             return Array.Empty<byte>();
                         default:
-                            throw new SecSessException(ExceptionCode.InvalidHandlingType);
+                            throw new SecProtoException(ExceptionCode.InvalidHandlingType);
                     }
                 }
 
@@ -141,11 +142,11 @@ namespace Openus.SecureProtocol.Transport.Tcp
                     switch (type)
                     {
                         case HandlingType.Ecexption:
-                            throw new SecSessException(ExceptionCode.InvalidNonce);
+                            throw new SecProtoException(ExceptionCode.InvalidNonce);
                         case HandlingType.EmptyReturn:
                             return Array.Empty<byte>();
                         default:
-                            throw new SecSessException(ExceptionCode.InvalidHandlingType);
+                            throw new SecProtoException(ExceptionCode.InvalidHandlingType);
                     }
                 }
 
@@ -169,11 +170,11 @@ namespace Openus.SecureProtocol.Transport.Tcp
                         switch (type)
                         {
                             case HandlingType.Ecexption:
-                                throw new SecSessException(ExceptionCode.DecryptError);
+                                throw new SecProtoException(ExceptionCode.DecryptError);
                             case HandlingType.EmptyReturn:
                                 return Array.Empty<byte>();
                             default:
-                                throw new SecSessException(ExceptionCode.InvalidHandlingType);
+                                throw new SecProtoException(ExceptionCode.InvalidHandlingType);
                         }
                     }
 
@@ -203,11 +204,11 @@ namespace Openus.SecureProtocol.Transport.Tcp
                             switch (type)
                             {
                                 case HandlingType.Ecexption:
-                                    throw new SecSessException(ExceptionCode.InvalidHmac);
+                                    throw new SecProtoException(ExceptionCode.InvalidHmac);
                                 case HandlingType.EmptyReturn:
                                     return Array.Empty<byte>();
                                 default:
-                                    throw new SecSessException(ExceptionCode.InvalidHandlingType);
+                                    throw new SecProtoException(ExceptionCode.InvalidHandlingType);
                             }
                         }
                     }
@@ -236,11 +237,11 @@ namespace Openus.SecureProtocol.Transport.Tcp
                             switch (type)
                             {
                                 case HandlingType.Ecexption:
-                                    throw new SecSessException(ExceptionCode.InvalidHmac);
+                                    throw new SecProtoException(ExceptionCode.InvalidHmac);
                                 case HandlingType.EmptyReturn:
                                     return Array.Empty<byte>();
                                 default:
-                                    throw new SecSessException(ExceptionCode.InvalidHandlingType);
+                                    throw new SecProtoException(ExceptionCode.InvalidHandlingType);
                             }
                         }
                     }

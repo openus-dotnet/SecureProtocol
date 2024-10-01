@@ -47,7 +47,7 @@ namespace Openus.SecureProtocol.Secure.Wrapper
 
                     break;
                 default:
-                    throw new SecSessException(ExceptionCode.InvalidSymmetric);
+                    throw new SecProtoException(ExceptionCode.InvalidSymmetric);
             }
 
             if (_symmetric != null)
@@ -64,16 +64,23 @@ namespace Openus.SecureProtocol.Secure.Wrapper
         /// <returns>Encrypted data</returns>
         public byte[]? Encrypt(byte[] data, byte[] iv)
         {
-            if (_symmetric == null)
+            try
             {
-                return data;
+                if (_symmetric == null)
+                {
+                    return data;
+                }
+
+                byte[] dest = new byte[data.Length - data.Length % BlockSize(Algorithm)
+                    + (data.Length % BlockSize(Algorithm) == 0 ? 0 : BlockSize(Algorithm))];
+                bool result = _symmetric.TryEncryptCbc(data, iv, dest, out int o, PaddingMode.Zeros);
+
+                return result == true ? dest : null;
             }
-
-            byte[] dest = new byte[data.Length - data.Length % BlockSize(Algorithm)
-                + (data.Length % BlockSize(Algorithm) == 0 ? 0 : BlockSize(Algorithm))];
-            bool result = _symmetric.TryEncryptCbc(data, iv, dest, out int o, PaddingMode.Zeros);
-
-            return result == true ? dest : null;
+            catch
+            {
+                return null;
+            }
         }
 
         /// <summary>
@@ -84,15 +91,22 @@ namespace Openus.SecureProtocol.Secure.Wrapper
         /// <returns>Decrypted data</returns>
         public byte[]? Decrypt(byte[] data, byte[] iv)
         {
-            if (_symmetric == null)
+            try
             {
-                return data;
+                if (_symmetric == null)
+                {
+                    return data;
+                }
+
+                byte[] dest = new byte[data.Length];
+                bool result = _symmetric.TryDecryptCbc(data, iv, dest, out int o, PaddingMode.Zeros);
+
+                return result == true ? dest : null;
             }
-
-            byte[] dest = new byte[data.Length];
-            bool result = _symmetric.TryDecryptCbc(data, iv, dest, out int o, PaddingMode.Zeros);
-
-            return result == true ? dest : null;
+            catch
+            {
+                return null;
+            }
         }
 
         /// <summary>
@@ -113,7 +127,7 @@ namespace Openus.SecureProtocol.Secure.Wrapper
                 case SymmetricType.AES:
                     return 32;
                 default:
-                    throw new SecSessException(ExceptionCode.InvalidSymmetric);
+                    throw new SecProtoException(ExceptionCode.InvalidSymmetric);
             }
         }
 
@@ -135,7 +149,7 @@ namespace Openus.SecureProtocol.Secure.Wrapper
                 case SymmetricType.AES:
                     return 16;
                 default:
-                    throw new SecSessException(ExceptionCode.InvalidSymmetric);
+                    throw new SecProtoException(ExceptionCode.InvalidSymmetric);
             }
         }
     }

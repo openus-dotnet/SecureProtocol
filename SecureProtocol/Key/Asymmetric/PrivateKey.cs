@@ -26,7 +26,7 @@ namespace Openus.SecureProtocol.Key.Asymmetric
 
                     break;
                 default:
-                    throw new SecSessException(ExceptionCode.InvalidAsymmetric);
+                    throw new SecProtoException(ExceptionCode.InvalidAsymmetric);
             }
         }
 
@@ -46,7 +46,7 @@ namespace Openus.SecureProtocol.Key.Asymmetric
 
                     break;
                 default:
-                    throw new SecSessException(ExceptionCode.InvalidAsymmetric);
+                    throw new SecProtoException(ExceptionCode.InvalidAsymmetric);
             }
 
             using (StreamWriter sw = new StreamWriter(path))
@@ -78,7 +78,7 @@ namespace Openus.SecureProtocol.Key.Asymmetric
 
                     return new PrivateKey(algorithm, rsa.ExportParameters(true));
                 default:
-                    throw new SecSessException(ExceptionCode.InvalidAsymmetric);
+                    throw new SecProtoException(ExceptionCode.InvalidAsymmetric);
             }
         }
     }

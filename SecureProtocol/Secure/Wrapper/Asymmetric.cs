@@ -29,7 +29,7 @@ namespace Openus.SecureProtocol.Secure.Wrapper
         {
             if (param == null ^ algorithm == AsymmetricType.None)
             {
-                throw new SecSessException(ExceptionCode.InvalidCombination);
+                throw new SecProtoException(ExceptionCode.InvalidCombination);
             }
 
             Algorithm = algorithm;
@@ -45,7 +45,7 @@ namespace Openus.SecureProtocol.Secure.Wrapper
 
                     break;
                 default:
-                    throw new SecSessException(ExceptionCode.InvalidAsymmetric);
+                    throw new SecProtoException(ExceptionCode.InvalidAsymmetric);
             }
         }
 
@@ -56,15 +56,22 @@ namespace Openus.SecureProtocol.Secure.Wrapper
         /// <returns>Encrypted data</returns>
         public byte[]? Encrypt(byte[] data)
         {
-            switch (Algorithm)
+            try
             {
-                case AsymmetricType.RSA:
-                    byte[] result = new byte[BlockSize(Algorithm)];
-                    bool b = (_asymmetric as RSA)!.TryEncrypt(data, result, RSAEncryptionPadding.Pkcs1, out int o);
+                switch (Algorithm)
+                {
+                    case AsymmetricType.RSA:
+                        byte[] result = new byte[BlockSize(Algorithm)];
+                        bool b = (_asymmetric as RSA)!.TryEncrypt(data, result, RSAEncryptionPadding.Pkcs1, out int o);
 
-                    return b == true ? result : null;
-                default:
-                    throw new SecSessException(ExceptionCode.InvalidAsymmetric);
+                        return b == true ? result : null;
+                    default:
+                        throw new SecProtoException(ExceptionCode.InvalidAsymmetric);
+                }
+            }
+            catch
+            {
+                return null;
             }
         }
 
@@ -75,15 +82,22 @@ namespace Openus.SecureProtocol.Secure.Wrapper
         /// <returns>Decrypted data</returns>
         public byte[]? Decrypt(byte[] data)
         {
-            switch (Algorithm)
+            try
             {
-                case AsymmetricType.RSA:
-                    byte[] result = new byte[BlockSize(Algorithm)];
-                    bool b = (_asymmetric as RSA)!.TryDecrypt(data, result, RSAEncryptionPadding.Pkcs1, out int o);
+                switch (Algorithm)
+                {
+                    case AsymmetricType.RSA:
+                        byte[] result = new byte[BlockSize(Algorithm)];
+                        bool b = (_asymmetric as RSA)!.TryDecrypt(data, result, RSAEncryptionPadding.Pkcs1, out int o);
 
-                    return b == true ? result : null;
-                default:
-                    throw new SecSessException(ExceptionCode.InvalidAsymmetric);
+                        return b == true ? result : null;
+                    default:
+                        throw new SecProtoException(ExceptionCode.InvalidAsymmetric);
+                }
+            }
+            catch
+            {
+                return null;
             }
         }
 
@@ -99,7 +113,7 @@ namespace Openus.SecureProtocol.Secure.Wrapper
                 case AsymmetricType.RSA:
                     return 256;
                 default:
-                    throw new SecSessException(ExceptionCode.InvalidAsymmetric);
+                    throw new SecProtoException(ExceptionCode.InvalidAsymmetric);
             }
         }
     }

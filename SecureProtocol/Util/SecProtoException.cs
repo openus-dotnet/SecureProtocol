@@ -1,22 +1,22 @@
 ﻿namespace Openus.SecureProtocol.Util
 {
     /// <summary>
-    /// SecSess module custom exceptions
+    /// Secure protocol module custom exceptions
     /// </summary>
-    public class SecSessException : Exception
+    public class SecProtoException : Exception
     {
         /// <summary>
         /// Generate exception with code
         /// </summary>
         /// <param name="code">Exception code</param>
         /// <param name="values">Other information value</param>
-        internal SecSessException(ExceptionCode code, params string[] values) : base(GetMessage(code) + GetInfo(values)) { }
+        internal SecProtoException(ExceptionCode code, params string[] values) : base(GetMessage(code) + GetInfo(values)) { }
 
         /// <summary>
-        /// Only message SecSess exception
+        /// Only message secure protocol exception
         /// </summary>
         /// <param name="message">Message to except</param>
-        public SecSessException(string message) : base(message) { }
+        public SecProtoException(string message) : base(message) { }
 
         /// <summary>
         /// Get more informations for exception
@@ -25,7 +25,7 @@
         /// <returns></returns>
         private static string GetInfo(string[] values)
         {
-            if (values != null && values.Length == 0)
+            if (values != null && values.Length != 0)
             {
                 string result = "(";
 
@@ -58,6 +58,8 @@
                 case ExceptionCode.InvalidHandlingType: return "Invalid handling type";
                 case ExceptionCode.InvalidNonce: return "Invalid received nonce";
                 case ExceptionCode.InvalidHmac: return "IHMAC authentication is failed";
+                case ExceptionCode.InvalidConnection: return "The first connection is can not used ReConnect()";
+                case ExceptionCode.InvalidTicket: return "Invalid session ticket";
                 default: return "Unknown exception";
             }
         }

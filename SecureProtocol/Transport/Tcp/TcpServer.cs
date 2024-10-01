@@ -5,6 +5,9 @@ using Openus.SecureProtocol.Util;
 using Openus.SecureProtocol.Secure.Wrapper;
 using Openus.SecureProtocol.Secure.Algorithm;
 using Openus.SecureProtocol.Transport.Option;
+using System.Security.Cryptography;
+using System.Text.Json;
+using Openus.SecureProtocol.Key.Asymmetric.Interface;
 
 namespace Openus.SecureProtocol.Transport.Tcp
 {
@@ -30,6 +33,115 @@ namespace Openus.SecureProtocol.Transport.Tcp
         }
 
         /// <summary>
+        /// Ticket for session re-connection
+        /// </summary>
+        private class Ticket
+        {
+            /// <summary>
+            /// Last used nonce
+            /// </summary>
+            internal static int MaxNonce = 1;
+
+            /// <summary>
+            /// Ticket nonce
+            /// </summary>
+            internal int Nonce;
+            /// <summary>
+            /// Session's symmetric key
+            /// </summary>
+            internal byte[] SymmetricKey;
+            /// <summary>
+            /// Session's HMAC key
+            /// </summary>
+            internal byte[] HmacKey;
+            /// <summary>
+            /// Ticket's IV
+            /// </summary>
+            internal byte[] IV;
+
+            /// <summary>
+            /// Create ticket for session, can set nonce
+            /// </summary>
+            /// <param name="nonce">Used nonce</param>
+            /// <param name="symmetric">Session's symmetric key</param>
+            /// <param name="hmac">Session's HMAC key</param>
+            /// <param name="iv">IV for symmetric encryption</param>
+            public Ticket(int nonce, byte[] symmetric, byte[] hmac, byte[] iv)
+            {
+                Nonce = nonce;
+                SymmetricKey = symmetric;
+                HmacKey = hmac;
+                IV = iv;
+            }
+
+            /// <summary>
+            /// Create ticket for session
+            /// </summary>
+            /// <param name="symmetric">Session's symmetric key</param>
+            /// <param name="hmac">Session's HMAC key</param>
+            /// <param name="iv">IV for symmetric encryption</param>
+            public Ticket(byte[] symmetric, byte[] hmac, byte[] iv)
+            {
+                Nonce = MaxNonce++;
+                SymmetricKey = symmetric;
+                HmacKey = hmac;
+                IV = iv;
+            }
+
+            /// <summary>
+            /// Ticket to bytes
+            /// </summary>
+            /// <returns></returns>
+            public byte[] ToBytes()
+            {
+                byte[] result = new byte[4 + SymmetricKey.Length + HmacKey.Length + IV.Length];
+
+                Buffer.BlockCopy(BitConverter.GetBytes(Nonce), 0, result, 0, 4);
+                Buffer.BlockCopy(SymmetricKey, 0, result, 4, SymmetricKey.Length);
+                Buffer.BlockCopy(HmacKey, 0, result, 4 + SymmetricKey.Length, HmacKey.Length);
+                Buffer.BlockCopy(IV, 0, result, 4 + SymmetricKey.Length + HmacKey.Length, IV.Length);
+
+                return result;
+            }
+
+            /// <summary>
+            /// Get ticket from bytes
+            /// </summary>
+            /// <param name="bytes"></param>
+            /// <param name="set">Using algorithm set</param>
+            /// <returns></returns>
+            public static Ticket ToTicket(byte[] bytes, Set set)
+            {
+                int toSym = 4 + Symmetric.KeySize(set.Symmetric);
+                int toHmac = toSym + Hash.HmacKeySize(set.Hash);
+                int toIV = toHmac + Symmetric.BlockSize(set.Symmetric);
+
+                Ticket ticket = new Ticket
+                (
+                    BitConverter.ToInt32(bytes[0..4]),
+                    bytes[4..toSym],
+                    bytes[toSym..toHmac],
+                    bytes[toHmac..toIV]
+                );
+
+                return ticket;
+            }
+
+            /// <summary>
+            /// Get ticket packet size without IV
+            /// </summary>
+            /// <param name="set">Algorithm set to use</param>
+            /// <returns></returns>
+            public static int GetPacketSize(Set set)
+            {
+                int normal = 4 + Symmetric.KeySize(set.Symmetric) + Hash.HmacKeySize(set.Hash) + Symmetric.BlockSize(set.Symmetric);
+
+                return (normal / Symmetric.KeySize(set.Symmetric) + (normal % Symmetric.KeySize(set.Symmetric) == 0 ? 0 : 1)) 
+                    * Symmetric.KeySize(set.Symmetric);
+            }
+        }
+
+        /// <summary>
         /// A TCP listener that actually works
         /// </summary>
         private TcpListener _listener;
@@ -45,6 +157,14 @@ namespace Openus.SecureProtocol.Transport.Tcp
         /// Algorithm set to use
         /// </summary>
         private Set _set;
+        /// <summary>
+        /// Only used server symmetric wrapper for session ticket 
+        /// </summary>
+        private Symmetric _ticketSymmetric;
+        /// <summary>
+        /// Session ticket for re-connect
+        /// </summary>
+        private List<Ticket> _tickets;
 
         /// <summary>
         /// General constructor for server
@@ -58,6 +178,12 @@ namespace Openus.SecureProtocol.Transport.Tcp
             _clients = new List<Client>();
             _asymmetric = new Asymmetric(parameters, set.Asymmetric);
             _set = set;
+
+            byte[] ticketKey = new byte[Symmetric.KeySize(set.Symmetric)];
+            RandomNumberGenerator.Fill(ticketKey);
+
+            _ticketSymmetric = new Symmetric(ticketKey, set.Symmetric);
+            _tickets = new List<Ticket>();
         }
 
         /// <summary>
@@ -117,32 +243,124 @@ namespace Openus.SecureProtocol.Transport.Tcp
                 while (s < buffer.Length)
                     s += client.GetStream().Read(buffer, s, buffer.Length - s);
 
-                byte[]? concat = _asymmetric.Decrypt(buffer);
+                byte[]? concatAsym = _asymmetric.Decrypt(buffer);
 
-                if (concat == null)
+                int ticketSize = Ticket.GetPacketSize(_set);
+                byte[]? concatSym = _ticketSymmetric.Decrypt(buffer[Symmetric.BlockSize(_set.Symmetric)
+                    ..(ticketSize + Symmetric.BlockSize(_set.Symmetric))], buffer[0..Symmetric.BlockSize(_set.Symmetric)]);
+
+                if (concatAsym == null && concatSym == null)
                 {
+                    client.Close();
+
                     switch (type)
                     {
                         case HandlingType.Ecexption:
-                            throw new SecSessException(ExceptionCode.DecryptError);
+                            throw new SecProtoException(ExceptionCode.DecryptError);
                         case HandlingType.EmptyReturn:
                             return null;
                         default:
-                            throw new SecSessException(ExceptionCode.InvalidHandlingType);
+                            throw new SecProtoException(ExceptionCode.InvalidHandlingType);
                     }
                 }
+                if (concatAsym != null)
+                {
+                    byte[] symmetricKey = concatAsym[0..Symmetric.KeySize(_set.Symmetric)];
+                    byte[] hmacKey = concatAsym[Symmetric.KeySize(_set.Symmetric)..(Symmetric.KeySize(_set.Symmetric) + Hash.HmacKeySize(_set.Hash))];
 
-                byte[] symmetricKey = concat[0..Symmetric.KeySize(_set.Symmetric)];
-                byte[] hmacKey = concat[Symmetric.KeySize(_set.Symmetric)..(Symmetric.KeySize(_set.Symmetric) + Hash.HmacKeySize(_set.Hash))];
+                    Client result = new Client(client, symmetricKey, hmacKey, _set);
+                    _clients.Add(result);
 
-                Client result = new Client(client, symmetricKey, hmacKey, _set);
-                _clients.Add(result);
+                    while (client.GetStream().CanWrite == false) ;
 
-                while (client.GetStream().CanWrite == false) ;
+                    result.Write(Hash.HashData(_set.Hash, concatAsym[0..(Symmetric.KeySize(_set.Symmetric) + Hash.HmacKeySize(_set.Hash))]));
 
-                result.Write(Hash.HashData(_set.Hash, concat[0..(Symmetric.KeySize(_set.Symmetric) + Hash.HmacKeySize(_set.Hash))]));
+                    byte[] iv = new byte[Symmetric.BlockSize(_set.Symmetric)];
+                    RandomNumberGenerator.Fill(iv);
 
-                return result;
+                    Ticket ticket = new Ticket(symmetricKey, hmacKey, iv);
+                    _tickets.Add(ticket);
+
+                    byte[]? ticketPacket = _ticketSymmetric.Encrypt(ticket.ToBytes(), iv);
+
+                    if (ticketPacket == null)
+                    {
+                        client.Close();
+
+                        throw new SecProtoException(ExceptionCode.EncryptError);
+                    }
+
+                    byte[] ticketWithIV = new byte[Symmetric.BlockSize(_set.Symmetric) + ticketPacket.Length];
+
+                    Buffer.BlockCopy(iv, 0, ticketWithIV, 0, iv.Length);
+                    Buffer.BlockCopy(ticketPacket, 0, ticketWithIV, iv.Length, ticketPacket.Length);
+
+                    result.Write(ticketWithIV);
+
+                    return result;
+                }
+                else if (concatSym != null)
+                {
+                    Ticket ticket = Ticket.ToTicket(concatSym, _set);
+                    Ticket? find = _tickets.FirstOrDefault(x => x.ToBytes().SequenceEqual(ticket.ToBytes()));
+
+                    if (find == null)
+                    {
+                        client.Close();
+
+                        switch (type)
+                        {
+                            case HandlingType.Ecexption:
+                                throw new SecProtoException(ExceptionCode.InvalidTicket);
+                            case HandlingType.EmptyReturn:
+                                return null;
+                            default:
+                                throw new SecProtoException(ExceptionCode.InvalidHandlingType);
+                        }
+                    }
+                    else
+                    {
+                        _tickets.Remove(find);
+                    }
+
+                    Client result = new Client(client, ticket.SymmetricKey, ticket.HmacKey, _set); 
+                    
+                    _clients.Add(result);
+
+                    while (client.GetStream().CanWrite == false) ;
+
+                    result.Write(Hash.HashData(_set.Hash, buffer));
+
+                    byte[] iv = new byte[Symmetric.BlockSize(_set.Symmetric)];
+                    RandomNumberGenerator.Fill(iv);
+
+                    Ticket reticket = new Ticket(ticket.SymmetricKey, ticket.HmacKey, iv);
+                    _tickets.Add(reticket);
+
+                    byte[]? ticketPacket = _ticketSymmetric.Encrypt(reticket.ToBytes(), iv);
+
+                    if (ticketPacket == null)
+                    {
+                        client.Close();
+
+                        throw new SecProtoException(ExceptionCode.EncryptError);
+                    }
+
+                    byte[] ticketWithIV = new byte[Symmetric.BlockSize(_set.Symmetric) + ticketPacket.Length];
+
+                    Buffer.BlockCopy(iv, 0, ticketWithIV, 0, iv.Length);
+                    Buffer.BlockCopy(ticketPacket, 0, ticketWithIV, iv.Length, ticketPacket.Length);
+
+                    result.Write(ticketWithIV);
+
+                    return result;
+                }
+                else
+                {
+                    client.Close();
+
+                    throw new SecProtoException(ExceptionCode.None);
+                }
             }
             else if (_set.Symmetric == SymmetricType.None)
             {
@@ -153,7 +371,9 @@ namespace Openus.SecureProtocol.Transport.Tcp
             }
             else
             {
-                throw new SecSessException(ExceptionCode.InvalidCombination);
+                client.Close();
+
+                throw new SecProtoException(ExceptionCode.InvalidCombination);
             }
         }
 

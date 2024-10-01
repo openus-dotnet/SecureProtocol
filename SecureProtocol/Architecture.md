@@ -32,7 +32,9 @@
 > - `🔏`: `SP-AES(AES_KEY, 📜)`
 >   - ≓ AES Encrypted hashed message for initail authentication
 
-## 2nd. SP(*Secure Protocol*)-AES(AES-CBC) Packet Commuicate Structure
+## 2nd. SP-AES Packet Commuicate Structure
+> The **SP** is **Secure Protocol**
+> SP-AES is using CBC, and can use over the TCP/UDP
 
 - Define `IV + AES(AES_KEY, NONCE + MSG_LENGTH + MSG)` to `α`. 
   - So, the `α` mean encrypted message part.
@@ -169,7 +171,7 @@ Set set = new Set()
 };
 
 TcpClient client = TcpClient.Create(pubkey, set);
-client.Connect(IPEndPoint.Parse($"127.0.0.1:12345"));
+client.InitialConnect(IPEndPoint.Parse($"127.0.0.1:12345"));
 
 byte[] buffer = new byte[1024];
 new Random().NextBytes(buffer);
