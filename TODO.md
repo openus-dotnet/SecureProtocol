@@ -1,3 +1,4 @@
 # To Do List
 
-- Nothing now
+- Add release note
+- Provide ticket wrapping class
