@@ -67,42 +67,16 @@ The project **Secure Protocol**'s goal is to build a **Simple**, **Secure**, and
   - AES block size is 128 bits.
   - HMAC hashed data size is 256 bits.
 
-<table>
-    <tr>
-        <td>
-            <p align="center">IV<br>128 bits</p>
-        </td>
-        <td>
-            <p align="center">AES Encrypted Message<br>128n bits</p>
-            <table>
-                <tr align="center">
-                    <td>
-                        <p align="center">Nonce<br>32 bits</p>
-                    </td>
-                    <td>
-                        <p align="center">Message Length<br>32 bits</p>
-                    </td>
-                    <td>
-                        <p align="center">Message<br>m bits(Z-Padding)</p>
-                    </td>
-                </tr>
-            </table>
-        </td>
-        <td>
-            <p align="center">HMAC Hash<br>256 bits</p>
-            <table>
-                <tr>
-                    <td>
-                        <p align="center">IV<br>128 bits</p>
-                    </td>
-                    <td>
-                        <p align="center">AES Encrypted Message<br>128n bits</p>
-                    </td>
-                </tr>
-            </table>
-        </td>
-    </tr>
-</table>
+```
++----------+--------------------------------------------+------------------------------------+
+|    IV    |            AES Encrypted Message           |                HMAC                |
+| 128 bits |                  128n bits                 |              256 bits              |
+|          |+---------+------------+-------------------+|+----------+-----------------------+|
+|          ||  Nonce  | MSG Length |      Message      |||    IV    | AES Encrypted Message ||
+|          || 32 bits |  32 bits   | m bits(Z-Padding) ||| 128 bits |       128n bits       ||
+|          |+---------+------------+-------------------+|+----------+-----------------------+|
++----------+--------------------------------------------+------------------------------------+
+```
 
 #### Provide from Structure
 
