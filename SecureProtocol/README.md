@@ -55,6 +55,7 @@ The project **Secure Protocol**'s goal is to build a **Simple**, **Secure**, and
 
 ### 2nd. SP-AES Packet Structure
 > The **SP** is **Secure Protocol**
+>
 > SP-AES is using CBC, and over the TCP/UDP
 
 - Define `IV + AES(AES_KEY, NONCE + MSG_LENGTH + MSG)` to `α`. 
