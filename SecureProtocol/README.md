@@ -88,7 +88,7 @@ The project **Secure Protocol**'s goal is to build a **Simple**, **Secure**, and
 > - `IV` is randomly generated for each communication.
 > - Use the `NONCE` increased by 1 ~ 5 from last used, using in each write.
 >   - When read, if the `NONCE` did not increase based on last read `NONCE`, it is judged as an incorrect packet.
->   - So, the write `NONCE` and the read `NONCE` are separated (v0.4~)
+>   - So, the write `NONCE` and the read `NONCE` are separated.
 
 ### 3rd. Usage Example
 
@@ -187,5 +187,5 @@ if (buffer.SequenceEqual(check) == false)
 client.Close();
 ```
 
-- This example is like repeated 100 times Ping-Pong, through SecSess RSA-AES over the TCP.
+- This example is like repeated 100 times Ping-Pong, through RSA, SP-AES over the TCP.
 - And last, the program check that message is corrupted.
