@@ -231,14 +231,14 @@ internal class Program
                 client.InitialConnect(new IPEndPoint(IPAddress.Parse(args[2]), 12345));
 
                 KeySet keyset = client.SessionKeySet;
-                byte[] ticket = client.TicketPacket!;
+                Ticket ticket = client.Ticket;
 
                 client.Close();
 
                 client = TcpClient.Create(set.Asymmetric == AsymmetricType.RSA ? pubkey : null, keyset, ticket);
                 client.ReConnect(new IPEndPoint(IPAddress.Parse(args[2]), 12345));
 
-                byte[] reticket = client.TicketPacket!;
+                Ticket reticket = client.Ticket;
 
                 byte[] buffer = Encoding.UTF8.GetBytes("Hello, world!");
 

@@ -21,7 +21,12 @@ namespace Openus.SecureProtocol.Transport.Tcp
         /// <summary>
         /// Session ticket for fast re-connection to server
         /// </summary>
-        public byte[]? TicketPacket { get; private set; }
+        private byte[]? _ticketPacket;
+
+        /// <summary>
+        /// Get ticket for fast re-connect TCP session
+        /// </summary>
+        public Ticket Ticket { get => new Ticket(_ticketPacket??throw new SecProtoException(ExceptionCode.InvalidTicket)); }
 
         /// <summary>
         /// Create client
@@ -65,11 +70,11 @@ namespace Openus.SecureProtocol.Transport.Tcp
         /// <param name="keySet">Secure session key set</param>
         /// <param name="ticket">Ticket for re-connect session</param>
         /// <returns>Client created</returns>
-        public static TcpClient Create(PublicKey? key, KeySet keySet, byte[] ticket)
+        public static TcpClient Create(PublicKey? key, KeySet keySet, Ticket ticket)
         {
             return new TcpClient(key, keySet.AlgorithmSet, keySet.SymmetricKey, keySet.HmacKey)
             { 
-                TicketPacket = ticket,
+                _ticketPacket = ticket.TicketPacket,
             };
         }
 
@@ -135,9 +140,9 @@ namespace Openus.SecureProtocol.Transport.Tcp
 
                 byte[] ticketPacket = Read();
 
-                TicketPacket = new byte[AlgorithmSet.GetMinimumConnectPacketSize()];
+                _ticketPacket = new byte[AlgorithmSet.GetMinimumConnectPacketSize()];
 
-                Buffer.BlockCopy(ticketPacket, 0, TicketPacket, 0, ticketPacket.Length);
+                Buffer.BlockCopy(ticketPacket, 0, _ticketPacket, 0, ticketPacket.Length);
             }
             else if (SymmetricWrapper.Algorithm == SymmetricType.None)
             {
@@ -192,15 +197,15 @@ namespace Openus.SecureProtocol.Transport.Tcp
 
             if (SymmetricWrapper.Algorithm != SymmetricType.None)
             {
-                if (TicketPacket == null)
+                if (_ticketPacket == null)
                 {
                     throw new SecProtoException(ExceptionCode.InvalidConnection);
                 }
 
-                ActuallyClient.GetStream().Write(TicketPacket);
+                ActuallyClient.GetStream().Write(_ticketPacket);
 
                 byte[] response = Read();
-                byte[] compare = Hash.HashData(AlgorithmSet.Hash, TicketPacket);
+                byte[] compare = Hash.HashData(AlgorithmSet.Hash, _ticketPacket);
 
                 if (compare.SequenceEqual(response) == false)
                 {
@@ -209,9 +214,9 @@ namespace Openus.SecureProtocol.Transport.Tcp
 
                 byte[] ticketPacket = Read();
 
-                TicketPacket = new byte[AlgorithmSet.GetMinimumConnectPacketSize()];
+                _ticketPacket = new byte[AlgorithmSet.GetMinimumConnectPacketSize()];
 
-                Buffer.BlockCopy(ticketPacket, 0, TicketPacket, 0, ticketPacket.Length);
+                Buffer.BlockCopy(ticketPacket, 0, _ticketPacket, 0, ticketPacket.Length);
             }
             else if (SymmetricWrapper.Algorithm == SymmetricType.None)
             {

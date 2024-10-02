@@ -1,27 +1,48 @@
-﻿# Secure Protocol Architecture
+﻿# Secure Protocol
+
+## Information
+
+The project **Secure Protocol**'s goal is to build a **Simple**, **Secure**, and **Fast** Transport Layer Module with C#.
+
+## Tech Stack
+
+|Transport Layer|Tech Type                                              |Implementation |
+|---------------|-------------------------------------------------------|---------------|
+|TCP            |General Unsecure                                       |**O**          |
+|UDP            |General Unsecure                                       |**O**          |
+|TCP            |Hybrid Crypto-system(for Generate and Exchange Keys)   |**O**          |
+|TCP            |Session KeySet & Ticket based Crypto-system            |**O**          |
+|UDP            |Session KeySet based Crypto-system                     |**O**          |
+|TCP            |Secure Service Model                                   |**X**          |
+
+- **O**: Completed works
+- **?**: Need more check
+- **X**: Have only plan
+
+## Secure Protocol Example and Architecture
 
 - Assume algorithm set is follow that.
   - Symmetric key algorithm is using AES.
   - Asymmetric key algorithm is using RSA.
   - Hash and HMAC algorithm is using SHA256.
 
-## 1st. AES & HMAC Key Exchange from RSA/TCP
+### 1st. Exchange AES Key & HMAC Key from RSA/TCP
 
 - Assume that the RSA public key on the server is already guaranteed by other means.
 
-|#|Location|Work|
-|-|--------|----|
-|01|Client side|**Generate** `AES_KEY` and `HMAC_KEY` → **Get** `🔑`|
-|02|Client side|`RSA(S_PUBLIC_KEY, 🔑)` → **Encrypt to** `🔐`|
-|03|Client to Server|**Send** `🔐`|
-|04|Server side|`RSA(S_PRIVATE_KEY, 🔐)` → **Decrypt to** `🔑`|
-|05|Server side|`🔑` → **Get** `AES_KEY` and `HMAC_KEY`|
-|06|Server side|`HMAC(HMAC_KEY, 🔑)` → **Hash to** `📜ⓢ`|
-|07|Server side|`SP-AES(AES_KEY, 📜ⓢ)` → **Encrypt to** `🔏ⓢ`|
-|08|Server to Client|**Send** `🔏ⓢ`|
-|09|Client side|`SP-AES(AES_KEY, 🔏ⓢ)` → **Decrypt to** `📜ⓢ`|
-|10|Client side|`HMAC(HMAC_KEY, 🔑)` → **Hash to** `📜ⓒ`|
-|11|Client side|**Compare** `📜ⓢ` and `📜ⓒ`|
+|# |Location        |Work                                                 |
+|--|----------------|-----------------------------------------------------|
+|01|Client side     |**Generate** `AES_KEY` and `HMAC_KEY` → **Get** `🔑` |
+|02|Client side     |`RSA(S_PUBLIC_KEY, 🔑)` → **Encrypt to** `🔐`        |
+|03|Client to Server|**Send** `🔐`                                        |
+|04|Server side     |`RSA(S_PRIVATE_KEY, 🔐)` → **Decrypt to** `🔑`       |
+|05|Server side     |`🔑` → **Get** `AES_KEY` and `HMAC_KEY`              |
+|06|Server side     |`HMAC(HMAC_KEY, 🔑)` → **Hash to** `📜ⓢ`            |
+|07|Server side     |`SP-AES(AES_KEY, 📜ⓢ)` → **Encrypt to** `🔏ⓢ`      |
+|08|Server to Client|**Send** `🔏ⓢ`                                      |
+|09|Client side     |`SP-AES(AES_KEY, 🔏ⓢ)` → **Decrypt to** `📜ⓢ`      |
+|10|Client side     |`HMAC(HMAC_KEY, 🔑)` → **Hash to** `📜ⓒ`            |
+|11|Client side     |**Compare** `📜ⓢ` and `📜ⓒ`                        |
 
 > - `🔑`: `AES_KEY + HMAC_KEY`
 >   - ≓ Session Key for SP-AES
@@ -32,15 +53,15 @@
 > - `🔏`: `SP-AES(AES_KEY, 📜)`
 >   - ≓ AES Encrypted hashed message for initail authentication
 
-## 2nd. SP-AES Packet Commuicate Structure
+### 2nd. SP-AES Packet Structure
 > The **SP** is **Secure Protocol**
-> SP-AES is using CBC, and can use over the TCP/UDP
+> SP-AES is using CBC, and over the TCP/UDP
 
 - Define `IV + AES(AES_KEY, NONCE + MSG_LENGTH + MSG)` to `α`. 
   - So, the `α` mean encrypted message part.
 - Write SP-AES packet is only follow the structure that `α + HMAC(HMAC_KEY, α)`
 
-### More Structure Information
+#### More Structure Information
 
 - Remember, in this case...
   - AES block size is 128 bits.
@@ -83,7 +104,7 @@
     </tr>
 </table>
 
-### Provide from Structure
+#### Provide from Structure
 
 - Data ***Confidentiality*** through **AES(CBC)**.
 - Data ***Integrity*** and ***Authentication*** through **HMAC**.
@@ -95,9 +116,9 @@
 >   - When read, if the `NONCE` did not increase based on last read `NONCE`, it is judged as an incorrect packet.
 >   - So, the write `NONCE` and the read `NONCE` are separated (v0.4~)
 
-## 3rd. Usage Example
+### 3rd. Usage Example
 
-### Key Generator
+#### Key Generator
 
 ```cs
 /// You must have RSA key pair before communication.
@@ -112,7 +133,7 @@ pair.PrivateKey.Save("key.priv");
 
 ```
 
-### SecSess Server
+#### Secure TCP Server
 
 ```cs
 /// This is the Server side.
@@ -149,7 +170,7 @@ for (int i = 0; i < 100; i++)
 server.Stop();
 ```
 
-### SecSess Client
+### Secure TCP Client
 
 ```cs
 /// This is the Client side.
@@ -192,5 +213,5 @@ if (buffer.SequenceEqual(check) == false)
 client.Close();
 ```
 
-- This example is like repeated 100 times Ping-Pong, through SecSess RSA-AES.
+- This example is like repeated 100 times Ping-Pong, through SecSess RSA-AES over the TCP.
 - And last, the program check that message is corrupted.
