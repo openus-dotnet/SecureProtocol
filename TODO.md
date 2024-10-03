@@ -1,3 +1,3 @@
 # To Do List
 
-- Nothing now IDEA...
+- Add Openus Icon
