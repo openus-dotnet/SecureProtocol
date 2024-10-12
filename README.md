@@ -5,7 +5,7 @@
 The project **Secure Protocol**'s goal is to build a **Simple**, **Secure**, and **Fast** Transport Layer Module with C#.
 
 - More Detail: https://github.com/openus-dotnet/SecureProtocol/blob/master/SecureProtocol/README.md
-- Detail License: https://github.com/openus-dotnet/SecureProtocol/blob/master/SecureProtocol/LICENSE.txt (Don't worry. It's MIT :D)
+- Detail License: https://github.com/openus-dotnet/SecureProtocol/blob/master/SecureProtocol/LICENSE.txt
 
 ## Maintainer
 
