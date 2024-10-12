@@ -15,8 +15,7 @@
         <PackageId>Openus.SecureProtocol</PackageId>
         <Version>8.1.3</Version>
         <Description>Build a Simple, Secure, and Fast Transport Layer Module with C#</Description>
-        <ApplicationIcon>Openus.Net.ico</ApplicationIcon>
-        <PackageIcon>Openus.Net.png</PackageIcon>
+        <PackageIcon>Openus.png</PackageIcon>
 	
         <PackageReleaseNotes>
             - Add package icon
@@ -24,12 +23,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Content Include="Openus.Net.ico" />
         <None Include="LICENSE.txt">
             <Pack>True</Pack>
             <PackagePath>/</PackagePath>
         </None>
-        <None Update="Openus.Net.png">
+        <None Update="Openus.png">
             <Pack>True</Pack>
             <PackagePath>/</PackagePath>
         </None>
