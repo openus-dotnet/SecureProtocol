@@ -1,49 +1,42 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <RootNamespace>Openus.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
-    <GenerateDocumentationFile>True</GenerateDocumentationFile>
-    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
-    <Company>Openus.NET</Company>
-    <Copyright>Openus.NET</Copyright>
-    <Authors>elecbug</Authors>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
-    <RepositoryUrl>https://github.com/openus-dotnet/SecureProtocol</RepositoryUrl>
-    <PackageId>Openus.SecureProtocol</PackageId>
-    <Version>8.1.3</Version>
-    <Description>Build a Simple, Secure, and Fast Transport Layer Module with C#</Description>
-	<ApplicationIcon>Openus.Net.ico</ApplicationIcon>
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <RootNamespace>Openus.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
+        <GenerateDocumentationFile>True</GenerateDocumentationFile>
+        <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+        <Company>Openus.NET</Company>
+        <Copyright>Openus.NET</Copyright>
+        <Authors>elecbug</Authors>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <RepositoryUrl>https://github.com/openus-dotnet/SecureProtocol</RepositoryUrl>
+        <PackageId>Openus.SecureProtocol</PackageId>
+        <Version>8.1.3</Version>
+        <Description>Build a Simple, Secure, and Fast Transport Layer Module with C#</Description>
+        <ApplicationIcon>Openus.Net.ico</ApplicationIcon>
+        <PackageIcon>Openus.Net.png</PackageIcon>
 	
-	<PackageReleaseNotes>
-	  - Add package icon
-	</PackageReleaseNotes>
-	
-	<PackageIcon>Openus.Net.png</PackageIcon>
-  </PropertyGroup>
+        <PackageReleaseNotes>
+            - Add package icon
+        </PackageReleaseNotes>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <Content Include="Openus.Net.ico" />
-  </ItemGroup>
-	
-  <ItemGroup>
-    <None Include="LICENSE.txt">
-      <Pack>True</Pack>
-      <PackagePath>/</PackagePath>
-    </None>
-  </ItemGroup>
-	
-  <ItemGroup>
-    <None Update="Openus.Net.png">
-      <Pack>True</Pack>
-      <PackagePath>\</PackagePath>
-    </None>
-    <None Update="README.md">
-      <Pack>True</Pack>
-      <PackagePath>/</PackagePath>
-    </None>
-  </ItemGroup>
+    <ItemGroup>
+        <Content Include="Openus.Net.ico" />
+        <None Include="LICENSE.txt">
+            <Pack>True</Pack>
+            <PackagePath>/</PackagePath>
+        </None>
+        <None Update="Openus.Net.png">
+            <Pack>True</Pack>
+            <PackagePath>/</PackagePath>
+        </None>
+        <None Update="README.md">
+            <Pack>True</Pack>
+            <PackagePath>/</PackagePath>
+        </None>
+    </ItemGroup>
 
 </Project>
