@@ -1,3 +1,3 @@
 # To Do List
 
-- Add Openus Icon
+- Change logging solution and ... Design that?
