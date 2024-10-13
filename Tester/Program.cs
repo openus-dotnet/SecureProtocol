@@ -196,8 +196,11 @@ internal class Program
         {
             if (args.Length > 0 && args[0].Contains("tcprs"))
             {
-                TcpServer server = TcpServer.Create(new IPEndPoint(IPAddress.Parse(args[1]), 12345),
-                    set.Asymmetric == AsymmetricType.RSA ? privkey : null, set);
+                TcpServer server = TcpServer
+                    .Create(new IPEndPoint(IPAddress.Parse(args[1]), 12345),
+                        set.Asymmetric == AsymmetricType.RSA ? privkey : null, set)
+                    // .WithEnableTicket(TimeSpan.FromSeconds(1))
+                    ;
                 server.Start();
 
                 TcpServer.Client sclient1 = server.AcceptClient()!;

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Openus.SecureProtocol.Key.Session
+﻿namespace Openus.SecureProtocol.Key.Session
 {
     /// <summary>
     /// Ticket for TCP session fast re-connection

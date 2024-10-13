@@ -59,7 +59,7 @@
                 case ExceptionCode.InvalidNonce: return "Invalid received nonce";
                 case ExceptionCode.InvalidHmac: return "IHMAC authentication is failed";
                 case ExceptionCode.InvalidConnection: return "The first connection is can not used ReConnect()";
-                case ExceptionCode.InvalidTicket: return "Invalid session ticket";
+                case ExceptionCode.InvalidTicket: return "Invalid session ticket or disabled ticket";
                 default: return "Unknown exception";
             }
         }

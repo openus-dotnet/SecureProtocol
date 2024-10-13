@@ -2,7 +2,7 @@
   "profiles": {
     "SecureProtocol": {
       "commandName": "Project",
-      "commandLineArgs": "tcpstcpc 127.0.0.1 127.0.0.1"
+      "commandLineArgs": "tcprstcprc 127.0.0.1 127.0.0.1"
     }
   }
 }
