@@ -1,6 +1,7 @@
 ﻿using System.Net.Sockets;
 using Openus.SecureProtocol.Secure.Wrapper;
 using Openus.SecureProtocol.Secure.Algorithm;
+using System.Net;
 
 namespace Openus.SecureProtocol.Transport.Tcp
 {
@@ -148,5 +149,21 @@ namespace Openus.SecureProtocol.Transport.Tcp
         /// Enable session ticket time
         /// </summary>
         private TimeSpan _enableTicketTime;
+        /// <summary>
+        /// Black list specific IP end point
+        /// </summary>
+        private List<IPEndPoint> _blackList;
+        /// <summary>
+        /// Server is listening now
+        /// </summary>
+        public bool IsListening { get; private set; }
+        /// <summary>
+        /// Server using ticket cleaner
+        /// </summary>
+        private bool _useTicketCleaner;
+        /// <summary>
+        /// Ticket cleaner interval
+        /// </summary>
+        private TimeSpan _ticketCleanerInterval;
     }
 }

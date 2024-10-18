@@ -30,7 +30,7 @@ namespace Openus.SecureProtocol.Secure.Wrapper
         {
             if (param == null ^ algorithm == AsymmetricType.None)
             {
-                throw new SecProtoException(ExceptionCode.InvalidCombination);
+                throw new SPException(ExceptionCode.InvalidCombination);
             }
 
             Algorithm = algorithm;
@@ -46,7 +46,7 @@ namespace Openus.SecureProtocol.Secure.Wrapper
 
                     break;
                 default:
-                    throw new SecProtoException(ExceptionCode.InvalidAsymmetric);
+                    throw new SPException(ExceptionCode.InvalidAsymmetric);
             }
         }
 
@@ -67,7 +67,7 @@ namespace Openus.SecureProtocol.Secure.Wrapper
 
                         return b == true ? result : null;
                     default:
-                        throw new SecProtoException(ExceptionCode.InvalidAsymmetric);
+                        throw new SPException(ExceptionCode.InvalidAsymmetric);
                 }
             }
             catch
@@ -93,7 +93,7 @@ namespace Openus.SecureProtocol.Secure.Wrapper
 
                         return b == true ? result : null;
                     default:
-                        throw new SecProtoException(ExceptionCode.InvalidAsymmetric);
+                        throw new SPException(ExceptionCode.InvalidAsymmetric);
                 }
             }
             catch
@@ -114,7 +114,7 @@ namespace Openus.SecureProtocol.Secure.Wrapper
                 case AsymmetricType.RSA:
                     return 256;
                 default:
-                    throw new SecProtoException(ExceptionCode.InvalidAsymmetric);
+                    throw new SPException(ExceptionCode.InvalidAsymmetric);
             }
         }
     }

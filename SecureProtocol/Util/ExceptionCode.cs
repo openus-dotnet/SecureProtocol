@@ -16,5 +16,7 @@
         InvalidHmac,
         InvalidConnection,
         InvalidTicket,
+        BlackList,
+        InvalidTimeSpan,
     }
 }

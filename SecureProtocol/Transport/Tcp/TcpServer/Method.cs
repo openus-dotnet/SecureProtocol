@@ -33,6 +33,11 @@ namespace Openus.SecureProtocol.Transport.Tcp
             _ticketSymmetric = new Symmetric(ticketKey, set.Symmetric);
             _tickets = new List<Ticket>();
             _enableTicketTime = TimeSpan.FromMinutes(5);
+            _blackList = new List<IPEndPoint>();
+            _useTicketCleaner = false;
+            _ticketCleanerInterval = TimeSpan.Zero;
+
+            IsListening = false;
         }
 
         /// <summary>
@@ -63,6 +68,43 @@ namespace Openus.SecureProtocol.Transport.Tcp
         public void Start()
         {
             _listener.Start();
+            IsListening = true;
+
+            if (_useTicketCleaner == true)
+            {
+                if (_ticketCleanerInterval == TimeSpan.Zero)
+                {
+                    throw new SPException(ExceptionCode.InvalidTimeSpan);
+                }
+
+                Task.Run(async () =>
+                {
+                    while (true)
+                    {
+                        try
+                        {
+                            while (IsListening == true)
+                            {
+                                lock (_tickets)
+                                {
+                                    _tickets.RemoveAll(x => DateTime.UtcNow - x.Timestamp > _enableTicketTime);
+                                }
+
+                                await Task.Delay(_ticketCleanerInterval);
+                            }
+
+                            lock (_tickets)
+                            {
+                                _tickets.Clear();
+                            }
+                        }
+                        catch
+                        {
+                            continue;
+                        }
+                    }
+                });
+            }
         }
 
         /// <summary>
@@ -72,6 +114,7 @@ namespace Openus.SecureProtocol.Transport.Tcp
         {
             _listener.Stop();
             _listener.Dispose();
+            IsListening = false;
         }
 
         /// <summary>
@@ -79,8 +122,23 @@ namespace Openus.SecureProtocol.Transport.Tcp
         /// </summary>
         /// <param name="type">How to handle when error</param>
         public Client? AcceptClient(HandlingType type = HandlingType.Ecexption)
-        {
+        {AcceptClient:
             Raw.TcpClient client = _listener.AcceptTcpClient();
+
+            if (_blackList.Contains(client.Client.RemoteEndPoint) == true)
+            {
+                switch (type)
+                {
+                    case HandlingType.Ecexption:
+                        throw new SPException(ExceptionCode.BlackList);
+                    case HandlingType.ReturnNull:
+                        return null;
+                    case HandlingType.IgnoreLoop:
+                        goto AcceptClient;
+                    default:
+                        throw new SPException(ExceptionCode.InvalidHandlingType);
+                }
+            }
 
             while (client.Connected == false || client.GetStream().CanRead == false) ;
 
@@ -107,11 +165,13 @@ namespace Openus.SecureProtocol.Transport.Tcp
                     switch (type)
                     {
                         case HandlingType.Ecexption:
-                            throw new SecProtoException(ExceptionCode.DecryptError);
-                        case HandlingType.EmptyReturn:
+                            throw new SPException(ExceptionCode.DecryptError);
+                        case HandlingType.ReturnNull:
                             return null;
+                        case HandlingType.IgnoreLoop:
+                            goto AcceptClient;
                         default:
-                            throw new SecProtoException(ExceptionCode.InvalidHandlingType);
+                            throw new SPException(ExceptionCode.InvalidHandlingType);
                     }
                 }
                 if (concatAsym != null)
@@ -130,7 +190,9 @@ namespace Openus.SecureProtocol.Transport.Tcp
                     RandomNumberGenerator.Fill(iv);
 
                     Ticket ticket = new Ticket(symmetricKey, hmacKey, iv);
-                    _tickets.Add(ticket);
+
+                    lock (_tickets)
+                        _tickets.Add(ticket);
 
                     byte[]? ticketPacket = _ticketSymmetric.Encrypt(ticket.ToBytes(), iv);
 
@@ -138,7 +200,7 @@ namespace Openus.SecureProtocol.Transport.Tcp
                     {
                         client.Close();
 
-                        throw new SecProtoException(ExceptionCode.EncryptError);
+                        throw new SPException(ExceptionCode.EncryptError);
                     }
 
                     byte[] ticketWithIV = new byte[Symmetric.BlockSize(_set.Symmetric) + ticketPacket.Length];
@@ -153,7 +215,10 @@ namespace Openus.SecureProtocol.Transport.Tcp
                 else if (concatSym != null)
                 {
                     Ticket ticket = Ticket.ToTicket(concatSym, _set);
-                    Ticket? find = _tickets.FirstOrDefault(x => x.ToBytes().SequenceEqual(ticket.ToBytes()));
+                    Ticket? find = null;
+
+                    lock (_tickets)
+                        find = _tickets.FirstOrDefault(x => x.ToBytes().SequenceEqual(ticket.ToBytes()));
 
                     if (find == null)
                     {
@@ -162,16 +227,19 @@ namespace Openus.SecureProtocol.Transport.Tcp
                         switch (type)
                         {
                             case HandlingType.Ecexption:
-                                throw new SecProtoException(ExceptionCode.InvalidTicket);
-                            case HandlingType.EmptyReturn:
+                                throw new SPException(ExceptionCode.InvalidTicket);
+                            case HandlingType.ReturnNull:
                                 return null;
+                            case HandlingType.IgnoreLoop:
+                                goto AcceptClient;
                             default:
-                                throw new SecProtoException(ExceptionCode.InvalidHandlingType);
+                                throw new SPException(ExceptionCode.InvalidHandlingType);
                         }
                     }
                     else
                     {
-                        _tickets.Remove(find);
+                        lock (_tickets)
+                            _tickets.Remove(find);
 
                         TimeSpan to = DateTime.UtcNow - find.Timestamp;
 
@@ -180,11 +248,13 @@ namespace Openus.SecureProtocol.Transport.Tcp
                             switch (type)
                             {
                                 case HandlingType.Ecexption:
-                                    throw new SecProtoException(ExceptionCode.InvalidTicket);
-                                case HandlingType.EmptyReturn:
+                                    throw new SPException(ExceptionCode.InvalidTicket);
+                                case HandlingType.ReturnNull:
                                     return null;
+                                case HandlingType.IgnoreLoop:
+                                    goto AcceptClient;
                                 default:
-                                    throw new SecProtoException(ExceptionCode.InvalidHandlingType);
+                                    throw new SPException(ExceptionCode.InvalidHandlingType);
                             }
                         }
                     }
@@ -201,7 +271,9 @@ namespace Openus.SecureProtocol.Transport.Tcp
                     RandomNumberGenerator.Fill(iv);
 
                     Ticket reticket = new Ticket(ticket.SymmetricKey, ticket.HmacKey, iv);
-                    _tickets.Add(reticket);
+
+                    lock (_tickets)
+                        _tickets.Add(reticket);
 
                     byte[]? ticketPacket = _ticketSymmetric.Encrypt(reticket.ToBytes(), iv);
 
@@ -209,7 +281,7 @@ namespace Openus.SecureProtocol.Transport.Tcp
                     {
                         client.Close();
 
-                        throw new SecProtoException(ExceptionCode.EncryptError);
+                        throw new SPException(ExceptionCode.EncryptError);
                     }
 
                     byte[] ticketWithIV = new byte[Symmetric.BlockSize(_set.Symmetric) + ticketPacket.Length];
@@ -225,7 +297,7 @@ namespace Openus.SecureProtocol.Transport.Tcp
                 {
                     client.Close();
 
-                    throw new SecProtoException(ExceptionCode.None);
+                    throw new SPException(ExceptionCode.None);
                 }
             }
             else if (_set.Symmetric == SymmetricType.None)
@@ -239,7 +311,7 @@ namespace Openus.SecureProtocol.Transport.Tcp
             {
                 client.Close();
 
-                throw new SecProtoException(ExceptionCode.InvalidCombination);
+                throw new SPException(ExceptionCode.InvalidCombination);
             }
         }
 

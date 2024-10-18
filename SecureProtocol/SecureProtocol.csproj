@@ -13,13 +13,13 @@
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <RepositoryUrl>https://github.com/openus-dotnet/SecureProtocol</RepositoryUrl>
         <PackageId>Openus.SecureProtocol</PackageId>
-        <Version>8.1.4</Version>
+        <Version>8.1.5-alpha</Version>
         <Description>Build a Simple, Secure, and Fast Transport Layer Module with C#</Description>
         <PackageIcon>Openus.png</PackageIcon>
 	
         <PackageReleaseNotes>
-            - Add package icon
-            - Add configure method (ticket time)
+			Releases Note
+			- Add two configure methods but, I can't test
         </PackageReleaseNotes>
     </PropertyGroup>
 

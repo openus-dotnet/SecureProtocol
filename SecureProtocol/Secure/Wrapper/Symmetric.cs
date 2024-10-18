@@ -48,7 +48,7 @@ namespace Openus.SecureProtocol.Secure.Wrapper
 
                     break;
                 default:
-                    throw new SecProtoException(ExceptionCode.InvalidSymmetric);
+                    throw new SPException(ExceptionCode.InvalidSymmetric);
             }
 
             if (_symmetric != null)
@@ -128,7 +128,7 @@ namespace Openus.SecureProtocol.Secure.Wrapper
                 case SymmetricType.AES:
                     return 32;
                 default:
-                    throw new SecProtoException(ExceptionCode.InvalidSymmetric);
+                    throw new SPException(ExceptionCode.InvalidSymmetric);
             }
         }
 
@@ -150,7 +150,7 @@ namespace Openus.SecureProtocol.Secure.Wrapper
                 case SymmetricType.AES:
                     return 16;
                 default:
-                    throw new SecProtoException(ExceptionCode.InvalidSymmetric);
+                    throw new SPException(ExceptionCode.InvalidSymmetric);
             }
         }
     }

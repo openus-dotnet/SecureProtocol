@@ -26,7 +26,7 @@ namespace Openus.SecureProtocol.Transport.Tcp
         /// <summary>
         /// Get ticket for fast re-connect TCP session
         /// </summary>
-        public Ticket Ticket { get => new Ticket(_ticketPacket??throw new SecProtoException(ExceptionCode.InvalidTicket)); }
+        public Ticket Ticket { get => new Ticket(_ticketPacket??throw new SPException(ExceptionCode.InvalidTicket)); }
 
         /// <summary>
         /// Create client
@@ -121,7 +121,7 @@ namespace Openus.SecureProtocol.Transport.Tcp
 
                 if (enc == null)
                 {
-                    throw new SecProtoException(ExceptionCode.EncryptError);
+                    throw new SPException(ExceptionCode.EncryptError);
                 }
 
                 byte[] initailPacket = new byte[AlgorithmSet.GetMinimumConnectPacketSize()];
@@ -135,7 +135,7 @@ namespace Openus.SecureProtocol.Transport.Tcp
 
                 if (compare.SequenceEqual(response) == false)
                 {
-                    throw new SecProtoException(ExceptionCode.InvalidHmac);
+                    throw new SPException(ExceptionCode.InvalidHmac);
                 }
 
                 byte[] ticketPacket = Read();
@@ -150,7 +150,7 @@ namespace Openus.SecureProtocol.Transport.Tcp
             }
             else
             {
-                throw new SecProtoException(ExceptionCode.InvalidHandlingType);
+                throw new SPException(ExceptionCode.InvalidHandlingType);
             }
         }
         /// <summary>
@@ -199,7 +199,7 @@ namespace Openus.SecureProtocol.Transport.Tcp
             {
                 if (_ticketPacket == null)
                 {
-                    throw new SecProtoException(ExceptionCode.InvalidConnection);
+                    throw new SPException(ExceptionCode.InvalidConnection);
                 }
 
                 ActuallyClient.GetStream().Write(_ticketPacket);
@@ -209,7 +209,7 @@ namespace Openus.SecureProtocol.Transport.Tcp
 
                 if (compare.SequenceEqual(response) == false)
                 {
-                    throw new SecProtoException(ExceptionCode.InvalidHmac);
+                    throw new SPException(ExceptionCode.InvalidHmac);
                 }
 
                 byte[] ticketPacket = Read();
@@ -224,7 +224,7 @@ namespace Openus.SecureProtocol.Transport.Tcp
             }
             else
             {
-                throw new SecProtoException(ExceptionCode.InvalidHandlingType);
+                throw new SPException(ExceptionCode.InvalidHandlingType);
             }
         }
 

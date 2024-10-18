@@ -71,7 +71,7 @@ namespace Openus.SecureProtocol.Transport.Tcp
 
                 if (enc == null)
                 {
-                    throw new SecProtoException(ExceptionCode.EncryptError);
+                    throw new SPException(ExceptionCode.EncryptError);
                 }
 
                 byte[] packet = new byte[iv.Length + enc.Length];
@@ -125,8 +125,8 @@ namespace Openus.SecureProtocol.Transport.Tcp
         /// </summary>
         /// <param name="type">How to handle when problem</param>
         /// <returns>Data that read from server</returns>
-        public byte[] Read(HandlingType type = HandlingType.Ecexption)
-        {
+        public byte[]? Read(HandlingType type = HandlingType.Ecexption)
+        {Read:
             // Debug.WriteLine("TCP RD BFR: ");
 
             if (SymmetricWrapper.Algorithm != SymmetricType.None)
@@ -152,11 +152,13 @@ namespace Openus.SecureProtocol.Transport.Tcp
                     switch (type)
                     {
                         case HandlingType.Ecexption:
-                            throw new SecProtoException(ExceptionCode.DecryptError);
-                        case HandlingType.EmptyReturn:
-                            return Array.Empty<byte>();
+                            throw new SPException(ExceptionCode.DecryptError);
+                        case HandlingType.ReturnNull:
+                            return null;
+                        case HandlingType.IgnoreLoop: 
+                            goto Read;
                         default:
-                            throw new SecProtoException(ExceptionCode.InvalidHandlingType);
+                            throw new SPException(ExceptionCode.InvalidHandlingType);
                     }
                 }
 
@@ -167,11 +169,13 @@ namespace Openus.SecureProtocol.Transport.Tcp
                     switch (type)
                     {
                         case HandlingType.Ecexption:
-                            throw new SecProtoException(ExceptionCode.InvalidNonce);
-                        case HandlingType.EmptyReturn:
-                            return Array.Empty<byte>();
+                            throw new SPException(ExceptionCode.InvalidNonce);
+                        case HandlingType.ReturnNull:
+                            return null;
+                        case HandlingType.IgnoreLoop:
+                            goto Read;
                         default:
-                            throw new SecProtoException(ExceptionCode.InvalidHandlingType);
+                            throw new SPException(ExceptionCode.InvalidHandlingType);
                     }
                 }
 
@@ -195,11 +199,13 @@ namespace Openus.SecureProtocol.Transport.Tcp
                         switch (type)
                         {
                             case HandlingType.Ecexption:
-                                throw new SecProtoException(ExceptionCode.DecryptError);
-                            case HandlingType.EmptyReturn:
-                                return Array.Empty<byte>();
+                                throw new SPException(ExceptionCode.DecryptError);
+                            case HandlingType.ReturnNull:
+                                return null;
+                            case HandlingType.IgnoreLoop:
+                                goto Read;
                             default:
-                                throw new SecProtoException(ExceptionCode.InvalidHandlingType);
+                                throw new SPException(ExceptionCode.InvalidHandlingType);
                         }
                     }
 
@@ -233,11 +239,13 @@ namespace Openus.SecureProtocol.Transport.Tcp
                             switch (type)
                             {
                                 case HandlingType.Ecexption:
-                                    throw new SecProtoException(ExceptionCode.InvalidHmac);
-                                case HandlingType.EmptyReturn:
-                                    return Array.Empty<byte>();
+                                    throw new SPException(ExceptionCode.InvalidHmac);
+                                case HandlingType.ReturnNull:
+                                    return null;
+                                case HandlingType.IgnoreLoop:
+                                    goto Read;
                                 default:
-                                    throw new SecProtoException(ExceptionCode.InvalidHandlingType);
+                                    throw new SPException(ExceptionCode.InvalidHandlingType);
                             }
                         }
                     }
@@ -276,11 +284,13 @@ namespace Openus.SecureProtocol.Transport.Tcp
                             switch (type)
                             {
                                 case HandlingType.Ecexption:
-                                    throw new SecProtoException(ExceptionCode.InvalidHmac);
-                                case HandlingType.EmptyReturn:
-                                    return Array.Empty<byte>();
+                                    throw new SPException(ExceptionCode.InvalidHmac);
+                                case HandlingType.ReturnNull:
+                                    return null;
+                                case HandlingType.IgnoreLoop:
+                                    goto Read;
                                 default:
-                                    throw new SecProtoException(ExceptionCode.InvalidHandlingType);
+                                    throw new SPException(ExceptionCode.InvalidHandlingType);
                             }
                         }
                     }

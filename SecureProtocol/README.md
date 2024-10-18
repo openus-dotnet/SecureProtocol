@@ -13,7 +13,7 @@ The project **Secure Protocol**'s goal is to build a **Simple**, **Secure**, and
 |TCP            |Hybrid Crypto-system(for Generate and Exchange Keys)   |**O**          |
 |TCP            |Session KeySet & Ticket based Crypto-system            |**O**          |
 |UDP            |Session KeySet based Crypto-system                     |**O**          |
-|TCP            |Secure Service Model                                   |**X**          |
+|TCP            |Secure Service Model                                   |**?**          |
 
 - **O**: Completed works
 - **?**: Need more check
