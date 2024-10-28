@@ -122,6 +122,11 @@ namespace Openus.SecureProtocol.Transport.Tcp
         }
 
         /// <summary>
+        /// TCP server's local end point
+        /// </summary>
+        public EndPoint LocalEP { get => _listener.LocalEndpoint; }
+
+        /// <summary>
         /// A TCP listener that actually works
         /// </summary>
         private TcpListener _listener;
